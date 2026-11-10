@@ -68,16 +68,15 @@
 </head>
 <body class="min-h-screen pb-24 text-slate-800">
 
-  <!-- OVERLAY ÉCRAN DE VERROUILLAGE INTERACTIF (DOUGLASSE & MOTS DOUX) -->
+  <!-- OVERLAY AUTOMATIQUE SUR ÉCRAN DE VERROUILLAGE (S'AFFICHE QUAND LE TÉLÉPHONE EST EN VEILLE) -->
   <div id="lockscreenOverlay" class="fixed inset-0 z-50 hidden bg-slate-950/95 backdrop-blur-xl text-white flex flex-col justify-between p-6">
     <div class="text-center mt-6">
       <p id="lockTime" class="text-6xl font-extrabold tracking-tight">22:57</p>
-      <p id="lockDate" class="text-xs text-pink-300 uppercase tracking-widest mt-1">Écran de verrouillage Love8</p>
+      <p id="lockAlertTitle" class="text-xs text-pink-300 font-bold uppercase tracking-widest mt-1">⚡ Alerte Love8 en direct</p>
     </div>
 
     <!-- Carte Centrale Lockscreen : Douglasse animé + Dernier dessin -->
     <div class="space-y-4 my-auto">
-      <!-- Alerte Douglasse sur écran verrouillé -->
       <div class="bg-white/10 border border-white/15 rounded-3xl p-4 backdrop-blur-md flex items-center gap-4">
         <div class="text-5xl cat-bounce">🐱</div>
         <div class="flex-1">
@@ -106,7 +105,7 @@
     </div>
 
     <button onclick="toggleLockscreen(false)" class="w-full py-3.5 rounded-2xl bg-white/15 border border-white/20 text-xs font-extrabold uppercase tracking-wider text-white active:scale-95 transition">
-      🔓 Déverrouiller et revenir à Love8
+      🔓 Fermer l'alerte d'écran verrouillé
     </button>
   </div>
 
@@ -147,10 +146,10 @@
       </button>
     </div>
 
-    <!-- BOUTON APERÇU VERROUILLAGE & NOTIFS -->
-    <button onclick="toggleLockscreen(true)" title="Voir l'écran de verrouillage" class="w-9 h-9 rounded-full bg-white shadow-sm border border-pink-100 flex items-center justify-center text-slate-600">
-      🔒
-    </button>
+    <!-- BADGE SERVICE VEILLE ACTIVE -->
+    <div class="px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-extrabold text-emerald-700">
+      ⚡ Veille OK
+    </div>
   </header>
 
   <!-- CONTENEUR PRINCIPAL -->
@@ -203,7 +202,7 @@
             😊 Changer mon humeur / lieu
           </button>
           <button onclick="refreshBatteryAndNotifications()" class="bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold px-3.5 py-2.5 rounded-2xl border border-purple-200 transition">
-            🔔 Activer Notifs / Bat
+            🔔 Tester Notif / Bat
           </button>
         </div>
       </div>
@@ -424,8 +423,8 @@
 
         <!-- Boutons de test pour déclencher les états "J'ai faim" / "Je veux jouer" -->
         <div class="pt-2 border-t border-slate-100 flex justify-between gap-2 text-[11px] font-bold">
-          <button onclick="triggerCatNeed('faim')" class="flex-1 py-2 rounded-xl bg-amber-50/70 text-amber-800 border border-amber-200/60">🔔 Simuler « J'ai faim »</button>
-          <button onclick="triggerCatNeed('jouer')" class="flex-1 py-2 rounded-xl bg-indigo-50/70 text-indigo-800 border border-indigo-200/60">🔔 Simuler « Je veux jouer »</button>
+          <button onclick="triggerCatNeed('faim')" class="flex-1 py-2 rounded-xl bg-amber-50/70 text-amber-800 border border-amber-200/60">🔔 Alerte « J'ai faim »</button>
+          <button onclick="triggerCatNeed('jouer')" class="flex-1 py-2 rounded-xl bg-indigo-50/70 text-indigo-800 border border-indigo-200/60">🔔 Alerte « Je veux jouer »</button>
         </div>
       </div>
 
@@ -568,13 +567,28 @@
       "Si on avait une soirée rien que tous les deux ce week-end, quel serait ton programme idéal ?"
     ];
 
-    // Notification Système (Barre de notif + Écran d'accueil)
+    // Notification Système Native (Barre de notification Android + Écran de verrouillage)
     function pushSystemNotification(title, body) {
-      if ('Notification' in window && Notification.permission === 'granted') {
+      if (window.AndroidNative && window.AndroidNative.showSystemNotification) {
+        window.AndroidNative.showSystemNotification(title, body);
+      } else if ('Notification' in window && Notification.permission === 'granted') {
         try {
           new Notification(title, { body, vibrate: [150, 80, 200] });
         } catch (e) {}
       }
+    }
+
+    // Déclenché automatiquement par Android quand le téléphone est en veille / verrouillé et reçoit un ping
+    window.onNativeWakeAlert = function(emoji) {
+      if (window.AndroidNative && window.AndroidNative.isDeviceLocked && window.AndroidNative.isDeviceLocked()) {
+        toggleLockscreen(true);
+      }
+      spawnParticles(emoji || '❤️', [200, 100, 350]);
+    };
+
+    // Synchronise le profil actif au démarrage avec le service Android en arrière-plan
+    if (window.AndroidNative && window.AndroidNative.setUser) {
+      window.AndroidNative.setUser(currentUser);
     }
 
     async function saveState() {
@@ -611,27 +625,43 @@
             spawnParticles(remote.lastEvent.emoji || '❤️', remote.lastEvent.pattern || [120, 80, 180]);
             triggerBanner(remote.lastEvent.title, remote.lastEvent.message, remote.lastEvent.emoji || '❤️');
             pushSystemNotification(remote.lastEvent.title, remote.lastEvent.message);
+
+            if (window.AndroidNative && window.AndroidNative.isDeviceLocked && window.AndroidNative.isDeviceLocked()) {
+              toggleLockscreen(true);
+            }
           }
         }
       } catch (e) {}
     }
 
-    // Étape 2 : Baisse naturelle des jauges de Douglasse avec le temps
+    // Baisse naturelle des jauges de Douglasse avec le temps + Alerte auto si < 40%
     function checkCatDecay() {
       const now = Date.now();
       const elapsedMinutes = (now - (state.cat.lastDecay || now)) / 60000;
       if (elapsedMinutes >= 15) {
         const steps = Math.floor(elapsedMinutes / 15);
+        const prevHunger = state.cat.hunger;
+        const prevLove = state.cat.love;
+
         state.cat.hunger = Math.max(5, state.cat.hunger - steps * 4);
         state.cat.love = Math.max(5, state.cat.love - steps * 3);
         state.cat.energy = Math.min(100, state.cat.energy + steps * 2);
         state.cat.lastDecay = now;
+
+        if (prevHunger > 40 && state.cat.hunger <= 40) {
+          triggerCatNeed('faim');
+        } else if (prevLove > 40 && state.cat.love <= 40) {
+          triggerCatNeed('jouer');
+        }
       }
     }
 
     function switchUser(user) {
       currentUser = user;
       localStorage.setItem('love8_user', user);
+      if (window.AndroidNative && window.AndroidNative.setUser) {
+        window.AndroidNative.setUser(user);
+      }
       renderAll();
     }
 
@@ -657,7 +687,7 @@
 
     function spawnParticles(emoji, pattern = [90, 60, 180]) {
       if (navigator.vibrate) navigator.vibrate(pattern);
-      for (let i = 0; i < 22; i++) {
+      for (let i = 0; i < 24; i++) {
         const el = document.createElement('div');
         el.className = 'heart-particle text-2xl';
         el.innerText = emoji;
@@ -697,6 +727,7 @@
       };
       spawnParticles(emoji, pattern);
       triggerBanner('VIBRATION D\'AMOUR', `${currentUser} → ${partner} : ${label}`, emoji);
+      pushSystemNotification(state.lastEvent.title, state.lastEvent.message);
       saveState();
     }
 
@@ -724,7 +755,6 @@
         emoji = '🧶';
       }
 
-      // Gain d'XP et passage de niveau
       state.cat.xp = (state.cat.xp || 0) + 15;
       if (state.cat.xp >= 100) {
         state.cat.level += 1;
@@ -746,10 +776,11 @@
       };
 
       spawnParticles(emoji);
+      pushSystemNotification(state.lastEvent.title, state.lastEvent.message);
       saveState();
     }
 
-    // Simuler une alerte "J'ai faim" ou "Je veux jouer" sur l'écran de verrouillage et en notification
+    // Déclenche une vraie notification système + alerte de Douglasse
     function triggerCatNeed(type) {
       const eventId = Date.now();
       lastEventId = eventId;
@@ -774,10 +805,10 @@
           pattern: [150, 80, 150]
         };
       }
+      spawnParticles(state.lastEvent.emoji, state.lastEvent.pattern);
       triggerBanner(state.lastEvent.title, state.lastEvent.message, state.lastEvent.emoji);
       pushSystemNotification(state.lastEvent.title, state.lastEvent.message);
       saveState();
-      toggleLockscreen(true);
     }
 
     function updateCoupleTimer() {
@@ -797,7 +828,7 @@
 
     async function refreshBatteryAndNotifications() {
       if ('Notification' in window) {
-        await Notification.requestPermission();
+        try { await Notification.requestPermission(); } catch (e) {}
       }
       if (navigator.getBattery) {
         const bat = await navigator.getBattery();
@@ -805,7 +836,8 @@
         const key = currentUser.toLowerCase();
         state[key].bat = level;
       }
-      triggerBanner('NOTIFICATIONS & BATTERIE', `Alertes activées et batterie synchronisée pour ${currentUser}`, '🔔');
+      pushSystemNotification('Love8 Actif ❤️', `Notifications dans la barre d'état et veille activées pour ${currentUser} !`);
+      triggerBanner('NOTIFICATIONS & BATTERIE', `Vraie notification envoyée dans la barre du haut !`, '🔔');
       saveState();
     }
 
@@ -903,6 +935,7 @@
       document.getElementById('sweetNoteInput').value = '';
       spawnParticles('🎨');
       triggerBanner('WIDGET MIS À JOUR', `Dessin envoyé sur l'écran de ${partner} !`, '🖌️');
+      pushSystemNotification(state.lastEvent.title, state.lastEvent.message);
       saveState();
       showTab('nous');
     }
@@ -977,7 +1010,6 @@
         </div>
       `).join('');
 
-      // État dynamique de Douglasse (Bulles J'ai faim / Je veux jouer)
       let speech = '« Rrrrr... Je ronronne de bonheur 💕 »';
       let badge = 'Ronronne 🐾';
       let mouthPath = 'M93 95 Q100 101 107 95';
