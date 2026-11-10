@@ -17,25 +17,40 @@
       background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
     }
     .cat-bounce {
-      animation: floatCat 3s ease-in-out infinite;
+      animation: floatCat 2.8s ease-in-out infinite;
+    }
+    .cat-excited {
+      animation: jumpCat 0.5s ease-in-out infinite;
     }
     @keyframes floatCat {
       0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-6px); }
+      50% { transform: translateY(-7px); }
+    }
+    @keyframes jumpCat {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50% { transform: translateY(-14px) scale(1.05); }
     }
     .tail-wag {
       transform-origin: 140px 145px;
-      animation: wag 2.2s ease-in-out infinite;
+      animation: wag 2s ease-in-out infinite;
     }
     @keyframes wag {
       0%, 100% { transform: rotate(0deg); }
-      50% { transform: rotate(14deg); }
+      50% { transform: rotate(16deg); }
+    }
+    .eye-blink {
+      transform-origin: center;
+      animation: blink 4s infinite;
+    }
+    @keyframes blink {
+      0%, 94%, 98%, 100% { transform: scaleY(1); }
+      96% { transform: scaleY(0.1); }
     }
     .heart-particle {
       position: fixed;
       pointer-events: none;
       z-index: 9999;
-      animation: fallDown 2.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      animation: fallDown 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
     }
     @keyframes fallDown {
       0% { transform: translateY(-10vh) scale(0.6) rotate(0deg); opacity: 1; }
@@ -53,7 +68,49 @@
 </head>
 <body class="min-h-screen pb-24 text-slate-800">
 
-  <!-- BANNIÈRE D'ALERTE TEMPS RÉEL (SIMULATION LOCKSCREEN / HEADS-UP) -->
+  <!-- OVERLAY ÉCRAN DE VERROUILLAGE INTERACTIF (DOUGLASSE & MOTS DOUX) -->
+  <div id="lockscreenOverlay" class="fixed inset-0 z-50 hidden bg-slate-950/95 backdrop-blur-xl text-white flex flex-col justify-between p-6">
+    <div class="text-center mt-6">
+      <p id="lockTime" class="text-6xl font-extrabold tracking-tight">22:57</p>
+      <p id="lockDate" class="text-xs text-pink-300 uppercase tracking-widest mt-1">Écran de verrouillage Love8</p>
+    </div>
+
+    <!-- Carte Centrale Lockscreen : Douglasse animé + Dernier dessin -->
+    <div class="space-y-4 my-auto">
+      <!-- Alerte Douglasse sur écran verrouillé -->
+      <div class="bg-white/10 border border-white/15 rounded-3xl p-4 backdrop-blur-md flex items-center gap-4">
+        <div class="text-5xl cat-bounce">🐱</div>
+        <div class="flex-1">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-extrabold uppercase tracking-wider text-amber-300">Douglasse en direct</span>
+            <span id="lockCatStats" class="text-[11px] text-pink-200">🍖 100% • 💖 100%</span>
+          </div>
+          <p id="lockCatSpeech" class="text-sm font-bold mt-1 text-white">« Miaou ! J'ai faim, donne-moi des croquettes 🐟 »</p>
+          <div class="flex gap-2 mt-2.5">
+            <button onclick="interactCat('nourrir')" class="bg-amber-500/90 hover:bg-amber-500 text-slate-950 text-xs font-extrabold px-3 py-1.5 rounded-xl">🐟 Nourrir</button>
+            <button onclick="interactCat('jouer')" class="bg-indigo-500/90 hover:bg-indigo-500 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl">🧶 Jouer</button>
+            <button onclick="interactCat('caresser')" class="bg-pink-500/90 hover:bg-pink-500 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl">💖 Câliner</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget Mot Doux sur écran verrouillé -->
+      <div class="bg-white/10 border border-white/15 rounded-3xl p-4 backdrop-blur-md text-center">
+        <p id="lockDrawingMeta" class="text-[11px] text-pink-200 mb-2">Dernier mot doux reçu</p>
+        <div class="bg-white rounded-2xl p-2 flex items-center justify-center min-h-[120px]">
+          <img id="lockDrawingImg" src="" class="max-h-28 object-contain hidden" />
+          <p id="lockDrawingFallback" class="text-xl font-extrabold text-pink-500 italic">Je t'aime ❤️</p>
+        </div>
+        <p id="lockDrawingCaption" class="text-xs font-bold text-pink-100 mt-2">« Mot doux pour toi ❤️ »</p>
+      </div>
+    </div>
+
+    <button onclick="toggleLockscreen(false)" class="w-full py-3.5 rounded-2xl bg-white/15 border border-white/20 text-xs font-extrabold uppercase tracking-wider text-white active:scale-95 transition">
+      🔓 Déverrouiller et revenir à Love8
+    </button>
+  </div>
+
+  <!-- BANNIÈRE DE NOTIFICATION FLOTTANTE (HEADS-UP) -->
   <div id="liveBanner" class="fixed top-3 left-4 right-4 z-50 hidden transform transition-all duration-300 bg-white/95 backdrop-blur-md border border-pink-200 rounded-2xl p-3.5 shadow-xl flex items-center justify-between">
     <div class="flex items-center gap-3">
       <div id="bannerIcon" class="w-10 h-10 rounded-full gradient-card flex items-center justify-center text-white text-xl">❤️</div>
@@ -66,7 +123,7 @@
   </div>
 
   <!-- HEADER FIXE -->
-  <header class="sticky top-0 z-30 bg-pink-50/80 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-pink-100/60">
+  <header class="sticky top-0 z-30 bg-pink-50/85 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-pink-100/60">
     <div class="flex items-center gap-2.5">
       <div class="w-10 h-10 rounded-full gradient-card flex items-center justify-center shadow-md pulse-ring">
         <span class="text-white text-lg">🤍</span>
@@ -74,9 +131,9 @@
       <div>
         <div class="flex items-center gap-1.5">
           <h1 class="font-extrabold text-lg text-purple-900 leading-none">Love8</h1>
-          <span id="syncDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+          <span id="syncDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" title="Synchronisé"></span>
         </div>
-        <p class="text-[11px] text-slate-500 font-medium">Espace privé à deux</p>
+        <p id="syncStatusText" class="text-[11px] text-slate-500 font-medium">Espace privé à deux</p>
       </div>
     </div>
 
@@ -90,8 +147,9 @@
       </button>
     </div>
 
-    <button onclick="openSettingsModal()" class="w-9 h-9 rounded-full bg-white shadow-sm border border-pink-100 flex items-center justify-center text-slate-600">
-      ⚙️
+    <!-- BOUTON APERÇU VERROUILLAGE & NOTIFS -->
+    <button onclick="toggleLockscreen(true)" title="Voir l'écran de verrouillage" class="w-9 h-9 rounded-full bg-white shadow-sm border border-pink-100 flex items-center justify-center text-slate-600">
+      🔒
     </button>
   </header>
 
@@ -100,7 +158,6 @@
 
     <!-- ==================== ONGLET 1 : NOUS ==================== -->
     <section id="tab-nous" class="space-y-4">
-      <!-- Carte Statut Couple -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80">
         <div class="flex justify-center mb-3">
           <button onclick="showTab('souvenirs')" class="bg-pink-50 hover:bg-pink-100 text-purple-800 text-xs font-bold px-4 py-1.5 rounded-full transition flex items-center gap-1">
@@ -109,7 +166,6 @@
         </div>
 
         <div class="grid grid-cols-3 items-center text-center">
-          <!-- Jordan -->
           <div class="flex flex-col items-center">
             <div class="relative w-20 h-20 rounded-full border-2 border-purple-500 p-1 flex items-center justify-center bg-purple-50/40">
               <span class="text-4xl">🧔🏻‍♂️</span>
@@ -121,7 +177,6 @@
             <span id="jordanLocText" class="mt-1 bg-purple-50 text-purple-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">📍 À la maison</span>
           </div>
 
-          <!-- Cœur central -->
           <div class="flex flex-col items-center justify-center">
             <div class="w-full flex items-center justify-center">
               <div class="h-[2px] w-6 bg-pink-200"></div>
@@ -131,7 +186,6 @@
             <span class="mt-2 bg-pink-50 text-pink-600 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-pink-200">Connectés ❤️</span>
           </div>
 
-          <!-- Lydie -->
           <div class="flex flex-col items-center">
             <div class="relative w-20 h-20 rounded-full border-2 border-pink-500 p-1 flex items-center justify-center bg-pink-50/40">
               <span class="text-4xl">👩🏻</span>
@@ -148,8 +202,8 @@
           <button onclick="promptMoodChange()" class="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold py-2.5 rounded-2xl border border-slate-200/80 transition">
             😊 Changer mon humeur / lieu
           </button>
-          <button onclick="refreshBatteryAndGPS()" class="bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold px-3.5 py-2.5 rounded-2xl border border-purple-200 transition">
-            🎯 GPS / Bat
+          <button onclick="refreshBatteryAndNotifications()" class="bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold px-3.5 py-2.5 rounded-2xl border border-purple-200 transition">
+            🔔 Activer Notifs / Bat
           </button>
         </div>
       </div>
@@ -161,7 +215,7 @@
           <span class="bg-pink-50 text-pink-600 text-xs font-bold px-3 py-1 rounded-full"><span id="pingCounter">32</span> Pings aujourd'hui 💕</span>
         </div>
 
-        <button onclick="sendLovePing('Tu me manques !', '💖')" class="w-full gradient-card text-white rounded-2xl p-4 shadow-md active:scale-[0.98] transition flex items-center justify-center gap-3">
+        <button onclick="sendLovePing('Tu me manques !', '💖', [120, 60, 220])" class="w-full gradient-card text-white rounded-2xl p-4 shadow-md active:scale-[0.98] transition flex items-center justify-center gap-3">
           <span class="text-2xl">💌</span>
           <div class="text-left">
             <p class="font-extrabold text-base leading-tight">Tu me manques !</p>
@@ -170,10 +224,10 @@
         </button>
 
         <div class="grid grid-cols-4 gap-2 text-xs font-bold">
-          <button onclick="sendLovePing('Je t\'aime ❤️', '❤️')" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">❤️ Je t'aime</button>
-          <button onclick="sendLovePing('Gros Bisou 😘', '😘')" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">😘 Bisou</button>
-          <button onclick="sendLovePing('Gros Câlin 🤗', '🤗')" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">🤗 Câlin</button>
-          <button onclick="sendLovePing('Ce soir ? 🔥', '🔥')" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">🍕 Ce soir ?</button>
+          <button onclick="sendLovePing('Je t\'aime ❤️', '❤️', [80, 50, 80, 50, 180])" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">❤️ Je t'aime</button>
+          <button onclick="sendLovePing('Gros Bisou 😘', '😘', [100])" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">😘 Bisou</button>
+          <button onclick="sendLovePing('Gros Câlin 🤗', '🤗', [400])" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">🤗 Câlin</button>
+          <button onclick="sendLovePing('Ce soir ? 🔥', '🔥', [120, 80, 120])" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">🍕 Ce soir ?</button>
         </div>
       </div>
 
@@ -237,7 +291,6 @@
           <canvas id="drawCanvas" width="360" height="230" class="w-full touch-none bg-white cursor-crosshair"></canvas>
         </div>
 
-        <!-- Palette de 7 couleurs + gomme -->
         <div class="flex items-center justify-between pt-1">
           <button onclick="setBrushColor('#ec4899')" class="w-8 h-8 rounded-full bg-pink-500 ring-2 ring-offset-2 ring-pink-400"></button>
           <button onclick="setBrushColor('#8b5cf6')" class="w-8 h-8 rounded-full bg-violet-500"></button>
@@ -249,7 +302,6 @@
           <button onclick="setBrushColor('#ffffff')" class="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-xs">🧽</button>
         </div>
 
-        <!-- Épaisseur + Tampons -->
         <div class="flex items-center gap-3 pt-1">
           <input id="brushSize" type="range" min="2" max="18" value="5" class="w-28 accent-pink-500" />
           <div class="flex items-center gap-1.5 overflow-x-auto">
@@ -270,7 +322,6 @@
         </button>
       </div>
 
-      <!-- Galerie de nos mots doux -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <h3 class="font-extrabold text-sm flex items-center gap-1.5">🖼️ Galerie de nos mots doux</h3>
         <div id="drawingsGallery" class="grid grid-cols-2 gap-2.5"></div>
@@ -281,7 +332,7 @@
     <section id="tab-douglasse" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 text-center space-y-3">
         <div class="flex items-center justify-between">
-          <span class="bg-amber-100 text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full">🐾 Niveau <span id="catLevel">4</span></span>
+          <span class="bg-amber-100 text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full">🐾 Niveau <span id="catLevel">4</span> (<span id="catXp">40</span>/100 XP)</span>
           <span id="catMoodPill" class="bg-pink-100 text-pink-700 text-xs font-extrabold px-3 py-1 rounded-full">Ronronne de bonheur 💕</span>
         </div>
 
@@ -290,42 +341,34 @@
           <p class="text-xs text-slate-400">Notre petit compagnon virtuel à câliner tous les deux</p>
         </div>
 
-        <!-- Bulle d'alerte dynamique Lockscreen / État -->
         <div id="catSpeechBubble" class="inline-block bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold px-3.5 py-1.5 rounded-full shadow-sm">
           « Miaou ! Touche-moi pour me caresser 🐾 »
         </div>
 
         <!-- Illustration SVG Animée de Douglasse -->
         <div onclick="interactCat('caresser')" class="py-2 flex justify-center cursor-pointer">
-          <svg class="w-40 h-40 cat-bounce" viewBox="0 0 200 200">
+          <svg id="catSvg" class="w-40 h-40 cat-bounce" viewBox="0 0 200 200">
             <ellipse cx="100" cy="175" rx="55" ry="10" fill="#ede9fe" />
-            <!-- Queue -->
             <path class="tail-wag" d="M135 145 Q175 135 165 95" stroke="#f59e0b" stroke-width="14" stroke-linecap="round" fill="none" />
-            <!-- Corps -->
             <ellipse cx="100" cy="135" rx="42" ry="36" fill="#fbbf24" />
             <ellipse cx="100" cy="140" rx="24" ry="24" fill="#fef3c7" />
-            <!-- Tête -->
             <circle cx="100" cy="82" r="40" fill="#fbbf24" />
-            <!-- Oreilles -->
             <polygon points="65,60 58,22 90,46" fill="#f59e0b" />
             <polygon points="68,55 63,30 85,47" fill="#fda4af" />
             <polygon points="135,60 142,22 110,46" fill="#f59e0b" />
             <polygon points="132,55 137,30 115,47" fill="#fda4af" />
-            <!-- Rayures front -->
             <line x1="92" y1="48" x2="92" y2="60" stroke="#d97706" stroke-width="4" stroke-linecap="round" />
             <line x1="100" y1="45" x2="100" y2="60" stroke="#d97706" stroke-width="4" stroke-linecap="round" />
             <line x1="108" y1="48" x2="108" y2="60" stroke="#d97706" stroke-width="4" stroke-linecap="round" />
-            <!-- Yeux -->
-            <circle cx="83" cy="82" r="7" fill="#1e293b" />
-            <circle cx="81" cy="79" r="2.5" fill="#ffffff" />
-            <circle cx="117" cy="82" r="7" fill="#1e293b" />
-            <circle cx="115" cy="79" r="2.5" fill="#ffffff" />
-            <!-- Museau -->
-            <path d="M93 95 Q100 101 107 95" stroke="#1e293b" stroke-width="3" fill="none" stroke-linecap="round" />
-            <!-- Collier rose -->
+            <g class="eye-blink">
+              <circle cx="83" cy="82" r="7" fill="#1e293b" />
+              <circle cx="81" cy="79" r="2.5" fill="#ffffff" />
+              <circle cx="117" cy="82" r="7" fill="#1e293b" />
+              <circle cx="115" cy="79" r="2.5" fill="#ffffff" />
+            </g>
+            <path id="catMouth" d="M93 95 Q100 101 107 95" stroke="#1e293b" stroke-width="3" fill="none" stroke-linecap="round" />
             <path d="M68 112 Q100 124 132 112" stroke="#ec4899" stroke-width="7" fill="none" stroke-linecap="round" />
             <circle cx="100" cy="120" r="6" fill="#f43f5e" />
-            <!-- Pattes -->
             <circle cx="78" cy="165" r="10" fill="#fef3c7" />
             <circle cx="122" cy="165" r="10" fill="#fef3c7" />
           </svg>
@@ -364,7 +407,6 @@
           </div>
         </div>
 
-        <!-- Boutons d'action -->
         <div class="grid grid-cols-3 gap-2.5 pt-2">
           <button onclick="interactCat('nourrir')" class="bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition">
             <span class="text-2xl">🐟</span>
@@ -379,9 +421,14 @@
             <span class="text-xs font-extrabold text-indigo-900">Jouer</span>
           </button>
         </div>
+
+        <!-- Boutons de test pour déclencher les états "J'ai faim" / "Je veux jouer" -->
+        <div class="pt-2 border-t border-slate-100 flex justify-between gap-2 text-[11px] font-bold">
+          <button onclick="triggerCatNeed('faim')" class="flex-1 py-2 rounded-xl bg-amber-50/70 text-amber-800 border border-amber-200/60">🔔 Simuler « J'ai faim »</button>
+          <button onclick="triggerCatNeed('jouer')" class="flex-1 py-2 rounded-xl bg-indigo-50/70 text-indigo-800 border border-indigo-200/60">🔔 Simuler « Je veux jouer »</button>
+        </div>
       </div>
 
-      <!-- Journal de Douglasse -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-2.5">
         <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">JOURNAL DE DOUGLASSE</h3>
         <div id="catJournalList" class="space-y-2 text-xs"></div>
@@ -418,7 +465,6 @@
         </div>
       </div>
 
-      <!-- Question couple du jour -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <span class="bg-pink-50 text-pink-600 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">💬 QUESTION COUPLE DU JOUR</span>
@@ -446,7 +492,6 @@
         </div>
       </div>
 
-      <!-- Nos Envies & Projets à Deux -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <h3 class="font-extrabold text-sm">✨ Nos Envies & Projets à Deux</h3>
         <div class="flex gap-2">
@@ -480,19 +525,24 @@
   </nav>
 
   <script>
-    // URL DE TON CLOUDFLARE WORKER (à remplacer une fois déployé)
-    const WORKER_URL = localStorage.getItem('love8_worker_url') || '';
+    // URL AUTOMATIQUE SUR CLOUDFLARE PAGES (/state)
+    const API_ENDPOINT = '/state';
+    let currentUser = localStorage.getItem('love8_user') || 'Jordan';
+    let lastEventId = Number(localStorage.getItem('love8_last_event') || 0);
 
     let state = JSON.parse(localStorage.getItem('love8_state')) || {
-      currentUser: 'Jordan',
+      updatedAt: Date.now(),
       pingsToday: 32,
+      lastEvent: { id: 0, sender: 'Jordan', title: '', message: '', emoji: '❤️', pattern: [100] },
       jordan: { mood: '😍', text: 'Pense à toi ❤️', loc: '📍 À la maison', bat: 75 },
       lydie: { mood: '😍', text: 'Hâte de te voir 💕', loc: '📍 À la maison', bat: 47 },
       cat: {
         level: 4,
+        xp: 40,
         hunger: 100,
         love: 100,
         energy: 100,
+        lastDecay: Date.now(),
         journal: [
           { text: 'Jordan a donné des croquettes à Douglasse 🐟', time: '19:47' },
           { text: 'Jordan a joué avec Douglasse 🧶', time: '19:47' }
@@ -518,21 +568,71 @@
       "Si on avait une soirée rien que tous les deux ce week-end, quel serait ton programme idéal ?"
     ];
 
-    function saveState() {
+    // Notification Système (Barre de notif + Écran d'accueil)
+    function pushSystemNotification(title, body) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification(title, { body, vibrate: [150, 80, 200] });
+        } catch (e) {}
+      }
+    }
+
+    async function saveState() {
+      state.updatedAt = Date.now();
       localStorage.setItem('love8_state', JSON.stringify(state));
       renderAll();
-      if (WORKER_URL) {
-        fetch(WORKER_URL + '/state', {
+      try {
+        await fetch(API_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(state)
-        }).catch(() => {});
+        });
+        document.getElementById('syncDot').className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block';
+      } catch (e) {
+        document.getElementById('syncDot').className = 'w-2.5 h-2.5 rounded-full bg-amber-500 inline-block';
+      }
+    }
+
+    // Synchronisation automatique toutes les 3 secondes
+    async function pollCloudState() {
+      try {
+        const res = await fetch(API_ENDPOINT);
+        if (!res.ok) return;
+        const remote = await res.json();
+        if (remote && remote.updatedAt && (!state.updatedAt || remote.updatedAt > state.updatedAt)) {
+          state = remote;
+          localStorage.setItem('love8_state', JSON.stringify(state));
+          checkCatDecay();
+          renderAll();
+
+          if (remote.lastEvent && remote.lastEvent.id > lastEventId && remote.lastEvent.sender !== currentUser) {
+            lastEventId = remote.lastEvent.id;
+            localStorage.setItem('love8_last_event', String(lastEventId));
+            spawnParticles(remote.lastEvent.emoji || '❤️', remote.lastEvent.pattern || [120, 80, 180]);
+            triggerBanner(remote.lastEvent.title, remote.lastEvent.message, remote.lastEvent.emoji || '❤️');
+            pushSystemNotification(remote.lastEvent.title, remote.lastEvent.message);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Étape 2 : Baisse naturelle des jauges de Douglasse avec le temps
+    function checkCatDecay() {
+      const now = Date.now();
+      const elapsedMinutes = (now - (state.cat.lastDecay || now)) / 60000;
+      if (elapsedMinutes >= 15) {
+        const steps = Math.floor(elapsedMinutes / 15);
+        state.cat.hunger = Math.max(5, state.cat.hunger - steps * 4);
+        state.cat.love = Math.max(5, state.cat.love - steps * 3);
+        state.cat.energy = Math.min(100, state.cat.energy + steps * 2);
+        state.cat.lastDecay = now;
       }
     }
 
     function switchUser(user) {
-      state.currentUser = user;
-      saveState();
+      currentUser = user;
+      localStorage.setItem('love8_user', user);
+      renderAll();
     }
 
     function showTab(tab) {
@@ -544,9 +644,19 @@
       document.getElementById('nav-' + tab).classList.add('text-pink-600');
     }
 
-    // Pluie d'emojis + Vibration Android
-    function spawnParticles(emoji) {
-      if (navigator.vibrate) navigator.vibrate([90, 60, 180]);
+    function toggleLockscreen(show) {
+      const el = document.getElementById('lockscreenOverlay');
+      if (show) {
+        const now = new Date();
+        document.getElementById('lockTime').innerText = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+      }
+    }
+
+    function spawnParticles(emoji, pattern = [90, 60, 180]) {
+      if (navigator.vibrate) navigator.vibrate(pattern);
       for (let i = 0; i < 22; i++) {
         const el = document.createElement('div');
         el.className = 'heart-particle text-2xl';
@@ -571,39 +681,105 @@
       document.getElementById('liveBanner').classList.add('hidden');
     }
 
-    function sendLovePing(label, emoji) {
+    function sendLovePing(label, emoji, pattern) {
       state.pingsToday += 1;
-      const partner = state.currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
-      spawnParticles(emoji);
-      triggerBanner('VIBRATION D\'AMOUR', `${state.currentUser} → ${partner} : ${label}`, emoji);
+      const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
+      const eventId = Date.now();
+      lastEventId = eventId;
+      localStorage.setItem('love8_last_event', String(eventId));
+      state.lastEvent = {
+        id: eventId,
+        sender: currentUser,
+        title: `⚡ VIBRATION D'AMOUR`,
+        message: `${currentUser} → ${partner} : ${label}`,
+        emoji,
+        pattern
+      };
+      spawnParticles(emoji, pattern);
+      triggerBanner('VIBRATION D\'AMOUR', `${currentUser} → ${partner} : ${label}`, emoji);
       saveState();
     }
 
-    // Douglasse Tamagotchi
     function interactCat(action) {
       const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      const svg = document.getElementById('catSvg');
+      svg.classList.add('cat-excited');
+      setTimeout(() => svg.classList.remove('cat-excited'), 1200);
+
+      let msg = '';
+      let emoji = '🐾';
+
       if (action === 'nourrir') {
-        state.cat.hunger = Math.min(100, state.cat.hunger + 25);
-        state.cat.journal.unshift({ text: `${state.currentUser} a donné des croquettes à Douglasse 🐟`, time: now });
-        document.getElementById('catSpeechBubble').innerText = '« Miam ! Merci pour les croquettes 🐟 »';
-        spawnParticles('🐟');
+        state.cat.hunger = Math.min(100, state.cat.hunger + 30);
+        msg = `${currentUser} a donné des croquettes à Douglasse 🐟`;
+        emoji = '🐟';
       } else if (action === 'caresser') {
-        state.cat.love = Math.min(100, state.cat.love + 25);
-        state.cat.journal.unshift({ text: `${state.currentUser} a câliné Douglasse 💖`, time: now });
-        document.getElementById('catSpeechBubble').innerText = '« Rrrrr... Je ronronne de bonheur 💕 »';
-        spawnParticles('💖');
+        state.cat.love = Math.min(100, state.cat.love + 30);
+        msg = `${currentUser} a câliné Douglasse 💖`;
+        emoji = '💖';
       } else if (action === 'jouer') {
-        state.cat.love = Math.min(100, state.cat.love + 15);
-        state.cat.energy = Math.max(10, state.cat.energy - 10);
-        state.cat.journal.unshift({ text: `${state.currentUser} a joué avec Douglasse 🧶`, time: now });
-        document.getElementById('catSpeechBubble').innerText = '« Trop bien la pelote de laine ! 🧶 »';
-        spawnParticles('🧶');
+        state.cat.love = Math.min(100, state.cat.love + 25);
+        state.cat.energy = Math.max(10, state.cat.energy - 15);
+        msg = `${currentUser} a joué avec Douglasse 🧶`;
+        emoji = '🧶';
       }
+
+      // Gain d'XP et passage de niveau
+      state.cat.xp = (state.cat.xp || 0) + 15;
+      if (state.cat.xp >= 100) {
+        state.cat.level += 1;
+        state.cat.xp = state.cat.xp - 100;
+      }
+
+      state.cat.journal.unshift({ text: msg, time: now });
       state.cat.journal = state.cat.journal.slice(0, 6);
+
+      const eventId = Date.now();
+      lastEventId = eventId;
+      state.lastEvent = {
+        id: eventId,
+        sender: currentUser,
+        title: '🐱 DOUGLASSE',
+        message: msg,
+        emoji,
+        pattern: [80, 50, 120]
+      };
+
+      spawnParticles(emoji);
       saveState();
     }
 
-    // Calculateur de jours depuis le 12 décembre 2019
+    // Simuler une alerte "J'ai faim" ou "Je veux jouer" sur l'écran de verrouillage et en notification
+    function triggerCatNeed(type) {
+      const eventId = Date.now();
+      lastEventId = eventId;
+      if (type === 'faim') {
+        state.cat.hunger = 25;
+        state.lastEvent = {
+          id: eventId,
+          sender: currentUser,
+          title: '🐱 Douglasse a faim !',
+          message: '« Miaou ! Mon ventre gargouille, donne-moi des croquettes 🐟 »',
+          emoji: '🐟',
+          pattern: [200, 100, 200]
+        };
+      } else {
+        state.cat.love = 30;
+        state.lastEvent = {
+          id: eventId,
+          sender: currentUser,
+          title: '🐱 Douglasse veut jouer !',
+          message: '« Je m\'ennuie... Qui lance la pelote de laine ? 🧶 »',
+          emoji: '🧶',
+          pattern: [150, 80, 150]
+        };
+      }
+      triggerBanner(state.lastEvent.title, state.lastEvent.message, state.lastEvent.emoji);
+      pushSystemNotification(state.lastEvent.title, state.lastEvent.message);
+      saveState();
+      toggleLockscreen(true);
+    }
+
     function updateCoupleTimer() {
       const start = new Date('2019-12-12T00:00:00');
       const diffMs = Date.now() - start.getTime();
@@ -619,20 +795,22 @@
       document.getElementById('statHours').innerText = hours;
     }
 
-    // Batterie native
-    async function refreshBatteryAndGPS() {
+    async function refreshBatteryAndNotifications() {
+      if ('Notification' in window) {
+        await Notification.requestPermission();
+      }
       if (navigator.getBattery) {
         const bat = await navigator.getBattery();
         const level = Math.round(bat.level * 100);
-        const key = state.currentUser.toLowerCase();
+        const key = currentUser.toLowerCase();
         state[key].bat = level;
       }
-      triggerBanner('STATUT MIS À JOUR', `Batterie et localisation synchronisées pour ${state.currentUser}`, '🔋');
+      triggerBanner('NOTIFICATIONS & BATTERIE', `Alertes activées et batterie synchronisée pour ${currentUser}`, '🔔');
       saveState();
     }
 
     function promptMoodChange() {
-      const key = state.currentUser.toLowerCase();
+      const key = currentUser.toLowerCase();
       const newText = prompt('Ton message d\'humeur :', state[key].text);
       if (newText) state[key].text = newText;
       const newLoc = prompt('Ta localisation actuelle (ex: 📍 Au travail, 📍 À la maison) :', state[key].loc);
@@ -640,7 +818,7 @@
       saveState();
     }
 
-    // Canvas de dessin
+    // Canvas
     const canvas = document.getElementById('drawCanvas');
     const ctx = canvas.getContext('2d');
     let drawing = false;
@@ -706,12 +884,25 @@
       const dataUrl = canvas.toDataURL('image/png');
       const note = document.getElementById('sweetNoteInput').value.trim() || 'Mot doux pour toi ❤️';
       const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-      state.latestDrawing = { dataUrl, caption: `« ${note} »`, author: state.currentUser, time: now };
+      const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
+      state.latestDrawing = { dataUrl, caption: `« ${note} »`, author: currentUser, time: now };
       state.gallery.unshift(state.latestDrawing);
       state.gallery = state.gallery.slice(0, 6);
+
+      const eventId = Date.now();
+      lastEventId = eventId;
+      state.lastEvent = {
+        id: eventId,
+        sender: currentUser,
+        title: `🖌️ Nouveau dessin de ${currentUser}`,
+        message: note,
+        emoji: '🎨',
+        pattern: [100, 60, 200]
+      };
+
       document.getElementById('sweetNoteInput').value = '';
       spawnParticles('🎨');
-      triggerBanner('WIDGET MIS À JOUR', `Dessin envoyé sur l'écran de verrouillage !`, '🖌️');
+      triggerBanner('WIDGET MIS À JOUR', `Dessin envoyé sur l'écran de ${partner} !`, '🖌️');
       saveState();
       showTab('nous');
     }
@@ -724,7 +915,7 @@
     function saveDailyAnswer() {
       const val = document.getElementById('questionInput').value.trim();
       if (!val) return;
-      state.answers[state.currentUser] = val;
+      state.answers[currentUser] = val;
       document.getElementById('questionInput').value = '';
       spawnParticles('💬');
       saveState();
@@ -743,16 +934,8 @@
       saveState();
     }
 
-    function openSettingsModal() {
-      const url = prompt('URL de ton Cloudflare Worker (optionnel pour synchronisation distante) :', WORKER_URL);
-      if (url !== null) {
-        localStorage.setItem('love8_worker_url', url.trim());
-        location.reload();
-      }
-    }
-
     function renderAll() {
-      const isJordan = state.currentUser === 'Jordan';
+      const isJordan = currentUser === 'Jordan';
       const partner = isJordan ? 'Lydie' : 'Jordan';
       document.getElementById('btnJordan').className = isJordan
         ? 'px-3 py-1.5 rounded-full gradient-card text-white shadow transition-all flex items-center gap-1'
@@ -766,7 +949,6 @@
       document.getElementById('sendTargetName').innerText = partner;
       document.getElementById('pingCounter').innerText = state.pingsToday;
 
-      // Statuts
       document.getElementById('jordanStatusText').innerText = state.jordan.text;
       document.getElementById('jordanLocText').innerText = state.jordan.loc;
       document.getElementById('jordanBat').innerText = `🔋 ${state.jordan.bat}%`;
@@ -774,16 +956,19 @@
       document.getElementById('lydieLocText').innerText = state.lydie.loc;
       document.getElementById('lydieBat').innerText = `🔋 ${state.lydie.bat}%`;
 
-      // Aperçu Dessin
       if (state.latestDrawing.dataUrl) {
         document.getElementById('dashboardDrawingPreview').src = state.latestDrawing.dataUrl;
         document.getElementById('dashboardDrawingPreview').classList.remove('hidden');
         document.getElementById('defaultDrawingPlaceholder').classList.add('hidden');
+        document.getElementById('lockDrawingImg').src = state.latestDrawing.dataUrl;
+        document.getElementById('lockDrawingImg').classList.remove('hidden');
+        document.getElementById('lockDrawingFallback').classList.add('hidden');
       }
       document.getElementById('dashboardNoteCaption').innerText = state.latestDrawing.caption;
       document.getElementById('widgetMeta').innerText = `Dessiné par ${state.latestDrawing.author} • À ${state.latestDrawing.time}`;
+      document.getElementById('lockDrawingCaption').innerText = state.latestDrawing.caption;
+      document.getElementById('lockDrawingMeta').innerText = `Dessiné par ${state.latestDrawing.author} • À ${state.latestDrawing.time}`;
 
-      // Galerie
       const gal = document.getElementById('drawingsGallery');
       gal.innerHTML = state.gallery.map(item => `
         <div class="border border-pink-100 rounded-2xl p-2 bg-pink-50/20 text-center">
@@ -792,9 +977,32 @@
         </div>
       `).join('');
 
-      // Douglasse
+      // État dynamique de Douglasse (Bulles J'ai faim / Je veux jouer)
+      let speech = '« Rrrrr... Je ronronne de bonheur 💕 »';
+      let badge = 'Ronronne 🐾';
+      let mouthPath = 'M93 95 Q100 101 107 95';
+
+      if (state.cat.hunger <= 40) {
+        speech = '« Miaou ! J\'ai faim, donne-moi des croquettes 🐟 »';
+        badge = 'J\'ai faim 🐟';
+        mouthPath = 'M93 99 Q100 92 107 99';
+      } else if (state.cat.love <= 40) {
+        speech = '« Je veux jouer ! Lance-moi la pelote 🧶 »';
+        badge = 'Veut jouer 🧶';
+        mouthPath = 'M93 99 Q100 92 107 99';
+      }
+
+      document.getElementById('catSpeechBubble').innerText = speech;
+      document.getElementById('lockCatSpeech').innerText = speech;
+      document.getElementById('miniCatBadge').innerText = badge;
+      document.getElementById('catMoodPill').innerText = badge;
+      document.getElementById('catMouth').setAttribute('d', mouthPath);
+
+      document.getElementById('catLevel').innerText = state.cat.level || 4;
+      document.getElementById('catXp').innerText = state.cat.xp || 40;
       document.getElementById('miniHunger').innerText = state.cat.hunger + '%';
       document.getElementById('miniLove').innerText = state.cat.love + '%';
+      document.getElementById('lockCatStats').innerText = `🍖 ${state.cat.hunger}% • 💖 ${state.cat.love}%`;
       document.getElementById('barHunger').style.width = state.cat.hunger + '%';
       document.getElementById('barHungerLabel').innerText = state.cat.hunger + '%';
       document.getElementById('barLove').style.width = state.cat.love + '%';
@@ -809,7 +1017,6 @@
         </div>
       `).join('');
 
-      // Questions & Projets
       document.getElementById('dailyQuestionText').innerText = questionsPool[state.questionIndex];
       document.getElementById('ansJordan').innerText = state.answers.Jordan;
       document.getElementById('ansLydie').innerText = state.answers.Lydie;
@@ -822,8 +1029,11 @@
       `).join('');
     }
 
+    checkCatDecay();
     updateCoupleTimer();
     renderAll();
+    pollCloudState();
+    setInterval(pollCloudState, 3000);
   </script>
 </body>
 </html>
