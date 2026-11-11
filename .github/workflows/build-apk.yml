@@ -49,23 +49,25 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: 🔒 Ajout propre des permissions et service d'arrière-plan
+      - name: 🔒 Injection Propre AndroidManifest & Services (Python)
         run: |
-          MANIFEST="android/app/src/main/AndroidManifest.xml"
-          sed -i 's/android:name=".MainActivity"/android:name=".MainActivity" android:showWhenLocked="true" android:turnScreenOn="true" android:launchMode="singleTask"/' "$MANIFEST"
-
           python3 -c '
-          with open("android/app/src/main/AndroidManifest.xml", "r") as f:
+          manifest_path = "android/app/src/main/AndroidManifest.xml"
+          with open(manifest_path, "r") as f:
               content = f.read()
 
           perms = """
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+              <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+              <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
               <uses-permission android:name="android.permission.VIBRATE" />
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
               <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
               <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
               <uses-permission android:name="android.permission.WAKE_LOCK" />
+              <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+              <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
               <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
@@ -78,14 +80,25 @@ jobs:
                   android:enabled="true"
                   android:exported="false"
                   android:foregroundServiceType="specialUse" />
-          </application>
           """
 
-          content = content.replace("<application", perms + "\n    <application")
-          content = content.replace("</application>", service_tag)
+          # Insère les permissions avant <application>
+          if "<application" in content and "FOREGROUND_SERVICE" not in content:
+              content = content.replace("<application", perms + "\n    <application")
 
-          with open("android/app/src/main/AndroidManifest.xml", "w") as f:
+          # Active showWhenLocked sur MainActivity
+          content = content.replace(
+              "android:name=\".MainActivity\"",
+              "android:name=\".MainActivity\" android:showWhenLocked=\"true\" android:turnScreenOn=\"true\" android:launchMode=\"singleTask\""
+          )
+
+          # Insère le service avant </application>
+          if "Love8Service" not in content:
+              content = content.replace("</application>", service_tag + "\n    </application>")
+
+          with open(manifest_path, "w") as f:
               f.write(content)
+          print("Manifest mis à jour avec succès.")
           '
 
           cat << 'EOF' > android/app/src/main/java/com/love8/app/Love8Service.java
@@ -103,6 +116,7 @@ jobs:
           import android.media.AudioAttributes;
           import android.media.RingtoneManager;
           import android.net.Uri;
+          import android.net.wifi.WifiManager;
           import android.os.Build;
           import android.os.Handler;
           import android.os.IBinder;
@@ -117,11 +131,12 @@ jobs:
           import java.net.URL;
 
           public class Love8Service extends Service {
-              private static final String CHANNEL_BG = "love8_bg_v6";
-              private static final String CHANNEL_ALERTS = "love8_alerts_v6";
+              private static final String CHANNEL_BG = "love8_bg_service_v5";
+              private static final String CHANNEL_ALERTS = "love8_alerts_v5";
               private Handler handler = new Handler(Looper.getMainLooper());
               private Runnable poller;
-              private PowerManager.WakeLock wakeLock;
+              private PowerManager.WakeLock cpuWakeLock;
+              private WifiManager.WifiLock wifiLock;
 
               @Override
               public void onCreate() {
@@ -130,9 +145,19 @@ jobs:
 
                   PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
                   if (pm != null) {
-                      wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "love8:keepAlive");
-                      wakeLock.setReferenceCounted(false);
-                      wakeLock.acquire();
+                      cpuWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "love8:cpuKeepAlive");
+                      cpuWakeLock.setReferenceCounted(false);
+                      cpuWakeLock.acquire();
+                  }
+
+                  WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                  if (wm != null) {
+                      int lockType = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+                          ? WifiManager.WIFI_MODE_FULL_LOW_LATENCY
+                          : WifiManager.WIFI_MODE_FULL_HIGH_PERF;
+                      wifiLock = wm.createWifiLock(lockType, "love8:wifiKeepAlive");
+                      wifiLock.setReferenceCounted(false);
+                      wifiLock.acquire();
                   }
 
                   Notification.Builder builder = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
@@ -140,8 +165,8 @@ jobs:
                       : new Notification.Builder(this);
 
                   Notification bgNotif = builder
-                      .setContentTitle("Love8 Connecté ⚡")
-                      .setContentText("Veille active Jordan & Lydie")
+                      .setContentTitle("Love8 Temps Réel Actif ⚡")
+                      .setContentText("Connexion Internet maintenue en veille")
                       .setSmallIcon(android.R.drawable.ic_dialog_info)
                       .setOngoing(true)
                       .build();
@@ -165,9 +190,9 @@ jobs:
                           .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
                           .build();
 
-                      NotificationChannel alerts = new NotificationChannel(CHANNEL_ALERTS, "Vibrations & Alertes Love8", NotificationManager.IMPORTANCE_HIGH);
+                      NotificationChannel alerts = new NotificationChannel(CHANNEL_ALERTS, "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
                       alerts.enableVibration(true);
-                      alerts.setVibrationPattern(new long[]{0, 300, 100, 500});
+                      alerts.setVibrationPattern(new long[]{0, 300, 100, 450});
                       alerts.setSound(soundUri, attrs);
                       alerts.setBypassDnd(true);
                       alerts.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
@@ -185,7 +210,7 @@ jobs:
                                   checkCloudState();
                               }
                           }).start();
-                          handler.postDelayed(this, 1500);
+                          handler.postDelayed(this, 2000);
                       }
                   };
                   handler.post(poller);
@@ -196,6 +221,7 @@ jobs:
                       URL url = new URL("https://love8-apps.pages.dev/state?t=" + System.currentTimeMillis());
                       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                       conn.setUseCaches(false);
+                      conn.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
                       conn.setConnectTimeout(2500);
                       conn.setReadTimeout(2500);
 
@@ -243,15 +269,15 @@ jobs:
                                       PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE,
                                       "love8:screenWake"
                                   );
-                                  screenLock.acquire(10000);
+                                  screenLock.acquire(8000);
                               }
 
                               Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                               if (v != null) {
                                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                      v.vibrate(VibrationEffect.createWaveform(new long[]{0, 300, 100, 500}, -1));
+                                      v.vibrate(VibrationEffect.createWaveform(new long[]{0, 300, 100, 450}, -1));
                                   } else {
-                                      v.vibrate(800);
+                                      v.vibrate(700);
                                   }
                               }
 
@@ -304,7 +330,8 @@ jobs:
 
               @Override
               public void onDestroy() {
-                  if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
+                  if (cpuWakeLock != null && cpuWakeLock.isHeld()) cpuWakeLock.release();
+                  if (wifiLock != null && wifiLock.isHeld()) wifiLock.release();
                   super.onDestroy();
               }
 
@@ -315,13 +342,182 @@ jobs:
           }
           EOF
 
+          cat << 'EOF' > android/app/src/main/java/com/love8/app/MainActivity.java
+          package com.love8.app;
+
+          import android.Manifest;
+          import android.app.KeyguardManager;
+          import android.app.Notification;
+          import android.app.NotificationChannel;
+          import android.app.NotificationManager;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
+          import android.net.Uri;
+          import android.os.Build;
+          import android.os.Bundle;
+          import android.os.PowerManager;
+          import android.os.VibrationEffect;
+          import android.os.Vibrator;
+          import android.provider.Settings;
+          import android.view.WindowManager;
+          import android.webkit.JavascriptInterface;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                      setShowWhenLocked(true);
+                      setTurnScreenOn(true);
+                  }
+                  getWindow().addFlags(
+                      WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                      WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
+                      WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
+                      WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+                  );
+
+                  if (Build.VERSION.SDK_INT >= 23) {
+                      requestPermissions(new String[]{
+                          Manifest.permission.POST_NOTIFICATIONS,
+                          Manifest.permission.ACCESS_FINE_LOCATION,
+                          Manifest.permission.ACCESS_COARSE_LOCATION
+                      }, 101);
+
+                      PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                      if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
+                          try {
+                              Intent ig = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                              ig.setData(Uri.parse("package:" + getPackageName()));
+                              startActivity(ig);
+                          } catch (Exception ignored) {}
+                      }
+
+                      if (!Settings.canDrawOverlays(this)) {
+                          try {
+                              Intent ov = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+                              startActivity(ov);
+                          } catch (Exception ignored) {}
+                      }
+                  }
+
+                  Intent svc = new Intent(this, Love8Service.class);
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                      startForegroundService(svc);
+                  } else {
+                      startService(svc);
+                  }
+
+                  this.bridge.getWebView().addJavascriptInterface(new WebAppBridge(this), "AndroidNative");
+                  handleWakeIntent(getIntent());
+              }
+
+              @Override
+              protected void onNewIntent(Intent intent) {
+                  super.onNewIntent(intent);
+                  setIntent(intent);
+                  handleWakeIntent(intent);
+              }
+
+              private void handleWakeIntent(Intent intent) {
+                  if (intent != null && intent.getBooleanExtra("lock_alert", false)) {
+                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                          setShowWhenLocked(true);
+                          setTurnScreenOn(true);
+                      }
+                      String emoji = intent.getStringExtra("emoji");
+                      String title = intent.getStringExtra("title");
+                      String msg = intent.getStringExtra("message");
+                      if (emoji == null) emoji = "❤️";
+                      if (title == null) title = "Love8";
+                      if (msg == null) msg = "Vibration reçue !";
+
+                      final String safeEmoji = emoji.replace("'", "\\'");
+                      final String safeTitle = title.replace("'", "\\'");
+                      final String safeMsg = msg.replace("'", "\\'");
+
+                      this.bridge.getWebView().postDelayed(new Runnable() {
+                          @Override
+                          public void run() {
+                              MainActivity.this.bridge.getWebView().evaluateJavascript(
+                                  "if(window.onNativeWakeAlert) window.onNativeWakeAlert('" + safeEmoji + "','" + safeTitle + "','" + safeMsg + "');", null
+                              );
+                          }
+                      }, 400);
+                  }
+              }
+
+              public class WebAppBridge {
+                  Context ctx;
+                  WebAppBridge(Context c) { this.ctx = c; }
+
+                  @JavascriptInterface
+                  public void setUser(String user) {
+                      SharedPreferences prefs = ctx.getSharedPreferences("love8_native", MODE_PRIVATE);
+                      prefs.edit().putString("current_user", user).apply();
+                  }
+
+                  @JavascriptInterface
+                  public void vibrateDevice(String csvPattern) {
+                      try {
+                          String[] parts = csvPattern.split(",");
+                          long[] timings = new long[parts.length + 1];
+                          timings[0] = 0;
+                          for (int i = 0; i < parts.length; i++) {
+                              timings[i + 1] = Long.parseLong(parts[i].trim());
+                          }
+                          Vibrator v = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
+                          if (v != null) {
+                              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                  v.vibrate(VibrationEffect.createWaveform(timings, -1));
+                              } else {
+                                  v.vibrate(350);
+                              }
+                          }
+                      } catch (Exception ignored) {}
+                  }
+
+                  @JavascriptInterface
+                  public void showSystemNotification(String title, String message) {
+                      NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+                      Notification.Builder b;
+                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                          NotificationChannel ch = new NotificationChannel("love8_alerts_v5", "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
+                          ch.enableVibration(true);
+                          nm.createNotificationChannel(ch);
+                          b = new Notification.Builder(ctx, "love8_alerts_v5");
+                      } else {
+                          b = new Notification.Builder(ctx);
+                      }
+                      b.setSmallIcon(android.R.drawable.ic_dialog_email)
+                       .setContentTitle(title)
+                       .setContentText(message)
+                       .setAutoCancel(true);
+                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                          b.setVisibility(Notification.VISIBILITY_PUBLIC);
+                      }
+                      nm.notify((int) (System.currentTimeMillis() % 10000), b.build());
+                  }
+
+                  @JavascriptInterface
+                  public boolean isDeviceLocked() {
+                      KeyguardManager km = (KeyguardManager) ctx.getSystemService(Context.KEYGUARD_SERVICE);
+                      return km != null && km.isKeyguardLocked();
+                  }
+              }
+          }
+          EOF
+
       - name: 🔨 Compilation de l'APK via Gradle
         working-directory: ./android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
-      - name: 📤 Publication de l'APK (Artifact)
+      - name: 📤 Publication de l'APK
         uses: actions/upload-artifact@v4
         with:
           name: Love8-Jordan-Lydie-APK
