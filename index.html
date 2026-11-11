@@ -32,68 +32,74 @@
     }
     @keyframes jumpCat {
       0%, 100% { transform: translateY(0px) scale(1); }
-      50% { transform: translateY(-14px) scale(1.05); }
-    }
-    .tail-wag {
-      transform-origin: 140px 145px;
-      animation: wag 2s ease-in-out infinite;
-    }
-    @keyframes wag {
-      0%, 100% { transform: rotate(0deg); }
-      50% { transform: rotate(16deg); }
-    }
-    .eye-blink {
-      transform-origin: center;
-      animation: blink 4s infinite;
-    }
-    @keyframes blink {
-      0%, 94%, 98%, 100% { transform: scaleY(1); }
-      96% { transform: scaleY(0.1); }
+      50% { transform: translateY(-14px) scale(1.06); }
     }
     .heart-particle {
       position: fixed;
       pointer-events: none;
       z-index: 9999;
-      animation: fallDown 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      animation: fallDown 2.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
     }
     @keyframes fallDown {
-      0% { transform: translateY(-10vh) scale(0.6) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(105vh) scale(1.3) rotate(360deg); opacity: 0; }
+      0% { transform: translateY(-10vh) scale(0.5) rotate(0deg); opacity: 1; }
+      50% { opacity: 1; }
+      100% { transform: translateY(105vh) scale(1.4) rotate(360deg); opacity: 0; }
+    }
+    .lock-center-anim {
+      animation: popLockBurst 1.8s cubic-bezier(0.17, 0.89, 0.32, 1.28) forwards;
+    }
+    @keyframes popLockBurst {
+      0% { transform: scale(0.2) rotate(-15deg); opacity: 0; }
+      35% { transform: scale(1.35) rotate(8deg); opacity: 1; }
+      65% { transform: scale(1.1) rotate(-5deg); opacity: 1; }
+      100% { transform: scale(1.6) rotate(0deg); opacity: 0; }
     }
     .pulse-ring {
-      animation: pulseRing 2s infinite;
+      animation: pulseRing 1.8s infinite;
     }
     @keyframes pulseRing {
-      0% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.5); }
-      70% { box-shadow: 0 0 0 12px rgba(236, 72, 153, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.6); }
+      70% { box-shadow: 0 0 0 14px rgba(236, 72, 153, 0); }
       100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0); }
     }
   </style>
 </head>
 <body class="min-h-screen pb-24 text-slate-800">
 
-  <!-- ==================== ÉCRAN DE VERROUILLAGE (SELON VISUEL qqqqqqqqqqqq.png) ==================== -->
-  <div id="lockscreenOverlay" class="fixed inset-0 z-50 hidden bg-[#0c0d14] text-white flex flex-col justify-between p-4">
-    
-    <!-- BARRE SUPÉRIEURE : CADRE ROUGE (JOURS) + CENTRE (COMPTEUR SÉPARATION GPS) + CADRE VERT (4 VIBRATIONS) -->
+  <!-- INPUTS FICHIERS CACHÉS POUR PHOTOS PROFIL, DOUGLASSE ET CANVAS -->
+  <input id="fileInputAvatar" type="file" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)" />
+  <input id="fileInputCat" type="file" accept="image/*" class="hidden" onchange="handleCatPhotoUpload(event)" />
+  <input id="fileInputCanvas" type="file" accept="image/*" class="hidden" onchange="handleCanvasImageUpload(event)" />
+
+  <!-- ==================== ÉCRAN DE VERROUILLAGE INTERACTIF ==================== -->
+  <div id="lockscreenOverlay" class="fixed inset-0 z-50 hidden bg-[#0c0d14] text-white flex flex-col justify-between p-4 overflow-hidden">
+
+    <!-- ANIMATION GÉANTE CENTRALE SUR L'ÉCRAN DE VERROUILLAGE LORS D'UN PING / COEUR -->
+    <div id="lockGiantBurst" class="fixed inset-0 pointer-events-none z-50 hidden flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div id="lockGiantEmoji" class="text-[110px] lock-center-anim filter drop-shadow-[0_0_35px_rgba(236,72,153,0.9)]">❤️</div>
+      <p id="lockGiantLabel" class="text-xl font-extrabold text-pink-200 tracking-wide mt-2 bg-black/60 px-5 py-2 rounded-full border border-pink-400/40 shadow-2xl">
+        Jordan t'envoie un cœur !
+      </p>
+    </div>
+
+    <!-- HAUT : CADRE ROUGE (JOURS) + CENTRE (COMPTEUR SÉPARATION GPS) + CADRE VERT (4 VIBRATIONS) -->
     <div class="mt-2">
       <div class="grid grid-cols-3 items-center gap-2">
-        
-        <!-- Cadre Rouge : Jours depuis le début de la relation -->
-        <div class="bg-rose-500/15 border border-rose-400/30 rounded-2xl p-2.5 text-center">
+        <!-- Cadre Rouge : Jours de relation -->
+        <div class="bg-rose-500/15 border border-rose-400/35 rounded-2xl p-2.5 text-center">
           <p class="text-[9px] uppercase tracking-wider text-rose-300 font-bold">Notre Relation</p>
           <p class="text-lg font-extrabold text-white leading-tight mt-0.5"><span id="lockRelationDays">2525</span>j ❤️</p>
           <p class="text-[9px] text-rose-200/80">Depuis 12/12/19</p>
         </div>
 
-        <!-- Centre : Compteur de séparation basé sur GPS -->
-        <div class="text-center">
+        <!-- Centre : Compteur de séparation GPS corrigé -->
+        <div onclick="resetTogetherNow()" class="text-center cursor-pointer active:scale-95 transition" title="Toucher si vous êtes ensemble">
           <p id="lockSepTimer" class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">00:00</p>
-          <p id="lockSepStatus" class="text-[9px] text-pink-300 font-bold uppercase tracking-wider mt-0.5">📍 Ensemble (0m)</p>
+          <p id="lockSepStatus" class="text-[9px] text-emerald-300 font-bold uppercase tracking-wider mt-0.5">📍 Ensemble (0m)</p>
         </div>
 
-        <!-- Cadre Vert : Compteur des 4 vibrations d'amour -->
-        <div class="bg-emerald-500/15 border border-emerald-400/30 rounded-2xl p-2 text-center">
+        <!-- Cadre Vert : Compteur des 4 vibrations -->
+        <div class="bg-emerald-500/15 border border-emerald-400/35 rounded-2xl p-2 text-center">
           <p class="text-[9px] uppercase tracking-wider text-emerald-300 font-bold mb-1">4 Vibrations</p>
           <div class="grid grid-cols-2 gap-1 text-[11px] font-extrabold text-white">
             <span class="bg-white/10 rounded-lg py-0.5">💌 <span id="lockCountEnv">0</span></span>
@@ -102,18 +108,17 @@
             <span class="bg-white/10 rounded-lg py-0.5">🌶️ <span id="lockCountChili">0</span></span>
           </div>
         </div>
-
       </div>
       <p class="text-center text-[10px] text-pink-300/80 font-bold uppercase tracking-widest mt-2">
         ÉCRAN DE VERROUILLAGE LOVE8
       </p>
     </div>
 
-    <!-- GRAND CADRE CENTRAL : DESSIN AGRANDI (COMME SUR qqqqqqqqqqqq.png) -->
+    <!-- GRAND CADRE CENTRAL : DESSIN AGRANDI -->
     <div class="flex-1 my-3 bg-[#181924] border border-white/10 rounded-3xl p-3.5 flex flex-col justify-between overflow-hidden shadow-2xl">
       <p id="lockDrawingMeta" class="text-xs text-slate-300 text-center font-medium">Dessiné par Jordan • À 21:22</p>
       
-      <div class="flex-1 my-2 bg-white rounded-2xl p-3 flex items-center justify-center overflow-hidden">
+      <div class="flex-1 my-2 bg-white rounded-2xl p-2 flex items-center justify-center overflow-hidden">
         <img id="lockDrawingImg" src="" class="w-full h-full object-contain hidden" />
         <p id="lockDrawingFallback" class="text-3xl font-extrabold text-pink-500 italic">Je t'aime ❤️</p>
       </div>
@@ -124,7 +129,10 @@
     <!-- BAS : CARTE DOUGLASSE EN DIRECT + BOUTON DÉVERROUILLER -->
     <div class="space-y-2.5">
       <div class="bg-[#181924] border border-white/10 rounded-3xl p-3.5 flex items-center gap-3.5">
-        <div class="text-4xl cat-bounce">🐱</div>
+        <div onclick="triggerCatPhotoUpload()" class="relative w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center overflow-hidden shrink-0 cat-bounce cursor-pointer">
+          <img id="lockCatPhoto" src="" class="w-full h-full object-cover hidden" />
+          <span id="lockCatEmoji" class="text-3xl">🐱</span>
+        </div>
         <div class="flex-1">
           <div class="flex items-center justify-between">
             <span class="text-[11px] font-extrabold uppercase tracking-wider text-amber-400">DOUGLASSE EN DIRECT</span>
@@ -168,7 +176,7 @@
           <h1 class="font-extrabold text-lg text-purple-900 leading-none">Love8</h1>
           <span id="syncDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" title="Synchronisé"></span>
         </div>
-        <p id="syncStatusText" class="text-[11px] text-slate-500 font-medium">Espace privé à deux</p>
+        <p id="syncStatusText" class="text-[11px] text-slate-500 font-medium">Auto-Sync 5m actif</p>
       </div>
     </div>
 
@@ -182,7 +190,6 @@
       </button>
     </div>
 
-    <!-- BOUTON APERÇU VERROUILLAGE -->
     <button onclick="toggleLockscreen(true)" class="px-2.5 py-1.5 rounded-full bg-purple-100 border border-purple-200 text-[10px] font-extrabold text-purple-800">
       🔒 Écran
     </button>
@@ -191,23 +198,25 @@
   <!-- CONTENEUR PRINCIPAL -->
   <main class="max-w-md mx-auto px-4 pt-3 space-y-4">
 
-    <!-- ==================== ONGLET 1 : NOUS ==================== -->
+    <!-- ==================== ONGLET 1 : NOUS (SANS WIDGET DESSIN) ==================== -->
     <section id="tab-nous" class="space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80">
         <div class="flex justify-between items-center mb-3">
           <button onclick="showTab('souvenirs')" class="bg-pink-50 hover:bg-pink-100 text-purple-800 text-xs font-bold px-3.5 py-1.5 rounded-full transition flex items-center gap-1">
             Ensemble depuis <span id="daysBadgeTop">2525</span> jours ›
           </button>
-          <span id="topSepBadge" class="bg-purple-50 text-purple-700 text-[11px] font-bold px-3 py-1 rounded-full">
-            ⏱️ Séparés : <span id="topSepTimer">00:00</span>
-          </span>
+          <button onclick="resetTogetherNow()" id="topSepBadge" class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold px-3 py-1 rounded-full active:scale-95 transition">
+            📍 <span id="topSepTimer">Ensemble (0m)</span>
+          </button>
         </div>
 
         <div class="grid grid-cols-3 items-center text-center">
+          <!-- Avatar Jordan avec upload photo -->
           <div class="flex flex-col items-center">
-            <div class="relative w-20 h-20 rounded-full border-2 border-purple-500 p-1 flex items-center justify-center bg-purple-50/40">
-              <span class="text-4xl">🧔🏻‍♂️</span>
-              <span id="jordanMoodEmoji" class="absolute -top-1 -right-1 bg-white rounded-full p-1 text-sm shadow">😍</span>
+            <div onclick="triggerAvatarUpload('jordan')" class="relative w-20 h-20 rounded-full border-2 border-purple-500 p-0.5 flex items-center justify-center bg-purple-50/40 cursor-pointer overflow-hidden shadow-sm">
+              <img id="jordanAvatarImg" src="" class="w-full h-full rounded-full object-cover hidden" />
+              <span id="jordanAvatarEmoji" class="text-4xl">🧔🏻‍♂️</span>
+              <span class="absolute bottom-0 right-0 bg-purple-600 text-white rounded-full w-5 h-5 text-[10px] flex items-center justify-center shadow">📷</span>
             </div>
             <span id="jordanBat" class="mt-2 bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">🔋 61%</span>
             <h3 class="font-extrabold text-sm mt-1">Jordan</h3>
@@ -215,19 +224,26 @@
             <span id="jordanLocText" class="mt-1 bg-purple-50 text-purple-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">📍 À la maison</span>
           </div>
 
+          <!-- COEUR CENTRAL INTERACTIF : ENVOIE UN COEUR SUR L'ÉCRAN DE VERROUILLAGE À CHAQUE TOUCHER -->
           <div class="flex flex-col items-center justify-center">
             <div class="w-full flex items-center justify-center">
-              <div class="h-[2px] w-6 bg-pink-200"></div>
-              <div class="w-11 h-11 rounded-full gradient-card flex items-center justify-center text-white shadow-md pulse-ring">🤍</div>
-              <div class="h-[2px] w-6 bg-pink-200"></div>
+              <div class="h-[2px] w-5 bg-pink-200"></div>
+              <button onclick="sendCenterHeartLockscreen()" class="w-14 h-14 rounded-full gradient-card flex items-center justify-center text-white text-2xl shadow-lg pulse-ring active:scale-75 transition transform cursor-pointer" title="Toucher pour envoyer un cœur sur l'écran verrouillé">
+                ❤️
+              </button>
+              <div class="h-[2px] w-5 bg-pink-200"></div>
             </div>
-            <span id="distanceBadge" class="mt-2 bg-pink-50 text-pink-600 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-pink-200">Connectés ❤️</span>
+            <span class="mt-2 bg-pink-50 text-pink-600 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-pink-200">
+              Toucher = ❤️ Lock
+            </span>
           </div>
 
+          <!-- Avatar Lydie avec upload photo -->
           <div class="flex flex-col items-center">
-            <div class="relative w-20 h-20 rounded-full border-2 border-pink-500 p-1 flex items-center justify-center bg-pink-50/40">
-              <span class="text-4xl">👩🏻</span>
-              <span id="lydieMoodEmoji" class="absolute -top-1 -right-1 bg-white rounded-full p-1 text-sm shadow">😍</span>
+            <div onclick="triggerAvatarUpload('lydie')" class="relative w-20 h-20 rounded-full border-2 border-pink-500 p-0.5 flex items-center justify-center bg-pink-50/40 cursor-pointer overflow-hidden shadow-sm">
+              <img id="lydieAvatarImg" src="" class="w-full h-full rounded-full object-cover hidden" />
+              <span id="lydieAvatarEmoji" class="text-4xl">👩🏻</span>
+              <span class="absolute bottom-0 right-0 bg-pink-600 text-white rounded-full w-5 h-5 text-[10px] flex items-center justify-center shadow">📷</span>
             </div>
             <span id="lydieBat" class="mt-2 bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">🔋 47%</span>
             <h3 class="font-extrabold text-sm mt-1">Lydie</h3>
@@ -238,89 +254,66 @@
 
         <div class="mt-4 pt-3 border-t border-slate-100 flex gap-2">
           <button onclick="promptMoodChange()" class="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold py-2.5 rounded-2xl border border-slate-200/80 transition">
-            😊 Changer mon humeur / lieu
+            😊 Humeur / Lieu
           </button>
-          <button onclick="refreshBatteryAndGPS()" class="bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold px-3.5 py-2.5 rounded-2xl border border-purple-200 transition">
-            🔔 Activer Notifs / GPS
+          <button onclick="refreshBatteryAndGPS(true)" class="bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold px-3.5 py-2.5 rounded-2xl border border-purple-200 transition">
+            🔔 Activer Notifs / GPS (Auto 5m)
           </button>
         </div>
       </div>
 
-      <!-- ==================== CARTE VIBRATION D'AMOUR (SELON VISUEL k.jpg) ==================== -->
+      <!-- CARTE VIBRATION D'AMOUR (4 BOUTONS CARRÉS + 4 BOUTONS BAS AVEC SON & VIBRATION) -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-xs font-extrabold tracking-wider uppercase text-slate-500">⚡ VIBRATION D'AMOUR</span>
           <span class="bg-pink-50 text-pink-600 text-xs font-bold px-3 py-1 rounded-full"><span id="pingCounter">41</span> Pings aujourd'hui 💕</span>
         </div>
 
-        <!-- LES 4 BOUTONS CARRÉS VIOLETS : ENVELOPPE COEUR, PÊCHE, CONCOMBRE, PIMENT -->
         <div class="grid grid-cols-4 gap-2.5 pt-1">
-          <button onclick="sendSpecialVibration('env', 'Tu me manques ! 💌', '💌', [120, 60, 250])" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
+          <button onclick="sendSpecialVibration('env', 'Tu me manques ! 💌', '💌', [150, 70, 300], 'env')" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
             <span class="text-3xl">💌</span>
             <span id="badgeVibEnv" class="absolute bottom-1 right-1.5 bg-black/25 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
           </button>
 
-          <button onclick="sendSpecialVibration('peach', 'Envie de toi 🍑', '🍑', [180, 80, 180, 80, 300])" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
+          <button onclick="sendSpecialVibration('peach', 'Envie de toi 🍑', '🍑', [200, 80, 200, 80, 350], 'peach')" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
             <span class="text-3xl">🍑</span>
             <span id="badgeVibPeach" class="absolute bottom-1 right-1.5 bg-black/25 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
           </button>
 
-          <button onclick="sendSpecialVibration('cuc', 'Pensée coquine 🥒', '🥒', [250, 70, 250, 70, 400])" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
+          <button onclick="sendSpecialVibration('cuc', 'Pensée coquine 🥒', '🥒', [280, 70, 280, 70, 420], 'cuc')" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
             <span class="text-3xl">🥒</span>
             <span id="badgeVibCuc" class="absolute bottom-1 right-1.5 bg-black/25 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
           </button>
 
-          <button onclick="sendSpecialVibration('chili', 'Caliente ! 🌶️', '🌶️', [100, 50, 100, 50, 100, 50, 350])" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
+          <button onclick="sendSpecialVibration('chili', 'Caliente ! 🌶️', '🌶️', [110, 50, 110, 50, 110, 50, 400], 'chili')" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
             <span class="text-3xl">🌶️</span>
             <span id="badgeVibChili" class="absolute bottom-1 right-1.5 bg-black/25 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
           </button>
         </div>
 
-        <!-- LES 4 BOUTONS DU BAS AVEC PLUIE SPÉCIFIQUE ET ICÔNE FLAMME POUR "CE SOIR ?" -->
         <div class="grid grid-cols-4 gap-2 text-xs font-bold pt-1">
-          <button onclick="sendLovePing('Je t\'aime ❤️', '❤️', [90, 60, 90, 60, 220])" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">
+          <button onclick="sendLovePing('Je t\'aime ❤️', '❤️', [100, 60, 100, 60, 260], 'love')" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">
             ❤️ Je t'aime
           </button>
-          <button onclick="sendLovePing('Gros Bisou 😘', '😘', [120, 70, 180])" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">
+          <button onclick="sendLovePing('Gros Bisou 😘', '😘', [140, 70, 200], 'kiss')" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">
             😘 Bisou
           </button>
-          <button onclick="sendLovePing('Gros Câlin 🤗', '🤗', [450])" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">
+          <button onclick="sendLovePing('Gros Câlin 🤗', '🤗', [500], 'hug')" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">
             🤗 Câlin
           </button>
-          <button onclick="sendLovePing('Ce soir ? 🔥', '🔥', [140, 60, 140, 60, 280])" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">
+          <button onclick="sendLovePing('Ce soir ? 🔥', '🔥', [160, 60, 160, 60, 320], 'fire')" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">
             🔥 Ce soir ?
           </button>
         </div>
       </div>
 
-      <!-- Aperçu Widget Écran & Mot Doux -->
-      <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2.5">
-            <span class="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center text-pink-500">🖌️</span>
-            <div>
-              <h3 class="font-extrabold text-sm">Widget Écran & Mot Doux</h3>
-              <p id="widgetMeta" class="text-[11px] text-slate-400">Dessiné par Jordan • À 21:22</p>
-            </div>
-          </div>
-          <button onclick="showTab('dessin')" class="bg-purple-600 text-white text-xs font-bold px-3.5 py-2 rounded-full shadow">✏️ Dessiner</button>
-        </div>
-
-        <div class="border-2 border-dashed border-pink-200 rounded-2xl p-3 bg-pink-50/20 flex flex-col items-center justify-center relative min-h-[220px]">
-          <img id="dashboardDrawingPreview" src="" alt="Aperçu dessin" class="max-h-48 object-contain hidden" />
-          <div id="defaultDrawingPlaceholder" class="text-center py-8">
-            <p class="text-3xl font-extrabold text-pink-500 italic font-serif">Je t'aime ❤️</p>
-          </div>
-          <div id="dashboardNoteCaption" class="mt-2 w-full bg-slate-700/90 text-white text-xs font-bold text-center py-2 rounded-full">
-            « Mot doux pour toi ❤️ »
-          </div>
-        </div>
-      </div>
-
-      <!-- Mini Carte Douglasse -->
+      <!-- Mini Carte Douglasse (avec sa vraie photo si importée) -->
       <div onclick="showTab('douglasse')" class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 flex items-center justify-between cursor-pointer active:scale-[0.99] transition">
         <div class="flex items-center gap-3">
-          <div class="w-12 h-12 rounded-2xl bg-amber-100/80 flex items-center justify-center text-2xl">🐱</div>
+          <div class="w-12 h-12 rounded-2xl bg-amber-100/80 flex items-center justify-center text-2xl overflow-hidden">
+            <img id="miniCatPhoto" src="" class="w-full h-full object-cover hidden" />
+            <span id="miniCatEmoji">🐱</span>
+          </div>
           <div>
             <div class="flex items-center gap-2">
               <h4 class="font-extrabold text-sm">Douglasse</h4>
@@ -335,34 +328,41 @@
       </div>
     </section>
 
-    <!-- ==================== ONGLET 2 : DESSIN (AGRANDI + CLAVIER) ==================== -->
+    <!-- ==================== ONGLET 2 : DESSIN (IMPORT IMAGE + LIMITE 6 LIGNES) ==================== -->
     <section id="tab-dessin" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="font-extrabold text-base flex items-center gap-1.5">🎨 Dessin & Texte</h2>
-            <p id="drawSubtitle" class="text-xs text-slate-400">Dessine au doigt ou écris avec ton clavier</p>
+            <h2 class="font-extrabold text-base flex items-center gap-1.5">🎨 Dessin, Photo & Texte</h2>
+            <p class="text-xs text-slate-400">Importe une photo, dessine ou écris (max 6 lignes)</p>
           </div>
-          <div class="flex gap-2">
+          <div class="flex gap-1.5">
+            <button onclick="document.getElementById('fileInputCanvas').click()" class="px-2.5 h-9 rounded-full bg-purple-50 border border-purple-200 text-purple-700 font-bold flex items-center gap-1 text-xs">
+              🖼️ Photo
+            </button>
             <button onclick="undoCanvas()" class="w-9 h-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-sm">↩️</button>
             <button onclick="clearCanvas()" class="w-9 h-9 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-sm">🗑️</button>
           </div>
         </div>
 
-        <!-- CANVAS AGRANDI EN HAUTEUR -->
         <div class="border-2 border-purple-200 rounded-2xl overflow-hidden bg-white shadow-inner">
           <canvas id="drawCanvas" width="360" height="360" class="w-full touch-none bg-white cursor-crosshair"></canvas>
         </div>
 
-        <!-- OUTIL POUR ÉCRIRE AU CLAVIER DIRECTEMENT DANS LE DESSIN -->
-        <div class="flex gap-2">
-          <input id="canvasKeyboardInput" type="text" placeholder="⌨️ Écrire un texte avec le clavier dans le dessin..." class="flex-1 text-xs bg-purple-50/60 border border-purple-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-purple-500" />
-          <button onclick="writeKeyboardTextOnCanvas()" class="bg-purple-600 text-white text-xs font-extrabold px-3.5 py-2 rounded-xl shadow active:scale-95">
-            Ajouter
-          </button>
+        <!-- OUTIL CLAVIER LIMITÉ À 6 LIGNES -->
+        <div class="space-y-1">
+          <div class="flex justify-between items-center text-[11px] font-bold text-slate-500 px-1">
+            <span>⌨️ Texte sur le dessin</span>
+            <span id="linesCounterBadge" class="text-purple-600">0 / 6 lignes</span>
+          </div>
+          <div class="flex gap-2">
+            <input id="canvasKeyboardInput" type="text" maxlength="32" placeholder="Écrire une ligne sur le dessin..." class="flex-1 text-xs bg-purple-50/60 border border-purple-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-purple-500" />
+            <button onclick="writeKeyboardTextOnCanvas()" class="bg-purple-600 text-white text-xs font-extrabold px-3.5 py-2 rounded-xl shadow active:scale-95">
+              Ajouter
+            </button>
+          </div>
         </div>
 
-        <!-- Palette de couleurs -->
         <div class="flex items-center justify-between pt-1">
           <button onclick="setBrushColor('#ec4899')" class="w-8 h-8 rounded-full bg-pink-500 ring-2 ring-offset-2 ring-pink-400"></button>
           <button onclick="setBrushColor('#8b5cf6')" class="w-8 h-8 rounded-full bg-violet-500"></button>
@@ -377,7 +377,6 @@
         <div class="flex items-center gap-3 pt-1">
           <input id="brushSize" type="range" min="2" max="18" value="5" class="w-28 accent-pink-500" />
           <div class="flex items-center gap-1.5 overflow-x-auto">
-            <span class="text-[10px] font-bold text-slate-400 uppercase">Tampons:</span>
             <button onclick="placeStamp('❤️')" class="px-2 py-1 bg-pink-50 rounded-lg text-sm">❤️</button>
             <button onclick="placeStamp('😘')" class="px-2 py-1 bg-pink-50 rounded-lg text-sm">😘</button>
             <button onclick="placeStamp('🍑')" class="px-2 py-1 bg-pink-50 rounded-lg text-sm">🍑</button>
@@ -390,7 +389,7 @@
         <input id="sweetNoteInput" type="text" placeholder="Légende sous le dessin (ex: Bon courage mon amour ❤️)..." class="w-full text-xs bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-3 focus:outline-none focus:border-pink-400" />
 
         <button onclick="sendDrawingToPartner()" class="w-full gradient-card text-white font-extrabold text-sm py-3.5 rounded-2xl shadow-md active:scale-[0.99] transition">
-          🚀 Envoyer sur l'écran de <span id="sendTargetName">Lydie</span>
+          🚀 Envoyer sur l'écran de verrouillage de <span id="sendTargetName">Lydie</span>
         </button>
       </div>
 
@@ -400,7 +399,7 @@
       </div>
     </section>
 
-    <!-- ==================== ONGLET 3 : DOUGLASSE ==================== -->
+    <!-- ==================== ONGLET 3 : DOUGLASSE (AVEC PHOTO PERSONNALISÉE) ==================== -->
     <section id="tab-douglasse" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 text-center space-y-3">
         <div class="flex items-center justify-between">
@@ -410,39 +409,37 @@
 
         <div>
           <h2 class="text-xl font-extrabold">Douglasse</h2>
-          <p class="text-xs text-slate-400">Notre petit compagnon virtuel à câliner tous les deux</p>
+          <p class="text-xs text-slate-400">Notre petit compagnon à câliner tous les deux</p>
         </div>
 
         <div id="catSpeechBubble" class="inline-block bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold px-3.5 py-1.5 rounded-full shadow-sm">
           « Miaou ! Touche-moi pour me caresser 🐾 »
         </div>
 
-        <div onclick="interactCat('caresser')" class="py-2 flex justify-center cursor-pointer">
-          <svg id="catSvg" class="w-40 h-40 cat-bounce" viewBox="0 0 200 200">
-            <ellipse cx="100" cy="175" rx="55" ry="10" fill="#ede9fe" />
-            <path class="tail-wag" d="M135 145 Q175 135 165 95" stroke="#f59e0b" stroke-width="14" stroke-linecap="round" fill="none" />
-            <ellipse cx="100" cy="135" rx="42" ry="36" fill="#fbbf24" />
-            <ellipse cx="100" cy="140" rx="24" ry="24" fill="#fef3c7" />
-            <circle cx="100" cy="82" r="40" fill="#fbbf24" />
-            <polygon points="65,60 58,22 90,46" fill="#f59e0b" />
-            <polygon points="68,55 63,30 85,47" fill="#fda4af" />
-            <polygon points="135,60 142,22 110,46" fill="#f59e0b" />
-            <polygon points="132,55 137,30 115,47" fill="#fda4af" />
-            <line x1="92" y1="48" x2="92" y2="60" stroke="#d97706" stroke-width="4" stroke-linecap="round" />
-            <line x1="100" y1="45" x2="100" y2="60" stroke="#d97706" stroke-width="4" stroke-linecap="round" />
-            <line x1="108" y1="48" x2="108" y2="60" stroke="#d97706" stroke-width="4" stroke-linecap="round" />
-            <g class="eye-blink">
+        <!-- Photo réelle de Douglasse ou SVG animé -->
+        <div class="py-2 flex flex-col items-center justify-center gap-2">
+          <div id="catVisualContainer" onclick="interactCat('caresser')" class="relative w-44 h-44 rounded-3xl flex items-center justify-center cursor-pointer cat-bounce overflow-hidden border-4 border-amber-200 shadow-md bg-amber-50/40">
+            <img id="mainCatPhoto" src="" class="w-full h-full object-cover hidden" />
+            <svg id="catSvg" class="w-40 h-40" viewBox="0 0 200 200">
+              <ellipse cx="100" cy="175" rx="55" ry="10" fill="#ede9fe" />
+              <path d="M135 145 Q175 135 165 95" stroke="#f59e0b" stroke-width="14" stroke-linecap="round" fill="none" />
+              <ellipse cx="100" cy="135" rx="42" ry="36" fill="#fbbf24" />
+              <ellipse cx="100" cy="140" rx="24" ry="24" fill="#fef3c7" />
+              <circle cx="100" cy="82" r="40" fill="#fbbf24" />
+              <polygon points="65,60 58,22 90,46" fill="#f59e0b" />
+              <polygon points="68,55 63,30 85,47" fill="#fda4af" />
+              <polygon points="135,60 142,22 110,46" fill="#f59e0b" />
+              <polygon points="132,55 137,30 115,47" fill="#fda4af" />
               <circle cx="83" cy="82" r="7" fill="#1e293b" />
-              <circle cx="81" cy="79" r="2.5" fill="#ffffff" />
               <circle cx="117" cy="82" r="7" fill="#1e293b" />
-              <circle cx="115" cy="79" r="2.5" fill="#ffffff" />
-            </g>
-            <path id="catMouth" d="M93 95 Q100 101 107 95" stroke="#1e293b" stroke-width="3" fill="none" stroke-linecap="round" />
-            <path d="M68 112 Q100 124 132 112" stroke="#ec4899" stroke-width="7" fill="none" stroke-linecap="round" />
-            <circle cx="100" cy="120" r="6" fill="#f43f5e" />
-            <circle cx="78" cy="165" r="10" fill="#fef3c7" />
-            <circle cx="122" cy="165" r="10" fill="#fef3c7" />
-          </svg>
+              <path id="catMouth" d="M93 95 Q100 101 107 95" stroke="#1e293b" stroke-width="3" fill="none" stroke-linecap="round" />
+              <path d="M68 112 Q100 124 132 112" stroke="#ec4899" stroke-width="7" fill="none" stroke-linecap="round" />
+              <circle cx="100" cy="120" r="6" fill="#f43f5e" />
+            </svg>
+          </div>
+          <button onclick="triggerCatPhotoUpload()" class="text-[11px] font-bold text-amber-800 bg-amber-100/80 px-3 py-1 rounded-full border border-amber-200">
+            📷 Mettre la vraie photo de Douglasse
+          </button>
         </div>
 
         <div class="space-y-2.5 text-left pt-1">
@@ -597,6 +594,7 @@
     const API_ENDPOINT = '/state';
     let currentUser = localStorage.getItem('love8_user') || 'Jordan';
     let lastEventId = Number(localStorage.getItem('love8_last_event') || 0);
+    let avatarUploadTarget = 'jordan';
 
     let state = JSON.parse(localStorage.getItem('love8_state')) || {
       updatedAt: Date.now(),
@@ -604,15 +602,16 @@
       vibCounts: { env: 12, peach: 9, cuc: 8, chili: 12 },
       separationStart: null,
       lastDistanceMeters: 0,
-      lastEvent: { id: 0, sender: 'Jordan', title: '', message: '', emoji: '❤️', pattern: [100] },
-      jordan: { mood: '😍', text: 'Pense à toi ❤️', loc: '📍 À la maison', bat: 61, lat: null, lng: null },
-      lydie: { mood: '😍', text: 'Hâte de te voir 💕', loc: '📍 À la maison', bat: 47, lat: null, lng: null },
+      lastEvent: { id: 0, sender: 'Jordan', title: '', message: '', emoji: '❤️', sound: 'love', pattern: [150, 80, 250] },
+      jordan: { mood: '😍', text: 'Pense à toi ❤️', loc: '📍 À la maison', bat: 61, lat: null, lng: null, avatar: '' },
+      lydie: { mood: '😍', text: 'Hâte de te voir 💕', loc: '📍 À la maison', bat: 47, lat: null, lng: null, avatar: '' },
       cat: {
         level: 4,
         xp: 40,
         hunger: 100,
         love: 100,
         energy: 100,
+        photo: '',
         lastDecay: Date.now(),
         journal: [
           { text: 'Jordan a donné des croquettes à Douglasse 🐟', time: '19:47' },
@@ -632,9 +631,11 @@
       ]
     };
 
-    // Sécurité si ancien state en cache sans vibCounts
-    if (!state.vibCounts) {
-      state.vibCounts = { env: 12, peach: 9, cuc: 8, chili: 12 };
+    if (!state.vibCounts) state.vibCounts = { env: 12, peach: 9, cuc: 8, chili: 12 };
+    // Nettoie l'ancien faux compteur de séparation si la distance était <= 300m
+    if (!state.lastDistanceMeters || state.lastDistanceMeters <= 300) {
+      state.separationStart = null;
+      state.lastDistanceMeters = 0;
     }
 
     const questionsPool = [
@@ -643,6 +644,56 @@
       "Quel est le petit geste du quotidien qui te fait le plus craquer chez moi ?",
       "Si on avait une soirée rien que tous les deux ce week-end, quel serait ton programme idéal ?"
     ];
+
+    // ==================== SYNTHÉTISEUR AUDIO PAR VIBRATION (SON ADAPTÉ À CHAQUE BOUTON) ====================
+    let audioCtx = null;
+    function playLoveSound(type = 'love') {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+
+        const melodies = {
+          heart: [[523, 0.12], [659, 0.12], [784, 0.25]],
+          env:   [[440, 0.1], [554, 0.1], [659, 0.22]],
+          peach: [[392, 0.12], [523, 0.12], [659, 0.15], [784, 0.25]],
+          cuc:   [[330, 0.12], [440, 0.12], [554, 0.22]],
+          chili: [[587, 0.08], [659, 0.08], [784, 0.08], [880, 0.25]],
+          love:  [[523, 0.14], [659, 0.14], [784, 0.14], [1046, 0.3]],
+          kiss:  [[659, 0.1], [880, 0.22]],
+          hug:   [[349, 0.2], [440, 0.2], [523, 0.3]],
+          fire:  [[440, 0.09], [587, 0.09], [784, 0.25]],
+          cat:   [[700, 0.12], [950, 0.18], [620, 0.22]]
+        };
+
+        const notes = melodies[type] || melodies.love;
+        let offset = 0;
+        notes.forEach(([freq, dur]) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type === 'chili' || type === 'fire' ? 'triangle' : 'sine';
+          osc.frequency.setValueAtTime(freq, now + offset);
+          gain.gain.setValueAtTime(0.22, now + offset);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + offset + dur);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + offset);
+          osc.stop(now + offset + dur);
+          offset += dur + 0.03;
+        });
+      } catch (e) {}
+    }
+
+    // Vibration physique garantie (Web + Pont Natif Android)
+    function triggerDeviceVibration(pattern = [200, 80, 300]) {
+      try {
+        if (window.AndroidNative && window.AndroidNative.vibrateDevice) {
+          window.AndroidNative.vibrateDevice(pattern.join(','));
+        } else if (navigator.vibrate) {
+          navigator.vibrate(pattern);
+        }
+      } catch (e) {}
+    }
 
     function pushSystemNotification(title, body) {
       if (window.AndroidNative && window.AndroidNative.showSystemNotification) {
@@ -654,9 +705,28 @@
       }
     }
 
+    // Animation géante sur l'écran de verrouillage + Pluie de particules + Son dédié
+    function triggerLockscreenBurst(emoji, labelText, soundType = 'love', pattern = [200, 80, 300]) {
+      playLoveSound(soundType);
+      triggerDeviceVibration(pattern);
+      spawnParticles(emoji, pattern);
+
+      const burst = document.getElementById('lockGiantBurst');
+      const giantEmoji = document.getElementById('lockGiantEmoji');
+      const giantLabel = document.getElementById('lockGiantLabel');
+
+      giantEmoji.innerText = emoji;
+      giantLabel.innerText = labelText;
+      burst.classList.remove('hidden');
+
+      setTimeout(() => {
+        burst.classList.add('hidden');
+      }, 2200);
+    }
+
     window.onNativeWakeAlert = function(emoji) {
       toggleLockscreen(true);
-      spawnParticles(emoji || '❤️', [250, 100, 350]);
+      triggerLockscreenBurst(emoji || '❤️', state.lastEvent?.message || 'Vibration d\'amour reçue !', state.lastEvent?.sound || 'love', [250, 100, 350]);
     };
 
     if (window.AndroidNative && window.AndroidNative.setUser) {
@@ -694,16 +764,21 @@
           if (remote.lastEvent && remote.lastEvent.id > lastEventId && remote.lastEvent.sender !== currentUser) {
             lastEventId = remote.lastEvent.id;
             localStorage.setItem('love8_last_event', String(lastEventId));
-            spawnParticles(remote.lastEvent.emoji || '❤️', remote.lastEvent.pattern || [180, 80, 250]);
+            toggleLockscreen(true);
+            triggerLockscreenBurst(
+              remote.lastEvent.emoji || '❤️',
+              remote.lastEvent.message || 'Nouvelle vibration !',
+              remote.lastEvent.sound || 'love',
+              remote.lastEvent.pattern || [200, 80, 300]
+            );
             triggerBanner(remote.lastEvent.title, remote.lastEvent.message, remote.lastEvent.emoji || '❤️');
             pushSystemNotification(remote.lastEvent.title, remote.lastEvent.message);
-            toggleLockscreen(true);
           }
         }
       } catch (e) {}
     }
 
-    // Calcul de distance GPS (Haversine) et compteur de séparation automatique
+    // ==================== GPS CORRIGÉ (PLUS DE FAUX 200M QUAND VOUS ÊTES ENSEMBLE) ====================
     function calcDistanceMeters(lat1, lon1, lat2, lon2) {
       const R = 6371000;
       const toRad = x => x * Math.PI / 180;
@@ -718,21 +793,42 @@
     function updateGpsSeparationState() {
       const j = state.jordan;
       const l = state.lydie;
+
+      // Si Jordan et Lydie ont le même lieu écrit (ex: "📍 À la maison"), ils sont ensemble
+      if (j.loc && l.loc && j.loc.trim().toLowerCase() === l.loc.trim().toLowerCase()) {
+        state.lastDistanceMeters = 0;
+        state.separationStart = null;
+        return;
+      }
+
       if (j.lat && j.lng && l.lat && l.lng) {
-        const dist = calcDistanceMeters(j.lat, j.lng, l.lat, l.lng);
-        state.lastDistanceMeters = dist;
-        // Si distance > 150m, on démarre le compteur de séparation
-        if (dist > 150) {
-          if (!state.separationStart) state.separationStart = Date.now();
-        } else {
+        const rawDist = calcDistanceMeters(j.lat, j.lng, l.lat, l.lng);
+        // Tolérance de 300m pour éviter l'erreur GPS en intérieur
+        if (rawDist <= 300) {
+          state.lastDistanceMeters = 0;
           state.separationStart = null;
+        } else {
+          state.lastDistanceMeters = rawDist;
+          if (!state.separationStart) state.separationStart = Date.now();
         }
+      } else {
+        state.lastDistanceMeters = 0;
+        state.separationStart = null;
       }
     }
 
+    function resetTogetherNow() {
+      state.separationStart = null;
+      state.lastDistanceMeters = 0;
+      state.jordan.loc = '📍 À la maison';
+      state.lydie.loc = '📍 À la maison';
+      triggerBanner('📍 ENSEMBLE', 'Compteur de séparation remis à zéro (Ensemble 0m) ❤️', '💑');
+      saveState();
+    }
+
     function formatSeparationTimer() {
-      if (!state.separationStart) {
-        return { timeStr: "00:00", statusStr: `📍 Ensemble (${state.lastDistanceMeters || 0}m)` };
+      if (!state.separationStart || (state.lastDistanceMeters || 0) <= 300) {
+        return { timeStr: "00:00", statusStr: "📍 Ensemble (0m)" };
       }
       const diffSec = Math.max(0, Math.floor((Date.now() - state.separationStart) / 1000));
       const hours = Math.floor(diffSec / 3600);
@@ -742,7 +838,7 @@
       const timeStr = hours > 0 ? `${pad(hours)}:${pad(mins)}:${pad(secs)}` : `${pad(mins)}:${pad(secs)}`;
       const distKm = state.lastDistanceMeters >= 1000
         ? (state.lastDistanceMeters / 1000).toFixed(1) + ' km'
-        : (state.lastDistanceMeters || 200) + ' m';
+        : state.lastDistanceMeters + ' m';
       return { timeStr, statusStr: `📍 Séparés (${distKm})` };
     }
 
@@ -750,8 +846,82 @@
       const sep = formatSeparationTimer();
       document.getElementById('lockSepTimer').innerText = sep.timeStr;
       document.getElementById('lockSepStatus').innerText = sep.statusStr;
-      document.getElementById('topSepTimer').innerText = sep.timeStr;
+      document.getElementById('topSepTimer').innerText = sep.statusStr === "📍 Ensemble (0m)" ? "Ensemble (0m)" : `${sep.timeStr} (${sep.statusStr.replace('📍 Séparés ', '')})`;
     }, 1000);
+
+    // ==================== COEUR CENTRAL : ENVOIE UN COEUR SUR L'ÉCRAN DE VERROUILLAGE ====================
+    function sendCenterHeartLockscreen() {
+      state.pingsToday += 1;
+      const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
+      const eventId = Date.now();
+      lastEventId = eventId;
+      localStorage.setItem('love8_last_event', String(eventId));
+
+      state.lastEvent = {
+        id: eventId,
+        sender: currentUser,
+        title: `❤️ COEUR EN DIRECT`,
+        message: `${currentUser} fait battre ton cœur sur l'écran de verrouillage !`,
+        emoji: '❤️',
+        sound: 'heart',
+        pattern: [120, 60, 120, 60, 280]
+      };
+
+      triggerLockscreenBurst('❤️', `Cœur envoyé sur l'écran de ${partner} !`, 'heart', [120, 60, 120, 60, 280]);
+      triggerBanner('❤️ COEUR ENVOYÉ', `Cœur animé envoyé sur l'écran de verrouillage de ${partner} !`, '❤️');
+      pushSystemNotification(state.lastEvent.title, state.lastEvent.message);
+      saveState();
+    }
+
+    // ==================== IMPORT PHOTOS PROFIL (JORDAN & LYDIE) + PHOTO DOUGLASSE ====================
+    function resizeImageToDataUrl(file, maxSize, callback) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const c = document.createElement('canvas');
+          let w = img.width;
+          let h = img.height;
+          if (w > h && w > maxSize) { h = Math.round(h * (maxSize / w)); w = maxSize; }
+          else if (h >= w && h > maxSize) { w = Math.round(w * (maxSize / h)); h = maxSize; }
+          c.width = w;
+          c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          callback(c.toDataURL('image/jpeg', 0.82));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function triggerAvatarUpload(personKey) {
+      avatarUploadTarget = personKey;
+      document.getElementById('fileInputAvatar').click();
+    }
+
+    function handleAvatarUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      resizeImageToDataUrl(file, 220, (dataUrl) => {
+        state[avatarUploadTarget].avatar = dataUrl;
+        triggerBanner('📷 PHOTO DE PROFIL', `Photo mise à jour !`, '😍');
+        saveState();
+      });
+    }
+
+    function triggerCatPhotoUpload() {
+      document.getElementById('fileInputCat').click();
+    }
+
+    function handleCatPhotoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      resizeImageToDataUrl(file, 300, (dataUrl) => {
+        state.cat.photo = dataUrl;
+        triggerBanner('🐱 DOUGLASSE', 'La vraie photo de Douglasse est enregistrée !', '🐾');
+        saveState();
+      });
+    }
 
     function checkCatDecay() {
       const now = Date.now();
@@ -785,18 +955,12 @@
 
     function toggleLockscreen(show) {
       const el = document.getElementById('lockscreenOverlay');
-      if (show) {
-        el.classList.remove('hidden');
-      } else {
-        el.classList.add('hidden');
-      }
+      if (show) el.classList.remove('hidden');
+      else el.classList.add('hidden');
     }
 
-    // Pluie abondante d'emojis (cœurs, bisous, câlins, flammes, pêches, concombres, piments) + Vibration forte
     function spawnParticles(emoji, pattern = [150, 70, 250]) {
-      if (navigator.vibrate) {
-        try { navigator.vibrate(pattern); } catch (e) {}
-      }
+      triggerDeviceVibration(pattern);
       for (let i = 0; i < 34; i++) {
         const el = document.createElement('div');
         el.className = 'heart-particle text-3xl';
@@ -821,8 +985,7 @@
       document.getElementById('liveBanner').classList.add('hidden');
     }
 
-    // Envoi d'une des 4 Vibrations Spéciales (Enveloppe, Pêche, Concombre, Piment)
-    function sendSpecialVibration(key, label, emoji, pattern) {
+    function sendSpecialVibration(key, label, emoji, pattern, soundType) {
       state.pingsToday += 1;
       state.vibCounts[key] = (state.vibCounts[key] || 0) + 1;
       const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
@@ -836,17 +999,17 @@
         title: `⚡ VIBRATION D'AMOUR`,
         message: `${currentUser} → ${partner} : ${label}`,
         emoji,
+        sound: soundType,
         pattern
       };
 
-      spawnParticles(emoji, pattern);
+      triggerLockscreenBurst(emoji, `${currentUser} → ${partner} : ${label}`, soundType, pattern);
       triggerBanner('⚡ VIBRATION D\'AMOUR', `${currentUser} → ${partner} : ${label}`, emoji);
       pushSystemNotification(state.lastEvent.title, state.lastEvent.message);
       saveState();
     }
 
-    // Envoi des 4 boutons du bas (Je t'aime, Bisou, Câlin, Ce soir ?)
-    function sendLovePing(label, emoji, pattern) {
+    function sendLovePing(label, emoji, pattern, soundType) {
       state.pingsToday += 1;
       const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
       const eventId = Date.now();
@@ -858,9 +1021,10 @@
         title: `⚡ VIBRATION D'AMOUR`,
         message: `${currentUser} → ${partner} : ${label}`,
         emoji,
+        sound: soundType,
         pattern
       };
-      spawnParticles(emoji, pattern);
+      triggerLockscreenBurst(emoji, `${currentUser} → ${partner} : ${label}`, soundType, pattern);
       triggerBanner('⚡ VIBRATION D\'AMOUR', `${currentUser} → ${partner} : ${label}`, emoji);
       pushSystemNotification(state.lastEvent.title, state.lastEvent.message);
       saveState();
@@ -868,9 +1032,9 @@
 
     function interactCat(action) {
       const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-      const svg = document.getElementById('catSvg');
-      svg.classList.add('cat-excited');
-      setTimeout(() => svg.classList.remove('cat-excited'), 1200);
+      const box = document.getElementById('catVisualContainer');
+      box.classList.add('cat-excited');
+      setTimeout(() => box.classList.remove('cat-excited'), 1200);
 
       let msg = '';
       let emoji = '🐾';
@@ -907,9 +1071,11 @@
         title: '🐱 DOUGLASSE',
         message: msg,
         emoji,
+        sound: 'cat',
         pattern: [100, 60, 160]
       };
 
+      playLoveSound('cat');
       spawnParticles(emoji, [100, 60, 160]);
       pushSystemNotification(state.lastEvent.title, state.lastEvent.message);
       saveState();
@@ -926,6 +1092,7 @@
           title: '🐱 Douglasse a faim !',
           message: '« Miaou ! Mon ventre gargouille, donne-moi des croquettes 🐟 »',
           emoji: '🐟',
+          sound: 'cat',
           pattern: [200, 100, 200]
         };
       } else {
@@ -936,10 +1103,11 @@
           title: '🐱 Douglasse veut jouer !',
           message: '« Je m\'ennuie... Qui lance la pelote de laine ? 🧶 »',
           emoji: '🧶',
+          sound: 'cat',
           pattern: [150, 80, 150]
         };
       }
-      spawnParticles(state.lastEvent.emoji, state.lastEvent.pattern);
+      triggerLockscreenBurst(state.lastEvent.emoji, state.lastEvent.message, 'cat', state.lastEvent.pattern);
       triggerBanner(state.lastEvent.title, state.lastEvent.message, state.lastEvent.emoji);
       pushSystemNotification(state.lastEvent.title, state.lastEvent.message);
       saveState();
@@ -961,8 +1129,9 @@
       document.getElementById('statHours').innerText = hours;
     }
 
-    async function refreshBatteryAndGPS() {
-      if ('Notification' in window) {
+    // ==================== ACTUALISATION GPS + BATTERIE + NOTIFS (MANUELLE & AUTO TOUTES LES 5 MIN) ====================
+    async function refreshBatteryAndGPS(isManual = false) {
+      if (isManual && 'Notification' in window) {
         try { await Notification.requestPermission(); } catch (e) {}
       }
       const key = currentUser.toLowerCase();
@@ -979,15 +1148,24 @@
           updateGpsSeparationState();
           saveState();
         }, () => {
-          // Si pas de signal GPS, permet de tester le compteur de séparation
-          if (!state.separationStart) state.separationStart = Date.now();
+          // En cas d'erreur de signal GPS en intérieur, ne déclenche PAS de fausse séparation de 200m
+          updateGpsSeparationState();
           saveState();
-        });
+        }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 });
       }
-      pushSystemNotification('Love8 Actif ❤️', `GPS, batterie et notifications synchronisés pour ${currentUser} !`);
-      triggerBanner('GPS & BATTERIE', `Position et compteur de séparation mis à jour !`, '📍');
+      if (isManual) {
+        playLoveSound('love');
+        triggerDeviceVibration([120, 60, 180]);
+        pushSystemNotification('Love8 Synchronisé ❤️', `GPS, batterie et notifications mis à jour pour ${currentUser} !`);
+        triggerBanner('SYNCHRO AUTO 5M ACTIVE', `Batterie et GPS mis à jour avec succès !`, '🔔');
+      }
       saveState();
     }
+
+    // Déclenchement automatique toutes les 5 minutes (300 000 ms)
+    setInterval(() => {
+      refreshBatteryAndGPS(false);
+    }, 300000);
 
     function promptMoodChange() {
       const key = currentUser.toLowerCase();
@@ -996,27 +1174,48 @@
       const newLoc = prompt('Ta localisation actuelle (ex: 📍 Au travail, 📍 À la maison) :', state[key].loc);
       if (newLoc) {
         state[key].loc = newLoc.startsWith('📍') ? newLoc : '📍 ' + newLoc;
-        // Si les deux ne sont plus au même endroit, lance le compteur de séparation
-        if (state.jordan.loc !== state.lydie.loc) {
-          if (!state.separationStart) state.separationStart = Date.now();
-        } else {
-          state.separationStart = null;
-        }
+        updateGpsSeparationState();
       }
       saveState();
     }
 
-    // ==================== CANVAS DE DESSIN + TEXTE AU CLAVIER ====================
+    // ==================== CANVAS DE DESSIN + IMPORT IMAGE + MAX 6 LIGNES DE TEXTE ====================
     const canvas = document.getElementById('drawCanvas');
     const ctx = canvas.getContext('2d');
     let drawing = false;
     let brushColor = '#ec4899';
     let historyStack = [];
-    let textLineY = 80;
+    let currentTextLines = 0;
+    const MAX_TEXT_LINES = 6;
+
+    function updateLinesBadge() {
+      document.getElementById('linesCounterBadge').innerText = `${currentTextLines} / ${MAX_TEXT_LINES} lignes`;
+    }
 
     function saveCanvasHistory() {
-      historyStack.push(canvas.toDataURL());
+      historyStack.push({ dataUrl: canvas.toDataURL(), lines: currentTextLines });
       if (historyStack.length > 10) historyStack.shift();
+    }
+
+    // Importer une photo depuis le téléphone sur le dessin
+    function handleCanvasImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      saveCanvasHistory();
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const ratio = Math.min(canvas.width / img.width, canvas.height / img.height);
+          const w = img.width * ratio;
+          const h = img.height * ratio;
+          const x = (canvas.width - w) / 2;
+          const y = (canvas.height - h) / 2;
+          ctx.drawImage(img, x, y, w, h);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
     }
 
     function getPos(e) {
@@ -1054,17 +1253,21 @@
     function clearCanvas() {
       saveCanvasHistory();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      textLineY = 80;
+      currentTextLines = 0;
+      updateLinesBadge();
     }
 
     function undoCanvas() {
       if (!historyStack.length) return;
+      const last = historyStack.pop();
+      currentTextLines = last.lines;
+      updateLinesBadge();
       const img = new Image();
       img.onload = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
       };
-      img.src = historyStack.pop();
+      img.src = last.dataUrl;
     }
 
     function placeStamp(emoji) {
@@ -1074,17 +1277,31 @@
       ctx.fillText(emoji, 60 + Math.random() * 240, 60 + Math.random() * 240);
     }
 
-    // Écrire au clavier directement dans le dessin
+    // Écrire au clavier avec limite stricte à 6 lignes par dessin
     function writeKeyboardTextOnCanvas() {
       const input = document.getElementById('canvasKeyboardInput');
       const text = input.value.trim();
       if (!text) return;
+
+      if (currentTextLines >= MAX_TEXT_LINES) {
+        triggerBanner('LIMITE ATTEINTE', 'Maximum 6 lignes de texte par dessin !', '⚠️');
+        triggerDeviceVibration([80, 50, 80]);
+        return;
+      }
+
       saveCanvasHistory();
-      ctx.font = 'bold 26px "Plus Jakarta Sans", sans-serif';
-      ctx.fillStyle = brushColor === '#ffffff' ? '#ec4899' : brushColor;
+      currentTextLines += 1;
+      updateLinesBadge();
+
+      const yPos = 45 + (currentTextLines - 1) * 52;
+      ctx.font = 'bold 24px "Plus Jakarta Sans", sans-serif';
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#ffffff';
       ctx.textAlign = 'center';
-      ctx.fillText(text, canvas.width / 2, textLineY);
-      textLineY = textLineY > 300 ? 80 : textLineY + 45;
+      ctx.strokeText(text, canvas.width / 2, yPos);
+      ctx.fillStyle = brushColor === '#ffffff' ? '#ec4899' : brushColor;
+      ctx.fillText(text, canvas.width / 2, yPos);
+
       input.value = '';
     }
 
@@ -1105,12 +1322,12 @@
         title: `🖌️ Nouveau dessin de ${currentUser}`,
         message: note,
         emoji: '🎨',
-        pattern: [120, 60, 220]
+        sound: 'love',
+        pattern: [150, 70, 250]
       };
 
       document.getElementById('sweetNoteInput').value = '';
-      spawnParticles('🎨', [120, 60, 220]);
-      triggerBanner('WIDGET MIS À JOUR', `Dessin envoyé sur l'écran de ${partner} !`, '🖌️');
+      triggerLockscreenBurst('🎨', `Dessin envoyé sur l'écran de ${partner} !`, 'love', [150, 70, 250]);
       pushSystemNotification(state.lastEvent.title, state.lastEvent.message);
       saveState();
       showTab('nous');
@@ -1156,7 +1373,30 @@
       document.getElementById('sendTargetName').innerText = partner;
       document.getElementById('pingCounter').innerText = state.pingsToday;
 
-      // Compteurs des 4 vibrations (Dashboard + Cadre Vert Lockscreen)
+      // Photos de profil Jordan & Lydie
+      if (state.jordan.avatar) {
+        document.getElementById('jordanAvatarImg').src = state.jordan.avatar;
+        document.getElementById('jordanAvatarImg').classList.remove('hidden');
+        document.getElementById('jordanAvatarEmoji').classList.add('hidden');
+      }
+      if (state.lydie.avatar) {
+        document.getElementById('lydieAvatarImg').src = state.lydie.avatar;
+        document.getElementById('lydieAvatarImg').classList.remove('hidden');
+        document.getElementById('lydieAvatarEmoji').classList.add('hidden');
+      }
+
+      // Photo réelle de Douglasse
+      if (state.cat && state.cat.photo) {
+        ['mainCatPhoto', 'miniCatPhoto', 'lockCatPhoto'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.src = state.cat.photo; el.classList.remove('hidden'); }
+        });
+        ['catSvg', 'miniCatEmoji', 'lockCatEmoji'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add('hidden');
+        });
+      }
+
       const vc = state.vibCounts || { env: 0, peach: 0, cuc: 0, chili: 0 };
       document.getElementById('badgeVibEnv').innerText = vc.env || 0;
       document.getElementById('badgeVibPeach').innerText = vc.peach || 0;
@@ -1176,15 +1416,10 @@
       document.getElementById('lydieBat').innerText = `🔋 ${state.lydie.bat}%`;
 
       if (state.latestDrawing.dataUrl) {
-        document.getElementById('dashboardDrawingPreview').src = state.latestDrawing.dataUrl;
-        document.getElementById('dashboardDrawingPreview').classList.remove('hidden');
-        document.getElementById('defaultDrawingPlaceholder').classList.add('hidden');
         document.getElementById('lockDrawingImg').src = state.latestDrawing.dataUrl;
         document.getElementById('lockDrawingImg').classList.remove('hidden');
         document.getElementById('lockDrawingFallback').classList.add('hidden');
       }
-      document.getElementById('dashboardNoteCaption').innerText = state.latestDrawing.caption;
-      document.getElementById('widgetMeta').innerText = `Dessiné par ${state.latestDrawing.author} • À ${state.latestDrawing.time}`;
       document.getElementById('lockDrawingCaption').innerText = state.latestDrawing.caption;
       document.getElementById('lockDrawingMeta').innerText = `Dessiné par ${state.latestDrawing.author} • À ${state.latestDrawing.time}`;
 
@@ -1214,7 +1449,8 @@
       document.getElementById('lockCatSpeech').innerText = speech;
       document.getElementById('miniCatBadge').innerText = badge;
       document.getElementById('catMoodPill').innerText = badge;
-      document.getElementById('catMouth').setAttribute('d', mouthPath);
+      const mouthEl = document.getElementById('catMouth');
+      if (mouthEl) mouthEl.setAttribute('d', mouthPath);
 
       document.getElementById('catLevel').innerText = state.cat.level || 4;
       document.getElementById('catXp').innerText = state.cat.xp || 40;
@@ -1250,6 +1486,7 @@
     checkCatDecay();
     updateCoupleTimer();
     renderAll();
+    refreshBatteryAndGPS(false);
     pollCloudState();
     setInterval(pollCloudState, 3000);
   </script>
