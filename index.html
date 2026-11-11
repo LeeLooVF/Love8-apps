@@ -16,6 +16,10 @@
     .gradient-card {
       background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
     }
+    .vib-square {
+      background: linear-gradient(145deg, #a855f7 0%, #9333ea 100%);
+      box-shadow: 0 6px 15px -3px rgba(147, 51, 234, 0.35);
+    }
     .cat-bounce {
       animation: floatCat 2.8s ease-in-out infinite;
     }
@@ -68,45 +72,77 @@
 </head>
 <body class="min-h-screen pb-24 text-slate-800">
 
-  <!-- OVERLAY AUTOMATIQUE SUR ÉCRAN DE VERROUILLAGE (S'AFFICHE QUAND LE TÉLÉPHONE EST EN VEILLE) -->
-  <div id="lockscreenOverlay" class="fixed inset-0 z-50 hidden bg-slate-950/95 backdrop-blur-xl text-white flex flex-col justify-between p-6">
-    <div class="text-center mt-6">
-      <p id="lockTime" class="text-6xl font-extrabold tracking-tight">22:57</p>
-      <p id="lockAlertTitle" class="text-xs text-pink-300 font-bold uppercase tracking-widest mt-1">⚡ Alerte Love8 en direct</p>
+  <!-- ==================== ÉCRAN DE VERROUILLAGE (SELON VISUEL qqqqqqqqqqqq.png) ==================== -->
+  <div id="lockscreenOverlay" class="fixed inset-0 z-50 hidden bg-[#0c0d14] text-white flex flex-col justify-between p-4">
+    
+    <!-- BARRE SUPÉRIEURE : CADRE ROUGE (JOURS) + CENTRE (COMPTEUR SÉPARATION GPS) + CADRE VERT (4 VIBRATIONS) -->
+    <div class="mt-2">
+      <div class="grid grid-cols-3 items-center gap-2">
+        
+        <!-- Cadre Rouge : Jours depuis le début de la relation -->
+        <div class="bg-rose-500/15 border border-rose-400/30 rounded-2xl p-2.5 text-center">
+          <p class="text-[9px] uppercase tracking-wider text-rose-300 font-bold">Notre Relation</p>
+          <p class="text-lg font-extrabold text-white leading-tight mt-0.5"><span id="lockRelationDays">2525</span>j ❤️</p>
+          <p class="text-[9px] text-rose-200/80">Depuis 12/12/19</p>
+        </div>
+
+        <!-- Centre : Compteur de séparation basé sur GPS -->
+        <div class="text-center">
+          <p id="lockSepTimer" class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">00:00</p>
+          <p id="lockSepStatus" class="text-[9px] text-pink-300 font-bold uppercase tracking-wider mt-0.5">📍 Ensemble (0m)</p>
+        </div>
+
+        <!-- Cadre Vert : Compteur des 4 vibrations d'amour -->
+        <div class="bg-emerald-500/15 border border-emerald-400/30 rounded-2xl p-2 text-center">
+          <p class="text-[9px] uppercase tracking-wider text-emerald-300 font-bold mb-1">4 Vibrations</p>
+          <div class="grid grid-cols-2 gap-1 text-[11px] font-extrabold text-white">
+            <span class="bg-white/10 rounded-lg py-0.5">💌 <span id="lockCountEnv">0</span></span>
+            <span class="bg-white/10 rounded-lg py-0.5">🍑 <span id="lockCountPeach">0</span></span>
+            <span class="bg-white/10 rounded-lg py-0.5">🥒 <span id="lockCountCuc">0</span></span>
+            <span class="bg-white/10 rounded-lg py-0.5">🌶️ <span id="lockCountChili">0</span></span>
+          </div>
+        </div>
+
+      </div>
+      <p class="text-center text-[10px] text-pink-300/80 font-bold uppercase tracking-widest mt-2">
+        ÉCRAN DE VERROUILLAGE LOVE8
+      </p>
     </div>
 
-    <!-- Carte Centrale Lockscreen : Douglasse animé + Dernier dessin -->
-    <div class="space-y-4 my-auto">
-      <div class="bg-white/10 border border-white/15 rounded-3xl p-4 backdrop-blur-md flex items-center gap-4">
-        <div class="text-5xl cat-bounce">🐱</div>
+    <!-- GRAND CADRE CENTRAL : DESSIN AGRANDI (COMME SUR qqqqqqqqqqqq.png) -->
+    <div class="flex-1 my-3 bg-[#181924] border border-white/10 rounded-3xl p-3.5 flex flex-col justify-between overflow-hidden shadow-2xl">
+      <p id="lockDrawingMeta" class="text-xs text-slate-300 text-center font-medium">Dessiné par Jordan • À 21:22</p>
+      
+      <div class="flex-1 my-2 bg-white rounded-2xl p-3 flex items-center justify-center overflow-hidden">
+        <img id="lockDrawingImg" src="" class="w-full h-full object-contain hidden" />
+        <p id="lockDrawingFallback" class="text-3xl font-extrabold text-pink-500 italic">Je t'aime ❤️</p>
+      </div>
+
+      <p id="lockDrawingCaption" class="text-xs font-bold text-pink-200 text-center">« Mot doux pour toi ❤️ »</p>
+    </div>
+
+    <!-- BAS : CARTE DOUGLASSE EN DIRECT + BOUTON DÉVERROUILLER -->
+    <div class="space-y-2.5">
+      <div class="bg-[#181924] border border-white/10 rounded-3xl p-3.5 flex items-center gap-3.5">
+        <div class="text-4xl cat-bounce">🐱</div>
         <div class="flex-1">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-amber-300">Douglasse en direct</span>
-            <span id="lockCatStats" class="text-[11px] text-pink-200">🍖 100% • 💖 100%</span>
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-amber-400">DOUGLASSE EN DIRECT</span>
+            <span id="lockCatStats" class="text-[11px] font-bold text-pink-200">🍖 100% • 💖 100%</span>
           </div>
-          <p id="lockCatSpeech" class="text-sm font-bold mt-1 text-white">« Miaou ! J'ai faim, donne-moi des croquettes 🐟 »</p>
-          <div class="flex gap-2 mt-2.5">
-            <button onclick="interactCat('nourrir')" class="bg-amber-500/90 hover:bg-amber-500 text-slate-950 text-xs font-extrabold px-3 py-1.5 rounded-xl">🐟 Nourrir</button>
-            <button onclick="interactCat('jouer')" class="bg-indigo-500/90 hover:bg-indigo-500 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl">🧶 Jouer</button>
-            <button onclick="interactCat('caresser')" class="bg-pink-500/90 hover:bg-pink-500 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl">💖 Câliner</button>
+          <p id="lockCatSpeech" class="text-xs font-bold mt-0.5 text-white">« Rrrrr... Je ronronne de bonheur 💕 »</p>
+          <div class="flex gap-2 mt-2">
+            <button onclick="interactCat('nourrir')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-extrabold px-3 py-1.5 rounded-full">🐟 Nourrir</button>
+            <button onclick="interactCat('jouer')" class="bg-indigo-500 hover:bg-indigo-400 text-white text-[11px] font-extrabold px-3 py-1.5 rounded-full">🧶 Jouer</button>
+            <button onclick="interactCat('caresser')" class="bg-pink-500 hover:bg-pink-400 text-white text-[11px] font-extrabold px-3 py-1.5 rounded-full">💖 Câliner</button>
           </div>
         </div>
       </div>
 
-      <!-- Widget Mot Doux sur écran verrouillé -->
-      <div class="bg-white/10 border border-white/15 rounded-3xl p-4 backdrop-blur-md text-center">
-        <p id="lockDrawingMeta" class="text-[11px] text-pink-200 mb-2">Dernier mot doux reçu</p>
-        <div class="bg-white rounded-2xl p-2 flex items-center justify-center min-h-[120px]">
-          <img id="lockDrawingImg" src="" class="max-h-28 object-contain hidden" />
-          <p id="lockDrawingFallback" class="text-xl font-extrabold text-pink-500 italic">Je t'aime ❤️</p>
-        </div>
-        <p id="lockDrawingCaption" class="text-xs font-bold text-pink-100 mt-2">« Mot doux pour toi ❤️ »</p>
-      </div>
+      <button onclick="toggleLockscreen(false)" class="w-full py-3 rounded-2xl bg-[#181924] border border-white/15 text-xs font-extrabold uppercase tracking-wider text-white active:scale-95 transition">
+        🔓 DÉVERROUILLER ET REVENIR À LOVE8
+      </button>
     </div>
-
-    <button onclick="toggleLockscreen(false)" class="w-full py-3.5 rounded-2xl bg-white/15 border border-white/20 text-xs font-extrabold uppercase tracking-wider text-white active:scale-95 transition">
-      🔓 Fermer l'alerte d'écran verrouillé
-    </button>
   </div>
 
   <!-- BANNIÈRE DE NOTIFICATION FLOTTANTE (HEADS-UP) -->
@@ -114,8 +150,8 @@
     <div class="flex items-center gap-3">
       <div id="bannerIcon" class="w-10 h-10 rounded-full gradient-card flex items-center justify-center text-white text-xl">❤️</div>
       <div>
-        <p id="bannerTitle" class="text-xs font-bold uppercase tracking-wider text-pink-600">Love8 Notification</p>
-        <p id="bannerText" class="text-sm font-semibold text-slate-800">Lydie t'envoie une pluie de cœurs !</p>
+        <p id="bannerTitle" class="text-xs font-bold uppercase tracking-wider text-pink-600">⚡ VIBRATION D'AMOUR</p>
+        <p id="bannerText" class="text-sm font-semibold text-slate-800">Lydie → Jordan : Gros Câlin 🤗</p>
       </div>
     </div>
     <button onclick="hideBanner()" class="text-xs font-bold text-slate-400 px-2 py-1">OK</button>
@@ -146,10 +182,10 @@
       </button>
     </div>
 
-    <!-- BADGE SERVICE VEILLE ACTIVE -->
-    <div class="px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-extrabold text-emerald-700">
-      ⚡ Veille OK
-    </div>
+    <!-- BOUTON APERÇU VERROUILLAGE -->
+    <button onclick="toggleLockscreen(true)" class="px-2.5 py-1.5 rounded-full bg-purple-100 border border-purple-200 text-[10px] font-extrabold text-purple-800">
+      🔒 Écran
+    </button>
   </header>
 
   <!-- CONTENEUR PRINCIPAL -->
@@ -158,10 +194,13 @@
     <!-- ==================== ONGLET 1 : NOUS ==================== -->
     <section id="tab-nous" class="space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80">
-        <div class="flex justify-center mb-3">
-          <button onclick="showTab('souvenirs')" class="bg-pink-50 hover:bg-pink-100 text-purple-800 text-xs font-bold px-4 py-1.5 rounded-full transition flex items-center gap-1">
-            Ensemble depuis <span id="daysBadgeTop">2525</span> jours <span>›</span>
+        <div class="flex justify-between items-center mb-3">
+          <button onclick="showTab('souvenirs')" class="bg-pink-50 hover:bg-pink-100 text-purple-800 text-xs font-bold px-3.5 py-1.5 rounded-full transition flex items-center gap-1">
+            Ensemble depuis <span id="daysBadgeTop">2525</span> jours ›
           </button>
+          <span id="topSepBadge" class="bg-purple-50 text-purple-700 text-[11px] font-bold px-3 py-1 rounded-full">
+            ⏱️ Séparés : <span id="topSepTimer">00:00</span>
+          </span>
         </div>
 
         <div class="grid grid-cols-3 items-center text-center">
@@ -170,7 +209,7 @@
               <span class="text-4xl">🧔🏻‍♂️</span>
               <span id="jordanMoodEmoji" class="absolute -top-1 -right-1 bg-white rounded-full p-1 text-sm shadow">😍</span>
             </div>
-            <span id="jordanBat" class="mt-2 bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">🔋 75%</span>
+            <span id="jordanBat" class="mt-2 bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">🔋 61%</span>
             <h3 class="font-extrabold text-sm mt-1">Jordan</h3>
             <p id="jordanStatusText" class="text-xs text-slate-500">Pense à toi ❤️</p>
             <span id="jordanLocText" class="mt-1 bg-purple-50 text-purple-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">📍 À la maison</span>
@@ -182,7 +221,7 @@
               <div class="w-11 h-11 rounded-full gradient-card flex items-center justify-center text-white shadow-md pulse-ring">🤍</div>
               <div class="h-[2px] w-6 bg-pink-200"></div>
             </div>
-            <span class="mt-2 bg-pink-50 text-pink-600 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-pink-200">Connectés ❤️</span>
+            <span id="distanceBadge" class="mt-2 bg-pink-50 text-pink-600 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-pink-200">Connectés ❤️</span>
           </div>
 
           <div class="flex flex-col items-center">
@@ -201,32 +240,56 @@
           <button onclick="promptMoodChange()" class="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold py-2.5 rounded-2xl border border-slate-200/80 transition">
             😊 Changer mon humeur / lieu
           </button>
-          <button onclick="refreshBatteryAndNotifications()" class="bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold px-3.5 py-2.5 rounded-2xl border border-purple-200 transition">
-            🔔 Tester Notif / Bat
+          <button onclick="refreshBatteryAndGPS()" class="bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold px-3.5 py-2.5 rounded-2xl border border-purple-200 transition">
+            🔔 Activer Notifs / GPS
           </button>
         </div>
       </div>
 
-      <!-- Carte Vibration d'Amour -->
+      <!-- ==================== CARTE VIBRATION D'AMOUR (SELON VISUEL k.jpg) ==================== -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-xs font-extrabold tracking-wider uppercase text-slate-500">⚡ VIBRATION D'AMOUR</span>
-          <span class="bg-pink-50 text-pink-600 text-xs font-bold px-3 py-1 rounded-full"><span id="pingCounter">32</span> Pings aujourd'hui 💕</span>
+          <span class="bg-pink-50 text-pink-600 text-xs font-bold px-3 py-1 rounded-full"><span id="pingCounter">41</span> Pings aujourd'hui 💕</span>
         </div>
 
-        <button onclick="sendLovePing('Tu me manques !', '💖', [120, 60, 220])" class="w-full gradient-card text-white rounded-2xl p-4 shadow-md active:scale-[0.98] transition flex items-center justify-center gap-3">
-          <span class="text-2xl">💌</span>
-          <div class="text-left">
-            <p class="font-extrabold text-base leading-tight">Tu me manques !</p>
-            <p id="pingTargetSub" class="text-xs text-pink-100">Envoyer une pluie de cœurs à Lydie</p>
-          </div>
-        </button>
+        <!-- LES 4 BOUTONS CARRÉS VIOLETS : ENVELOPPE COEUR, PÊCHE, CONCOMBRE, PIMENT -->
+        <div class="grid grid-cols-4 gap-2.5 pt-1">
+          <button onclick="sendSpecialVibration('env', 'Tu me manques ! 💌', '💌', [120, 60, 250])" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
+            <span class="text-3xl">💌</span>
+            <span id="badgeVibEnv" class="absolute bottom-1 right-1.5 bg-black/25 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
+          </button>
 
-        <div class="grid grid-cols-4 gap-2 text-xs font-bold">
-          <button onclick="sendLovePing('Je t\'aime ❤️', '❤️', [80, 50, 80, 50, 180])" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">❤️ Je t'aime</button>
-          <button onclick="sendLovePing('Gros Bisou 😘', '😘', [100])" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">😘 Bisou</button>
-          <button onclick="sendLovePing('Gros Câlin 🤗', '🤗', [400])" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">🤗 Câlin</button>
-          <button onclick="sendLovePing('Ce soir ? 🔥', '🔥', [120, 80, 120])" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">🍕 Ce soir ?</button>
+          <button onclick="sendSpecialVibration('peach', 'Envie de toi 🍑', '🍑', [180, 80, 180, 80, 300])" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
+            <span class="text-3xl">🍑</span>
+            <span id="badgeVibPeach" class="absolute bottom-1 right-1.5 bg-black/25 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
+          </button>
+
+          <button onclick="sendSpecialVibration('cuc', 'Pensée coquine 🥒', '🥒', [250, 70, 250, 70, 400])" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
+            <span class="text-3xl">🥒</span>
+            <span id="badgeVibCuc" class="absolute bottom-1 right-1.5 bg-black/25 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
+          </button>
+
+          <button onclick="sendSpecialVibration('chili', 'Caliente ! 🌶️', '🌶️', [100, 50, 100, 50, 100, 50, 350])" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
+            <span class="text-3xl">🌶️</span>
+            <span id="badgeVibChili" class="absolute bottom-1 right-1.5 bg-black/25 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
+          </button>
+        </div>
+
+        <!-- LES 4 BOUTONS DU BAS AVEC PLUIE SPÉCIFIQUE ET ICÔNE FLAMME POUR "CE SOIR ?" -->
+        <div class="grid grid-cols-4 gap-2 text-xs font-bold pt-1">
+          <button onclick="sendLovePing('Je t\'aime ❤️', '❤️', [90, 60, 90, 60, 220])" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">
+            ❤️ Je t'aime
+          </button>
+          <button onclick="sendLovePing('Gros Bisou 😘', '😘', [120, 70, 180])" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">
+            😘 Bisou
+          </button>
+          <button onclick="sendLovePing('Gros Câlin 🤗', '🤗', [450])" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">
+            🤗 Câlin
+          </button>
+          <button onclick="sendLovePing('Ce soir ? 🔥', '🔥', [140, 60, 140, 60, 280])" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">
+            🔥 Ce soir ?
+          </button>
         </div>
       </div>
 
@@ -243,10 +306,10 @@
           <button onclick="showTab('dessin')" class="bg-purple-600 text-white text-xs font-bold px-3.5 py-2 rounded-full shadow">✏️ Dessiner</button>
         </div>
 
-        <div class="border-2 border-dashed border-pink-200 rounded-2xl p-3 bg-pink-50/20 flex flex-col items-center justify-center relative min-h-[160px]">
-          <img id="dashboardDrawingPreview" src="" alt="Aperçu dessin" class="max-h-36 object-contain hidden" />
-          <div id="defaultDrawingPlaceholder" class="text-center py-6">
-            <p class="text-2xl font-extrabold text-pink-500 italic font-serif">Je t'aime ❤️</p>
+        <div class="border-2 border-dashed border-pink-200 rounded-2xl p-3 bg-pink-50/20 flex flex-col items-center justify-center relative min-h-[220px]">
+          <img id="dashboardDrawingPreview" src="" alt="Aperçu dessin" class="max-h-48 object-contain hidden" />
+          <div id="defaultDrawingPlaceholder" class="text-center py-8">
+            <p class="text-3xl font-extrabold text-pink-500 italic font-serif">Je t'aime ❤️</p>
           </div>
           <div id="dashboardNoteCaption" class="mt-2 w-full bg-slate-700/90 text-white text-xs font-bold text-center py-2 rounded-full">
             « Mot doux pour toi ❤️ »
@@ -272,13 +335,13 @@
       </div>
     </section>
 
-    <!-- ==================== ONGLET 2 : DESSIN ==================== -->
+    <!-- ==================== ONGLET 2 : DESSIN (AGRANDI + CLAVIER) ==================== -->
     <section id="tab-dessin" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="font-extrabold text-base flex items-center gap-1.5">🎨 Dessin & Mot Doux</h2>
-            <p id="drawSubtitle" class="text-xs text-slate-400">Dessine au doigt pour l'écran de Lydie</p>
+            <h2 class="font-extrabold text-base flex items-center gap-1.5">🎨 Dessin & Texte</h2>
+            <p id="drawSubtitle" class="text-xs text-slate-400">Dessine au doigt ou écris avec ton clavier</p>
           </div>
           <div class="flex gap-2">
             <button onclick="undoCanvas()" class="w-9 h-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-sm">↩️</button>
@@ -286,10 +349,20 @@
           </div>
         </div>
 
+        <!-- CANVAS AGRANDI EN HAUTEUR -->
         <div class="border-2 border-purple-200 rounded-2xl overflow-hidden bg-white shadow-inner">
-          <canvas id="drawCanvas" width="360" height="230" class="w-full touch-none bg-white cursor-crosshair"></canvas>
+          <canvas id="drawCanvas" width="360" height="360" class="w-full touch-none bg-white cursor-crosshair"></canvas>
         </div>
 
+        <!-- OUTIL POUR ÉCRIRE AU CLAVIER DIRECTEMENT DANS LE DESSIN -->
+        <div class="flex gap-2">
+          <input id="canvasKeyboardInput" type="text" placeholder="⌨️ Écrire un texte avec le clavier dans le dessin..." class="flex-1 text-xs bg-purple-50/60 border border-purple-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-purple-500" />
+          <button onclick="writeKeyboardTextOnCanvas()" class="bg-purple-600 text-white text-xs font-extrabold px-3.5 py-2 rounded-xl shadow active:scale-95">
+            Ajouter
+          </button>
+        </div>
+
+        <!-- Palette de couleurs -->
         <div class="flex items-center justify-between pt-1">
           <button onclick="setBrushColor('#ec4899')" class="w-8 h-8 rounded-full bg-pink-500 ring-2 ring-offset-2 ring-pink-400"></button>
           <button onclick="setBrushColor('#8b5cf6')" class="w-8 h-8 rounded-full bg-violet-500"></button>
@@ -307,14 +380,14 @@
             <span class="text-[10px] font-bold text-slate-400 uppercase">Tampons:</span>
             <button onclick="placeStamp('❤️')" class="px-2 py-1 bg-pink-50 rounded-lg text-sm">❤️</button>
             <button onclick="placeStamp('😘')" class="px-2 py-1 bg-pink-50 rounded-lg text-sm">😘</button>
-            <button onclick="placeStamp('🌹')" class="px-2 py-1 bg-pink-50 rounded-lg text-sm">🌹</button>
-            <button onclick="placeStamp('🐱')" class="px-2 py-1 bg-pink-50 rounded-lg text-sm">🐱</button>
-            <button onclick="placeStamp('✨')" class="px-2 py-1 bg-pink-50 rounded-lg text-sm">✨</button>
+            <button onclick="placeStamp('🍑')" class="px-2 py-1 bg-pink-50 rounded-lg text-sm">🍑</button>
+            <button onclick="placeStamp('🥒')" class="px-2 py-1 bg-pink-50 rounded-lg text-sm">🥒</button>
+            <button onclick="placeStamp('🌶️')" class="px-2 py-1 bg-pink-50 rounded-lg text-sm">🌶️</button>
             <button onclick="placeStamp('🔥')" class="px-2 py-1 bg-pink-50 rounded-lg text-sm">🔥</button>
           </div>
         </div>
 
-        <input id="sweetNoteInput" type="text" placeholder="Ajouter un petit mot doux (ex: Bon courage mon amour ❤️)..." class="w-full text-xs bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-3 focus:outline-none focus:border-pink-400" />
+        <input id="sweetNoteInput" type="text" placeholder="Légende sous le dessin (ex: Bon courage mon amour ❤️)..." class="w-full text-xs bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-3 focus:outline-none focus:border-pink-400" />
 
         <button onclick="sendDrawingToPartner()" class="w-full gradient-card text-white font-extrabold text-sm py-3.5 rounded-2xl shadow-md active:scale-[0.99] transition">
           🚀 Envoyer sur l'écran de <span id="sendTargetName">Lydie</span>
@@ -344,7 +417,6 @@
           « Miaou ! Touche-moi pour me caresser 🐾 »
         </div>
 
-        <!-- Illustration SVG Animée de Douglasse -->
         <div onclick="interactCat('caresser')" class="py-2 flex justify-center cursor-pointer">
           <svg id="catSvg" class="w-40 h-40 cat-bounce" viewBox="0 0 200 200">
             <ellipse cx="100" cy="175" rx="55" ry="10" fill="#ede9fe" />
@@ -373,7 +445,6 @@
           </svg>
         </div>
 
-        <!-- 3 Jauges -->
         <div class="space-y-2.5 text-left pt-1">
           <div>
             <div class="flex justify-between text-xs font-bold mb-1">
@@ -421,7 +492,6 @@
           </button>
         </div>
 
-        <!-- Boutons de test pour déclencher les états "J'ai faim" / "Je veux jouer" -->
         <div class="pt-2 border-t border-slate-100 flex justify-between gap-2 text-[11px] font-bold">
           <button onclick="triggerCatNeed('faim')" class="flex-1 py-2 rounded-xl bg-amber-50/70 text-amber-800 border border-amber-200/60">🔔 Alerte « J'ai faim »</button>
           <button onclick="triggerCatNeed('jouer')" class="flex-1 py-2 rounded-xl bg-indigo-50/70 text-indigo-800 border border-indigo-200/60">🔔 Alerte « Je veux jouer »</button>
@@ -524,17 +594,19 @@
   </nav>
 
   <script>
-    // URL AUTOMATIQUE SUR CLOUDFLARE PAGES (/state)
     const API_ENDPOINT = '/state';
     let currentUser = localStorage.getItem('love8_user') || 'Jordan';
     let lastEventId = Number(localStorage.getItem('love8_last_event') || 0);
 
     let state = JSON.parse(localStorage.getItem('love8_state')) || {
       updatedAt: Date.now(),
-      pingsToday: 32,
+      pingsToday: 41,
+      vibCounts: { env: 12, peach: 9, cuc: 8, chili: 12 },
+      separationStart: null,
+      lastDistanceMeters: 0,
       lastEvent: { id: 0, sender: 'Jordan', title: '', message: '', emoji: '❤️', pattern: [100] },
-      jordan: { mood: '😍', text: 'Pense à toi ❤️', loc: '📍 À la maison', bat: 75 },
-      lydie: { mood: '😍', text: 'Hâte de te voir 💕', loc: '📍 À la maison', bat: 47 },
+      jordan: { mood: '😍', text: 'Pense à toi ❤️', loc: '📍 À la maison', bat: 61, lat: null, lng: null },
+      lydie: { mood: '😍', text: 'Hâte de te voir 💕', loc: '📍 À la maison', bat: 47, lat: null, lng: null },
       cat: {
         level: 4,
         xp: 40,
@@ -560,6 +632,11 @@
       ]
     };
 
+    // Sécurité si ancien state en cache sans vibCounts
+    if (!state.vibCounts) {
+      state.vibCounts = { env: 12, peach: 9, cuc: 8, chili: 12 };
+    }
+
     const questionsPool = [
       "Quel est ton souvenir préféré de nous deux cette année ?",
       "Quelle destination rêves-tu qu'on visite ensemble prochainement ?",
@@ -567,26 +644,21 @@
       "Si on avait une soirée rien que tous les deux ce week-end, quel serait ton programme idéal ?"
     ];
 
-    // Notification Système Native (Barre de notification Android + Écran de verrouillage)
     function pushSystemNotification(title, body) {
       if (window.AndroidNative && window.AndroidNative.showSystemNotification) {
         window.AndroidNative.showSystemNotification(title, body);
       } else if ('Notification' in window && Notification.permission === 'granted') {
         try {
-          new Notification(title, { body, vibrate: [150, 80, 200] });
+          new Notification(title, { body, vibrate: [200, 100, 250] });
         } catch (e) {}
       }
     }
 
-    // Déclenché automatiquement par Android quand le téléphone est en veille / verrouillé et reçoit un ping
     window.onNativeWakeAlert = function(emoji) {
-      if (window.AndroidNative && window.AndroidNative.isDeviceLocked && window.AndroidNative.isDeviceLocked()) {
-        toggleLockscreen(true);
-      }
-      spawnParticles(emoji || '❤️', [200, 100, 350]);
+      toggleLockscreen(true);
+      spawnParticles(emoji || '❤️', [250, 100, 350]);
     };
 
-    // Synchronise le profil actif au démarrage avec le service Android en arrière-plan
     if (window.AndroidNative && window.AndroidNative.setUser) {
       window.AndroidNative.setUser(currentUser);
     }
@@ -607,7 +679,6 @@
       }
     }
 
-    // Synchronisation automatique toutes les 3 secondes
     async function pollCloudState() {
       try {
         const res = await fetch(API_ENDPOINT);
@@ -615,6 +686,7 @@
         const remote = await res.json();
         if (remote && remote.updatedAt && (!state.updatedAt || remote.updatedAt > state.updatedAt)) {
           state = remote;
+          if (!state.vibCounts) state.vibCounts = { env: 12, peach: 9, cuc: 8, chili: 12 };
           localStorage.setItem('love8_state', JSON.stringify(state));
           checkCatDecay();
           renderAll();
@@ -622,37 +694,74 @@
           if (remote.lastEvent && remote.lastEvent.id > lastEventId && remote.lastEvent.sender !== currentUser) {
             lastEventId = remote.lastEvent.id;
             localStorage.setItem('love8_last_event', String(lastEventId));
-            spawnParticles(remote.lastEvent.emoji || '❤️', remote.lastEvent.pattern || [120, 80, 180]);
+            spawnParticles(remote.lastEvent.emoji || '❤️', remote.lastEvent.pattern || [180, 80, 250]);
             triggerBanner(remote.lastEvent.title, remote.lastEvent.message, remote.lastEvent.emoji || '❤️');
             pushSystemNotification(remote.lastEvent.title, remote.lastEvent.message);
-
-            if (window.AndroidNative && window.AndroidNative.isDeviceLocked && window.AndroidNative.isDeviceLocked()) {
-              toggleLockscreen(true);
-            }
+            toggleLockscreen(true);
           }
         }
       } catch (e) {}
     }
 
-    // Baisse naturelle des jauges de Douglasse avec le temps + Alerte auto si < 40%
+    // Calcul de distance GPS (Haversine) et compteur de séparation automatique
+    function calcDistanceMeters(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const toRad = x => x * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    }
+
+    function updateGpsSeparationState() {
+      const j = state.jordan;
+      const l = state.lydie;
+      if (j.lat && j.lng && l.lat && l.lng) {
+        const dist = calcDistanceMeters(j.lat, j.lng, l.lat, l.lng);
+        state.lastDistanceMeters = dist;
+        // Si distance > 150m, on démarre le compteur de séparation
+        if (dist > 150) {
+          if (!state.separationStart) state.separationStart = Date.now();
+        } else {
+          state.separationStart = null;
+        }
+      }
+    }
+
+    function formatSeparationTimer() {
+      if (!state.separationStart) {
+        return { timeStr: "00:00", statusStr: `📍 Ensemble (${state.lastDistanceMeters || 0}m)` };
+      }
+      const diffSec = Math.max(0, Math.floor((Date.now() - state.separationStart) / 1000));
+      const hours = Math.floor(diffSec / 3600);
+      const mins = Math.floor((diffSec % 3600) / 60);
+      const secs = diffSec % 60;
+      const pad = n => String(n).padStart(2, '0');
+      const timeStr = hours > 0 ? `${pad(hours)}:${pad(mins)}:${pad(secs)}` : `${pad(mins)}:${pad(secs)}`;
+      const distKm = state.lastDistanceMeters >= 1000
+        ? (state.lastDistanceMeters / 1000).toFixed(1) + ' km'
+        : (state.lastDistanceMeters || 200) + ' m';
+      return { timeStr, statusStr: `📍 Séparés (${distKm})` };
+    }
+
+    setInterval(() => {
+      const sep = formatSeparationTimer();
+      document.getElementById('lockSepTimer').innerText = sep.timeStr;
+      document.getElementById('lockSepStatus').innerText = sep.statusStr;
+      document.getElementById('topSepTimer').innerText = sep.timeStr;
+    }, 1000);
+
     function checkCatDecay() {
       const now = Date.now();
       const elapsedMinutes = (now - (state.cat.lastDecay || now)) / 60000;
       if (elapsedMinutes >= 15) {
         const steps = Math.floor(elapsedMinutes / 15);
-        const prevHunger = state.cat.hunger;
-        const prevLove = state.cat.love;
-
         state.cat.hunger = Math.max(5, state.cat.hunger - steps * 4);
         state.cat.love = Math.max(5, state.cat.love - steps * 3);
         state.cat.energy = Math.min(100, state.cat.energy + steps * 2);
         state.cat.lastDecay = now;
-
-        if (prevHunger > 40 && state.cat.hunger <= 40) {
-          triggerCatNeed('faim');
-        } else if (prevLove > 40 && state.cat.love <= 40) {
-          triggerCatNeed('jouer');
-        }
       }
     }
 
@@ -677,24 +786,25 @@
     function toggleLockscreen(show) {
       const el = document.getElementById('lockscreenOverlay');
       if (show) {
-        const now = new Date();
-        document.getElementById('lockTime').innerText = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
         el.classList.remove('hidden');
       } else {
         el.classList.add('hidden');
       }
     }
 
-    function spawnParticles(emoji, pattern = [90, 60, 180]) {
-      if (navigator.vibrate) navigator.vibrate(pattern);
-      for (let i = 0; i < 24; i++) {
+    // Pluie abondante d'emojis (cœurs, bisous, câlins, flammes, pêches, concombres, piments) + Vibration forte
+    function spawnParticles(emoji, pattern = [150, 70, 250]) {
+      if (navigator.vibrate) {
+        try { navigator.vibrate(pattern); } catch (e) {}
+      }
+      for (let i = 0; i < 34; i++) {
         const el = document.createElement('div');
-        el.className = 'heart-particle text-2xl';
+        el.className = 'heart-particle text-3xl';
         el.innerText = emoji;
         el.style.left = Math.random() * 94 + 'vw';
-        el.style.animationDuration = (1.8 + Math.random() * 1.4) + 's';
+        el.style.animationDuration = (1.6 + Math.random() * 1.6) + 's';
         document.body.appendChild(el);
-        setTimeout(() => el.remove(), 3000);
+        setTimeout(() => el.remove(), 3200);
       }
     }
 
@@ -711,6 +821,31 @@
       document.getElementById('liveBanner').classList.add('hidden');
     }
 
+    // Envoi d'une des 4 Vibrations Spéciales (Enveloppe, Pêche, Concombre, Piment)
+    function sendSpecialVibration(key, label, emoji, pattern) {
+      state.pingsToday += 1;
+      state.vibCounts[key] = (state.vibCounts[key] || 0) + 1;
+      const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
+      const eventId = Date.now();
+      lastEventId = eventId;
+      localStorage.setItem('love8_last_event', String(eventId));
+
+      state.lastEvent = {
+        id: eventId,
+        sender: currentUser,
+        title: `⚡ VIBRATION D'AMOUR`,
+        message: `${currentUser} → ${partner} : ${label}`,
+        emoji,
+        pattern
+      };
+
+      spawnParticles(emoji, pattern);
+      triggerBanner('⚡ VIBRATION D\'AMOUR', `${currentUser} → ${partner} : ${label}`, emoji);
+      pushSystemNotification(state.lastEvent.title, state.lastEvent.message);
+      saveState();
+    }
+
+    // Envoi des 4 boutons du bas (Je t'aime, Bisou, Câlin, Ce soir ?)
     function sendLovePing(label, emoji, pattern) {
       state.pingsToday += 1;
       const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
@@ -726,7 +861,7 @@
         pattern
       };
       spawnParticles(emoji, pattern);
-      triggerBanner('VIBRATION D\'AMOUR', `${currentUser} → ${partner} : ${label}`, emoji);
+      triggerBanner('⚡ VIBRATION D\'AMOUR', `${currentUser} → ${partner} : ${label}`, emoji);
       pushSystemNotification(state.lastEvent.title, state.lastEvent.message);
       saveState();
     }
@@ -772,15 +907,14 @@
         title: '🐱 DOUGLASSE',
         message: msg,
         emoji,
-        pattern: [80, 50, 120]
+        pattern: [100, 60, 160]
       };
 
-      spawnParticles(emoji);
+      spawnParticles(emoji, [100, 60, 160]);
       pushSystemNotification(state.lastEvent.title, state.lastEvent.message);
       saveState();
     }
 
-    // Déclenche une vraie notification système + alerte de Douglasse
     function triggerCatNeed(type) {
       const eventId = Date.now();
       lastEventId = eventId;
@@ -821,23 +955,37 @@
 
       document.getElementById('daysBadgeTop').innerText = days;
       document.getElementById('totalDaysMain').innerText = days;
+      document.getElementById('lockRelationDays').innerText = days;
       document.getElementById('statYears').innerText = years;
       document.getElementById('statMonths').innerText = months;
       document.getElementById('statHours').innerText = hours;
     }
 
-    async function refreshBatteryAndNotifications() {
+    async function refreshBatteryAndGPS() {
       if ('Notification' in window) {
         try { await Notification.requestPermission(); } catch (e) {}
       }
+      const key = currentUser.toLowerCase();
       if (navigator.getBattery) {
-        const bat = await navigator.getBattery();
-        const level = Math.round(bat.level * 100);
-        const key = currentUser.toLowerCase();
-        state[key].bat = level;
+        try {
+          const bat = await navigator.getBattery();
+          state[key].bat = Math.round(bat.level * 100);
+        } catch (e) {}
       }
-      pushSystemNotification('Love8 Actif ❤️', `Notifications dans la barre d'état et veille activées pour ${currentUser} !`);
-      triggerBanner('NOTIFICATIONS & BATTERIE', `Vraie notification envoyée dans la barre du haut !`, '🔔');
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          state[key].lat = pos.coords.latitude;
+          state[key].lng = pos.coords.longitude;
+          updateGpsSeparationState();
+          saveState();
+        }, () => {
+          // Si pas de signal GPS, permet de tester le compteur de séparation
+          if (!state.separationStart) state.separationStart = Date.now();
+          saveState();
+        });
+      }
+      pushSystemNotification('Love8 Actif ❤️', `GPS, batterie et notifications synchronisés pour ${currentUser} !`);
+      triggerBanner('GPS & BATTERIE', `Position et compteur de séparation mis à jour !`, '📍');
       saveState();
     }
 
@@ -846,16 +994,25 @@
       const newText = prompt('Ton message d\'humeur :', state[key].text);
       if (newText) state[key].text = newText;
       const newLoc = prompt('Ta localisation actuelle (ex: 📍 Au travail, 📍 À la maison) :', state[key].loc);
-      if (newLoc) state[key].loc = newLoc.startsWith('📍') ? newLoc : '📍 ' + newLoc;
+      if (newLoc) {
+        state[key].loc = newLoc.startsWith('📍') ? newLoc : '📍 ' + newLoc;
+        // Si les deux ne sont plus au même endroit, lance le compteur de séparation
+        if (state.jordan.loc !== state.lydie.loc) {
+          if (!state.separationStart) state.separationStart = Date.now();
+        } else {
+          state.separationStart = null;
+        }
+      }
       saveState();
     }
 
-    // Canvas
+    // ==================== CANVAS DE DESSIN + TEXTE AU CLAVIER ====================
     const canvas = document.getElementById('drawCanvas');
     const ctx = canvas.getContext('2d');
     let drawing = false;
     let brushColor = '#ec4899';
     let historyStack = [];
+    let textLineY = 80;
 
     function saveCanvasHistory() {
       historyStack.push(canvas.toDataURL());
@@ -893,10 +1050,13 @@
     window.addEventListener('pointerup', () => { drawing = false; });
 
     function setBrushColor(c) { brushColor = c; }
+
     function clearCanvas() {
       saveCanvasHistory();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      textLineY = 80;
     }
+
     function undoCanvas() {
       if (!historyStack.length) return;
       const img = new Image();
@@ -906,10 +1066,26 @@
       };
       img.src = historyStack.pop();
     }
+
     function placeStamp(emoji) {
       saveCanvasHistory();
-      ctx.font = '38px sans-serif';
-      ctx.fillText(emoji, 50 + Math.random() * 240, 60 + Math.random() * 130);
+      ctx.font = '42px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(emoji, 60 + Math.random() * 240, 60 + Math.random() * 240);
+    }
+
+    // Écrire au clavier directement dans le dessin
+    function writeKeyboardTextOnCanvas() {
+      const input = document.getElementById('canvasKeyboardInput');
+      const text = input.value.trim();
+      if (!text) return;
+      saveCanvasHistory();
+      ctx.font = 'bold 26px "Plus Jakarta Sans", sans-serif';
+      ctx.fillStyle = brushColor === '#ffffff' ? '#ec4899' : brushColor;
+      ctx.textAlign = 'center';
+      ctx.fillText(text, canvas.width / 2, textLineY);
+      textLineY = textLineY > 300 ? 80 : textLineY + 45;
+      input.value = '';
     }
 
     function sendDrawingToPartner() {
@@ -929,11 +1105,11 @@
         title: `🖌️ Nouveau dessin de ${currentUser}`,
         message: note,
         emoji: '🎨',
-        pattern: [100, 60, 200]
+        pattern: [120, 60, 220]
       };
 
       document.getElementById('sweetNoteInput').value = '';
-      spawnParticles('🎨');
+      spawnParticles('🎨', [120, 60, 220]);
       triggerBanner('WIDGET MIS À JOUR', `Dessin envoyé sur l'écran de ${partner} !`, '🖌️');
       pushSystemNotification(state.lastEvent.title, state.lastEvent.message);
       saveState();
@@ -977,10 +1153,20 @@
         ? 'px-3 py-1.5 rounded-full gradient-card text-white shadow transition-all flex items-center gap-1'
         : 'px-3 py-1.5 rounded-full text-slate-600 transition-all flex items-center gap-1';
 
-      document.getElementById('pingTargetSub').innerText = `Envoyer une pluie de cœurs à ${partner}`;
-      document.getElementById('drawSubtitle').innerText = `Dessine au doigt pour l'écran de ${partner}`;
       document.getElementById('sendTargetName').innerText = partner;
       document.getElementById('pingCounter').innerText = state.pingsToday;
+
+      // Compteurs des 4 vibrations (Dashboard + Cadre Vert Lockscreen)
+      const vc = state.vibCounts || { env: 0, peach: 0, cuc: 0, chili: 0 };
+      document.getElementById('badgeVibEnv').innerText = vc.env || 0;
+      document.getElementById('badgeVibPeach').innerText = vc.peach || 0;
+      document.getElementById('badgeVibCuc').innerText = vc.cuc || 0;
+      document.getElementById('badgeVibChili').innerText = vc.chili || 0;
+
+      document.getElementById('lockCountEnv').innerText = vc.env || 0;
+      document.getElementById('lockCountPeach').innerText = vc.peach || 0;
+      document.getElementById('lockCountCuc').innerText = vc.cuc || 0;
+      document.getElementById('lockCountChili').innerText = vc.chili || 0;
 
       document.getElementById('jordanStatusText').innerText = state.jordan.text;
       document.getElementById('jordanLocText').innerText = state.jordan.loc;
