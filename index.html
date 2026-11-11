@@ -384,7 +384,6 @@
           </button>
         </div>
 
-        <!-- NOUVEAU BOUTON D'URGENCE : S.O.S FLASH LUMINEUX LED + SIRÈNE D'AMOUR -->
         <div class="pt-1">
           <button onclick="sendSosFlashSiren()" class="sos-siren-btn w-full py-3.5 px-4 rounded-2xl text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 active:scale-95 transition">
             <span class="text-lg">🚨</span>
@@ -628,10 +627,9 @@
       </div>
     </section>
 
-    <!-- ==================== ONGLET 4 : JEUX & BONS D'AMOUR (AVEC ACTION OU VÉRITÉ 3 NIVEAUX) ==================== -->
+    <!-- ==================== ONGLET 4 : JEUX & BONS D'AMOUR ==================== -->
     <section id="tab-jeux" class="hidden space-y-4">
 
-      <!-- ==================== NOUVEAU JEU : ACTION OU VÉRITÉ SPÉCIAL COUPLE (3 NIVEAUX) ==================== -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <div>
@@ -642,7 +640,6 @@
           </span>
         </div>
 
-        <!-- SÉLECTEUR DES 3 NIVEAUX D'INTENSITÉ -->
         <div class="grid grid-cols-3 gap-2 pt-1 text-xs font-extrabold">
           <button id="btnTodDoux" onclick="setTodLevel('doux')" class="py-2 rounded-xl border transition">
             💕 Doux
@@ -655,7 +652,6 @@
           </button>
         </div>
 
-        <!-- CARTE TIRÉE -->
         <div class="gradient-card text-white rounded-2xl p-4 text-center shadow-md space-y-2 min-h-[120px] flex flex-col justify-center">
           <p id="todCardHeader" class="text-[10px] uppercase tracking-widest font-extrabold text-pink-100">
             TIRE UNE CARTE POUR COMMENCER LA SOIRÉE
@@ -665,7 +661,6 @@
           </p>
         </div>
 
-        <!-- BOUTONS TIRER ACTION / TIRER VÉRITÉ / DÉFI RELEVÉ -->
         <div class="grid grid-cols-2 gap-2.5 text-xs font-extrabold">
           <button onclick="drawTruthOrDare('Vérité')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 py-3 rounded-2xl active:scale-95 transition">
             🤔 Tirer une VÉRITÉ
@@ -680,7 +675,6 @@
         </button>
       </div>
 
-      <!-- QUIZ COUPLE -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <span class="bg-purple-100 text-purple-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">🎯 QUIZ : TU ME CONNAIS PAR CŒUR ?</span>
@@ -692,7 +686,6 @@
         <div id="quizStatusBox" class="bg-pink-50/70 border border-pink-200 rounded-2xl p-3 text-xs font-bold text-pink-900 text-center"></div>
       </div>
 
-      <!-- CARNET DE BONS D'AMOUR -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div>
           <h3 class="font-extrabold text-sm">🎟️ Carnet de « Bons d'Amour »</h3>
@@ -852,7 +845,6 @@
       { id: 'king_aura',  name: 'Aura Légendaire', emoji: '🔥', slot: 'aura', price: 5000 }
     ];
 
-    // BANQUE DE CARTES « ACTION OU VÉRITÉ » SPÉCIAL COUPLE (3 NIVEAUX D'INTENSITÉ)
     const truthOrDareDeck = {
       doux: {
         Vérité: [
@@ -1004,7 +996,6 @@
       }
     }
 
-    // ==================== MOTEUR AUDIO ENRICHI (AVEC SIRÈNE S.O.S D'AMOUR) ====================
     let audioCtx = null;
     function getAudioContext() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1017,7 +1008,6 @@
         const ctx = getAudioContext();
         const now = ctx.currentTime;
 
-        // 0. SIRÈNE D'AMOUR S.O.S ("Réponds-moi vite !")
         if (type === 'siren') {
           [0, 0.42, 0.84].forEach(cycle => {
             const osc = ctx.createOscillator();
@@ -1339,7 +1329,6 @@
       }
     }
 
-    // ==================== BOUTON D'URGENCE : S.O.S FLASH LUMINEUX LED + SIRÈNE D'AMOUR ====================
     function sendSosFlashSiren() {
       state.pingsToday += 1;
       state.coins = (state.coins || 0) + 5;
@@ -1365,7 +1354,6 @@
       saveState();
     }
 
-    // ==================== PLUIE SUR FOND 100% NOIR + EXTINCTION STRICTE 1S APRÈS L'ANIMATION ====================
     function triggerBlackScreenRain(emoji, labelText, soundType = 'love', pattern = [200, 80, 300], shouldSleepAfter = false) {
       if (sleep15sTimer) clearTimeout(sleep15sTimer);
       if (sleepCountdownInterval) clearInterval(sleepCountdownInterval);
@@ -1463,17 +1451,28 @@
       window.AndroidNative.setUser(currentUser);
     }
 
+    // ==================== FONCTION SAVESTATE ALLÉGÉE (ANTI-BLOCAGE CLOUDFLARE) ====================
     async function saveState() {
       state.updatedAt = Date.now();
+      if (state.cat && state.cat.photo) {
+        delete state.cat.photo;
+      }
+      if (state.gallery && state.gallery.length > 2) {
+        state.gallery = state.gallery.slice(0, 2);
+      }
       localStorage.setItem('love8_state', JSON.stringify(state));
       renderAll();
       try {
-        await fetch(API_ENDPOINT, {
+        const res = await fetch(API_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(state)
         });
-        document.getElementById('syncDot').className = 'w-2 h-2 rounded-full bg-emerald-500 inline-block';
+        if (res.ok) {
+          document.getElementById('syncDot').className = 'w-2 h-2 rounded-full bg-emerald-500 inline-block';
+        } else {
+          document.getElementById('syncDot').className = 'w-2 h-2 rounded-full bg-amber-500 inline-block';
+        }
       } catch (e) {
         document.getElementById('syncDot').className = 'w-2 h-2 rounded-full bg-amber-500 inline-block';
       }
@@ -1518,7 +1517,6 @@
       } catch (e) {}
     }
 
-    // ==================== SURVEILLANCE 100% AUTOMATIQUE BATTERIE & GPS ====================
     async function initAutoBatteryAndGpsListeners() {
       if (navigator.getBattery) {
         try {
@@ -1526,51 +1524,29 @@
           const syncBat = () => {
             const key = currentUser.toLowerCase();
             const newLevel = Math.round(bat.level * 100);
-            if (state[key].bat !== newLevel) {
+            if (Math.abs((state[key].bat || 0) - newLevel) >= 2) {
               state[key].bat = newLevel;
               saveState();
             }
           };
           syncBat();
           bat.addEventListener('levelchange', syncBat);
-          bat.addEventListener('chargingchange', syncBat);
         } catch (e) {}
       }
 
       if (navigator.geolocation) {
         try {
-          navigator.geolocation.watchPosition(pos => {
+          navigator.geolocation.getCurrentPosition(pos => {
             const key = currentUser.toLowerCase();
             state[key].lat = pos.coords.latitude;
             state[key].lng = pos.coords.longitude;
             updateGpsSeparationState();
             saveState();
-          }, () => {}, { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 });
+          }, () => {}, { enableHighAccuracy: true, maximumAge: 60000, timeout: 10000 });
         } catch (e) {}
       }
     }
 
-    setInterval(async () => {
-      const key = currentUser.toLowerCase();
-      if (navigator.getBattery) {
-        try {
-          const bat = await navigator.getBattery();
-          state[key].bat = Math.round(bat.level * 100);
-        } catch (e) {}
-      }
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-          state[key].lat = pos.coords.latitude;
-          state[key].lng = pos.coords.longitude;
-          updateGpsSeparationState();
-          saveState();
-        }, () => {
-          saveState();
-        }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 });
-      }
-    }, 60000);
-
-    // ==================== MODALE AVEC LES 2 LISTES : HUMEURS & LIEUX ====================
     function openMoodLocModal() {
       renderMoodLocLists();
       document.getElementById('moodLocModal').classList.remove('hidden');
@@ -1745,7 +1721,7 @@
     function handleAvatarUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
-      resizeImageToDataUrl(file, 220, (dataUrl) => {
+      resizeImageToDataUrl(file, 160, (dataUrl) => {
         state[avatarUploadTarget].avatar = dataUrl;
         triggerBanner('📷 PHOTO DE PROFIL', `Photo mise à jour !`, '😍');
         saveState();
@@ -1935,7 +1911,6 @@
       saveState();
     }
 
-    // ==================== FONCTIONS DU JEU « ACTION OU VÉRITÉ » SPÉCIAL COUPLE ====================
     function setTodLevel(lvl) {
       state.truthOrDare.level = lvl;
       playLoveSound(lvl === 'caliente' ? 'fire' : (lvl === 'fun' ? 'straw' : 'rose'));
@@ -2069,7 +2044,7 @@
     function handleCapsulePhotoUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
-      resizeImageToDataUrl(file, 360, (dataUrl) => {
+      resizeImageToDataUrl(file, 300, (dataUrl) => {
         pendingCapsulePhoto = dataUrl;
         document.getElementById('btnCapsulePhoto').innerText = '✅ Photo prête';
       });
@@ -2334,7 +2309,7 @@
       const drawingObj = { dataUrl, caption: `« ${note} »`, author: currentUser, time: `${dateStr} à ${now}` };
       state.latestDrawing = drawingObj;
       state.gallery.unshift(drawingObj);
-      state.gallery = state.gallery.slice(0, 6);
+      state.gallery = state.gallery.slice(0, 2);
       state.coins = (state.coins || 0) + 15;
 
       try {
@@ -2540,7 +2515,6 @@
         </div>
       `).join('');
 
-      // Rendu du jeu Action ou Vérité Spécial Couple
       const tod = state.truthOrDare || { level: 'doux', turn: 'Jordan', lastType: 'Vérité', cardText: '' };
       document.getElementById('todTurnBadge').innerText = `Tour de ${tod.turn} ${tod.turn === 'Jordan' ? '👦🏻' : '👩🏻'}`;
       document.getElementById('todCardHeader').innerText = `${tod.lastType || 'DÉFI'} (${tod.level.toUpperCase()}) • POUR ${tod.turn.toUpperCase()}`;
