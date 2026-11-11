@@ -29,7 +29,6 @@ jobs:
 
       - name: 📦 Préparation du dossier Web & Capacitor 6
         run: |
-          # Supprime tout dossier android résiduel du dépôt pour éviter le blocage à 17s
           rm -rf android www package.json package-lock.json capacitor.config.json
           mkdir -p www
           cp index.html www/index.html
@@ -54,9 +53,10 @@ jobs:
           npx cap add android
           npx cap sync android
 
-          # Applique ton fichier icone.png comme icône de l'APK s'il est présent
+          # Applique ton fichier icone.png sans conflit avec mipmap-anydpi-v26
           if [ -f "icone.png" ]; then
-            for dir in android/app/src/main/res/mipmap-*; do
+            rm -rf android/app/src/main/res/mipmap-anydpi-v26
+            for dir in android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-hdpi android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi android/app/src/main/res/mipmap-xxxhdpi; do
               cp icone.png "$dir/ic_launcher.png" 2>/dev/null || true
               cp icone.png "$dir/ic_launcher_round.png" 2>/dev/null || true
               cp icone.png "$dir/ic_launcher_foreground.png" 2>/dev/null || true
