@@ -21,6 +21,10 @@
       background: linear-gradient(145deg, #a855f7 0%, #9333ea 100%);
       box-shadow: 0 6px 15px -3px rgba(147, 51, 234, 0.35);
     }
+    .vib-square-pink {
+      background: linear-gradient(145deg, #ec4899 0%, #db2777 100%);
+      box-shadow: 0 6px 15px -3px rgba(236, 72, 153, 0.35);
+    }
     .cat-bounce {
       animation: floatCat 2.8s ease-in-out infinite;
     }
@@ -29,33 +33,46 @@
     }
     @keyframes floatCat {
       0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-7px); }
+      50% { transform: translateY(-6px); }
     }
     @keyframes jumpCat {
       0%, 100% { transform: translateY(0px) scale(1); }
       50% { transform: translateY(-14px) scale(1.06); }
     }
+    /* PLUIE D'EMOJIS DEPUIS TOUT EN HAUT SUR FOND NOIR */
     .heart-particle {
       position: fixed;
       top: -60px;
       pointer-events: none;
-      z-index: 99999;
+      z-index: 999999;
       will-change: transform, opacity;
       animation: fallFullHeight linear forwards;
     }
     @keyframes fallFullHeight {
-      0% { transform: translate3d(0, 0vh, 0) scale(0.75) rotate(0deg); opacity: 1; }
+      0% { transform: translate3d(0, 0vh, 0) scale(0.8) rotate(0deg); opacity: 1; }
       85% { opacity: 1; }
-      100% { transform: translate3d(0, 115vh, 0) scale(1.25) rotate(360deg); opacity: 0; }
+      100% { transform: translate3d(0, 115vh, 0) scale(1.3) rotate(360deg); opacity: 0; }
     }
-    .lock-center-anim {
-      animation: popLockBurst 1.8s cubic-bezier(0.17, 0.89, 0.32, 1.28) forwards;
+    /* BITMOJIS / AURA QUI FLOTTENT AUTOUR DE DOUGLASSE */
+    .orbit-item-1 { animation: floatAround1 3.2s ease-in-out infinite; }
+    .orbit-item-2 { animation: floatAround2 3.6s ease-in-out infinite; }
+    .orbit-item-3 { animation: floatAround3 2.9s ease-in-out infinite; }
+    .orbit-item-4 { animation: floatAround4 3.4s ease-in-out infinite; }
+    @keyframes floatAround1 {
+      0%, 100% { transform: translate(0px, 0px) scale(1) rotate(-10deg); }
+      50% { transform: translate(-8px, -12px) scale(1.18) rotate(12deg); }
     }
-    @keyframes popLockBurst {
-      0% { transform: scale(0.2) rotate(-15deg); opacity: 0; }
-      35% { transform: scale(1.35) rotate(8deg); opacity: 1; }
-      65% { transform: scale(1.1) rotate(-5deg); opacity: 1; }
-      100% { transform: scale(1.6) rotate(0deg); opacity: 0; }
+    @keyframes floatAround2 {
+      0%, 100% { transform: translate(0px, 0px) scale(1) rotate(8deg); }
+      50% { transform: translate(10px, -10px) scale(1.15) rotate(-12deg); }
+    }
+    @keyframes floatAround3 {
+      0%, 100% { transform: translate(0px, 0px) scale(1); }
+      50% { transform: translate(-10px, 8px) scale(1.2); }
+    }
+    @keyframes floatAround4 {
+      0%, 100% { transform: translate(0px, 0px) scale(1); }
+      50% { transform: translate(8px, 10px) scale(1.15); }
     }
     .pulse-ring {
       animation: pulseRing 1.8s infinite;
@@ -83,16 +100,17 @@
   <input id="fileInputCanvas" type="file" accept="image/*" class="hidden" onchange="handleCanvasImageUpload(event)" />
   <input id="fileInputCapsule" type="file" accept="image/*" class="hidden" onchange="handleCapsulePhotoUpload(event)" />
 
-  <!-- ==================== ÉCRAN DE VERROUILLAGE INTERACTIF ==================== -->
-  <div id="lockscreenOverlay" class="fixed inset-0 z-50 hidden bg-[#0c0d14] text-white flex flex-col justify-between p-4 overflow-hidden">
+  <!-- ==================== ÉCRAN NOIR PUR (100% BLACKOUT) POUR TOUTES LES PLUIES DE VIBRATIONS ==================== -->
+  <div id="pureBlackRainOverlay" onclick="closeBlackRainNow()" class="fixed inset-0 z-[99990] hidden bg-black flex flex-col items-center justify-center">
+    <p id="blackRainSubtitle" class="text-white/30 text-xs font-bold tracking-widest uppercase mt-auto mb-8">
+      Love8 • Pluie d'amour en cours
+    </p>
+  </div>
 
-    <div id="lockGiantBurst" class="fixed inset-0 pointer-events-none z-50 hidden flex flex-col items-center justify-center bg-black/45 backdrop-blur-sm">
-      <div id="lockGiantEmoji" class="text-[110px] lock-center-anim filter drop-shadow-[0_0_35px_rgba(236,72,153,0.9)]">❤️</div>
-      <p id="lockGiantLabel" class="text-xl font-extrabold text-pink-200 tracking-wide mt-2 bg-black/70 px-5 py-2 rounded-full border border-pink-400/40 shadow-2xl text-center">
-        Jordan t'envoie un cœur !
-      </p>
-    </div>
+  <!-- ==================== ÉCRAN DE VERROUILLAGE (SANS DOUGLASSE, EXTINCTION AUTO 15S) ==================== -->
+  <div id="lockscreenOverlay" class="fixed inset-0 z-50 hidden bg-[#060609] text-white flex flex-col justify-between p-4 overflow-hidden">
 
+    <!-- HAUT : CADRE ROUGE (JOURS) + CENTRE (COMPTEUR SÉPARATION GPS) + CADRE VERT (VIBRATIONS) -->
     <div class="mt-2">
       <div class="grid grid-cols-3 items-center gap-2">
         <div class="bg-rose-500/15 border border-rose-400/35 rounded-2xl p-2.5 text-center">
@@ -107,8 +125,8 @@
         </div>
 
         <div class="bg-emerald-500/15 border border-emerald-400/35 rounded-2xl p-2 text-center">
-          <p class="text-[9px] uppercase tracking-wider text-emerald-300 font-bold mb-1">4 Vibrations</p>
-          <div class="grid grid-cols-2 gap-1 text-[11px] font-extrabold text-white">
+          <p class="text-[9px] uppercase tracking-wider text-emerald-300 font-bold mb-1">Vibrations</p>
+          <div class="grid grid-cols-2 gap-1 text-[10px] font-extrabold text-white">
             <span class="bg-white/10 rounded-lg py-0.5">💌 <span id="lockCountEnv">0</span></span>
             <span class="bg-white/10 rounded-lg py-0.5">🍑 <span id="lockCountPeach">0</span></span>
             <span class="bg-white/10 rounded-lg py-0.5">🥒 <span id="lockCountCuc">0</span></span>
@@ -116,47 +134,29 @@
           </div>
         </div>
       </div>
-      <p class="text-center text-[10px] text-pink-300/80 font-bold uppercase tracking-widest mt-2">
-        ÉCRAN DE VERROUILLAGE LOVE8
-      </p>
+      <div class="flex items-center justify-center gap-2 mt-2">
+        <p class="text-center text-[10px] text-pink-300/80 font-bold uppercase tracking-widest">
+          ÉCRAN DE VERROUILLAGE LOVE8
+        </p>
+        <span id="lockSleepCountdown" class="text-[10px] bg-white/10 text-slate-300 px-2 py-0.5 rounded-full font-bold hidden">Veille dans 15s</span>
+      </div>
     </div>
 
-    <div class="flex-1 my-3 bg-[#181924] border border-white/10 rounded-3xl p-3.5 flex flex-col justify-between overflow-hidden shadow-2xl">
+    <!-- GRAND CADRE CENTRAL PLEINE HAUTEUR : DESSIN AGRANDI (DOUGLASSE RETIRÉ DU LOCKSCREEN) -->
+    <div class="flex-1 my-4 bg-[#12131c] border border-white/10 rounded-3xl p-4 flex flex-col justify-between overflow-hidden shadow-2xl">
       <p id="lockDrawingMeta" class="text-xs text-slate-300 text-center font-medium">Dessiné par Jordan • À 21:22</p>
       
-      <div class="flex-1 my-2 bg-white rounded-2xl p-2 flex items-center justify-center overflow-hidden">
+      <div class="flex-1 my-3 bg-white rounded-2xl p-2 flex items-center justify-center overflow-hidden">
         <img id="lockDrawingImg" src="" class="w-full h-full object-contain hidden" />
         <p id="lockDrawingFallback" class="text-3xl font-extrabold text-pink-500 italic">Je t'aime ❤️</p>
       </div>
 
-      <p id="lockDrawingCaption" class="text-xs font-bold text-pink-200 text-center">« Mot doux pour toi ❤️ »</p>
+      <p id="lockDrawingCaption" class="text-sm font-bold text-pink-200 text-center">« Mot doux pour toi ❤️ »</p>
     </div>
 
-    <div class="space-y-2.5">
-      <div class="bg-[#181924] border border-white/10 rounded-3xl p-3.5 flex items-center gap-3.5">
-        <div onclick="triggerCatPhotoUpload()" class="relative w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center overflow-hidden shrink-0 cat-bounce cursor-pointer">
-          <img id="lockCatPhoto" src="" class="w-full h-full object-cover hidden" />
-          <span id="lockCatEmoji" class="text-3xl">🐱</span>
-          <span id="lockCatAccBadge" class="absolute -top-1 -right-1 text-base"></span>
-        </div>
-        <div class="flex-1">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-extrabold uppercase tracking-wider text-amber-400">DOUGLASSE EN DIRECT</span>
-            <span id="lockCatStats" class="text-[11px] font-bold text-pink-200">🍖 100% • 💖 100%</span>
-          </div>
-          <p id="lockCatSpeech" class="text-xs font-bold mt-0.5 text-white">« Rrrrr... Je ronronne de bonheur 💕 »</p>
-          <div class="flex gap-2 mt-2">
-            <button onclick="interactCat('nourrir')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-extrabold px-3 py-1.5 rounded-full">🐟 Nourrir</button>
-            <button onclick="interactCat('jouer')" class="bg-indigo-500 hover:bg-indigo-400 text-white text-[11px] font-extrabold px-3 py-1.5 rounded-full">🧶 Jouer</button>
-            <button onclick="interactCat('caresser')" class="bg-pink-500 hover:bg-pink-400 text-white text-[11px] font-extrabold px-3 py-1.5 rounded-full">💖 Câliner</button>
-          </div>
-        </div>
-      </div>
-
-      <button onclick="toggleLockscreen(false)" class="w-full py-3 rounded-2xl bg-[#181924] border border-white/15 text-xs font-extrabold uppercase tracking-wider text-white active:scale-95 transition">
-        🔓 DÉVERROUILLER ET REVENIR À LOVE8
-      </button>
-    </div>
+    <button onclick="toggleLockscreen(false)" class="w-full py-3.5 rounded-2xl bg-[#181924] border border-white/15 text-xs font-extrabold uppercase tracking-wider text-white active:scale-95 transition">
+      🔓 DÉVERROUILLER ET REVENIR À LOVE8
+    </button>
   </div>
 
   <!-- BANNIÈRE DE NOTIFICATION FLOTTANTE -->
@@ -171,7 +171,7 @@
     <button onclick="hideBanner()" class="text-xs font-bold text-slate-400 px-2 py-1">OK</button>
   </div>
 
-  <!-- HEADER FIXE AVEC PIÈCES D'AMOUR, BOUTON MAJ APK & BOUTON ÉCRAN -->
+  <!-- HEADER FIXE -->
   <header class="sticky top-0 z-30 bg-pink-50/85 backdrop-blur-md px-3 py-2.5 flex items-center justify-between border-b border-pink-100/60">
     <div class="flex items-center gap-2">
       <div class="w-9 h-9 rounded-full gradient-card flex items-center justify-center shadow-md pulse-ring">
@@ -199,7 +199,7 @@
       <button onclick="downloadLatestApk()" title="Récupérer le dernier APK généré sur GitHub" class="px-2 py-1.5 rounded-full bg-emerald-100 border border-emerald-300 text-[10px] font-extrabold text-emerald-800 active:scale-95 transition">
         🔄 MAJ
       </button>
-      <button onclick="toggleLockscreen(true)" class="px-2 py-1.5 rounded-full bg-purple-100 border border-purple-200 text-[10px] font-extrabold text-purple-800 active:scale-95 transition">
+      <button onclick="toggleLockscreen(true, false)" class="px-2 py-1.5 rounded-full bg-purple-100 border border-purple-200 text-[10px] font-extrabold text-purple-800 active:scale-95 transition">
         🔒 Écran
       </button>
     </div>
@@ -241,7 +241,7 @@
               <div class="h-[2px] w-5 bg-pink-200"></div>
             </div>
             <span class="mt-2 bg-pink-50 text-pink-600 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-pink-200">
-              Toucher = ❤️ Lock
+              Toucher = ❤️ Noir
             </span>
           </div>
 
@@ -268,34 +268,60 @@
         </div>
       </div>
 
+      <!-- ==================== CARTE VIBRATION D'AMOUR : 8 CARRÉS (2x4) + 4 BOUTONS BAS ==================== -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-extrabold tracking-wider uppercase text-slate-500">⚡ VIBRATION D'AMOUR (+5 🪙)</span>
+          <span class="text-xs font-extrabold tracking-wider uppercase text-slate-500">⚡ VIBRATIONS SUR FOND NOIR</span>
           <span class="bg-pink-50 text-pink-600 text-xs font-bold px-3 py-1 rounded-full"><span id="pingCounter">41</span> Pings 💕</span>
         </div>
 
+        <!-- RANGÉE 1 : ENVELOPPE, PÊCHE, CONCOMBRE, PIMENT -->
         <div class="grid grid-cols-4 gap-2.5 pt-1">
-          <button onclick="sendSpecialVibration('env', 'Tu me manques ! 💌', '💌', [150, 70, 300], 'env')" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
+          <button onclick="sendSpecialVibration('env', 'Tu me manques ! 💌', '💌', [140, 60, 280], 'env')" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
             <span class="text-3xl">💌</span>
             <span id="badgeVibEnv" class="absolute bottom-1 right-1.5 bg-black/25 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
           </button>
 
-          <button onclick="sendSpecialVibration('peach', 'Envie de toi 🍑', '🍑', [200, 80, 200, 80, 350], 'peach')" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
+          <button onclick="sendSpecialVibration('peach', 'Envie de toi 🍑', '🍑', [200, 70, 220, 70, 320], 'peach')" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
             <span class="text-3xl">🍑</span>
             <span id="badgeVibPeach" class="absolute bottom-1 right-1.5 bg-black/25 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
           </button>
 
-          <button onclick="sendSpecialVibration('cuc', 'Pensée coquine 🥒', '🥒', [280, 70, 280, 70, 420], 'cuc')" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
+          <button onclick="sendSpecialVibration('cuc', 'Pensée coquine 🥒', '🥒', [260, 60, 260, 60, 400], 'cuc')" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
             <span class="text-3xl">🥒</span>
             <span id="badgeVibCuc" class="absolute bottom-1 right-1.5 bg-black/25 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
           </button>
 
-          <button onclick="sendSpecialVibration('chili', 'Caliente ! 🌶️', '🌶️', [110, 50, 110, 50, 110, 50, 400], 'chili')" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
+          <button onclick="sendSpecialVibration('chili', 'Caliente ! 🌶️', '🌶️', [100, 40, 100, 40, 100, 40, 380], 'chili')" class="vib-square aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
             <span class="text-3xl">🌶️</span>
             <span id="badgeVibChili" class="absolute bottom-1 right-1.5 bg-black/25 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
           </button>
         </div>
 
+        <!-- RANGÉE 2 (LES 4 NOUVEAUX BOUTONS EN DESSOUS) : FRAISE, DÉMON COQUIN, BISOUS ROUGES, ROSE -->
+        <div class="grid grid-cols-4 gap-2.5">
+          <button onclick="sendSpecialVibration('straw', 'Gourmandise à deux 🍓', '🍓', [120, 60, 120, 60, 240], 'straw')" class="vib-square-pink aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
+            <span class="text-3xl">🍓</span>
+            <span id="badgeVibStraw" class="absolute bottom-1 right-1.5 bg-black/25 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
+          </button>
+
+          <button onclick="sendSpecialVibration('devil', 'Prépare-toi ce soir 😈', '😈', [300, 80, 150, 80, 450], 'devil')" class="vib-square-pink aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
+            <span class="text-3xl">😈</span>
+            <span id="badgeVibDevil" class="absolute bottom-1 right-1.5 bg-black/25 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
+          </button>
+
+          <button onclick="sendSpecialVibration('lips', 'Pluie de baisers 💋', '💋', [100, 50, 180, 50, 260], 'kiss')" class="vib-square-pink aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
+            <span class="text-3xl">💋</span>
+            <span id="badgeVibLips" class="absolute bottom-1 right-1.5 bg-black/25 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
+          </button>
+
+          <button onclick="sendSpecialVibration('rose', 'Mon amour pour toujours 🌹', '🌹', [180, 90, 350], 'rose')" class="vib-square-pink aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
+            <span class="text-3xl">🌹</span>
+            <span id="badgeVibRose" class="absolute bottom-1 right-1.5 bg-black/25 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
+          </button>
+        </div>
+
+        <!-- RANGÉE 3 : LES 4 BOUTONS TEXTE -->
         <div class="grid grid-cols-4 gap-2 text-xs font-bold pt-1">
           <button onclick="sendLovePing('Je t\'aime ❤️', '❤️', [100, 60, 100, 60, 260], 'love')" class="bg-slate-50 hover:bg-pink-50 border border-slate-200/80 py-2.5 rounded-xl transition active:scale-95">
             ❤️ Je t'aime
@@ -312,12 +338,12 @@
         </div>
       </div>
 
+      <!-- Mini Carte Douglasse -->
       <div onclick="showTab('douglasse')" class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 flex items-center justify-between cursor-pointer active:scale-[0.99] transition">
         <div class="flex items-center gap-3">
-          <div class="relative w-12 h-12 rounded-2xl bg-amber-100/80 flex items-center justify-center text-2xl overflow-hidden">
-            <img id="miniCatPhoto" src="" class="w-full h-full object-cover hidden" />
+          <div class="relative w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-2xl overflow-hidden border border-slate-200">
+            <img id="miniCatPhoto" src="Snapchat-1098749864.jpg" onerror="this.classList.add('hidden')" class="w-full h-full object-cover" />
             <span id="miniCatEmoji">🐱</span>
-            <span id="miniCatAcc" class="absolute -top-1 -right-1 text-sm"></span>
           </div>
           <div>
             <div class="flex items-center gap-2">
@@ -353,11 +379,9 @@
           </div>
         </div>
 
-        <!-- ZONE DE DESSIN AVEC CURSEUR PARTENAIRE EN DIRECT & HALO DE FUSION HAPTIQUE -->
         <div class="relative border-2 border-purple-200 rounded-2xl overflow-hidden bg-white shadow-inner">
           <canvas id="drawCanvas" width="360" height="360" class="w-full touch-none bg-white cursor-crosshair"></canvas>
 
-          <!-- Curseur en direct du partenaire -->
           <div id="partnerLiveCursor" class="pointer-events-none absolute hidden transform -translate-x-1/2 -translate-y-1/2 z-20 transition-all duration-150">
             <div class="w-6 h-6 rounded-full bg-pink-500/40 border-2 border-pink-600 flex items-center justify-center shadow-lg">
               <span class="text-xs">❤️</span>
@@ -365,7 +389,6 @@
             <span id="partnerCursorLabel" class="bg-pink-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full shadow whitespace-nowrap">Lydie</span>
           </div>
 
-          <!-- Halo lumineux de Fusion Haptique quand les 2 doigts se touchent -->
           <div id="hapticFusionOrb" class="pointer-events-none absolute hidden w-28 h-28 rounded-full bg-gradient-to-r from-pink-500/60 via-purple-500/60 to-amber-400/60 transform -translate-x-1/2 -translate-y-1/2 z-30 flex flex-col items-center justify-center fusion-glow">
             <span class="text-3xl">✨💖✨</span>
             <span class="text-[9px] font-extrabold text-white uppercase bg-black/50 px-2 py-0.5 rounded-full">Fusion !</span>
@@ -411,11 +434,10 @@
         <input id="sweetNoteInput" type="text" placeholder="Légende sous le dessin (ex: Bon courage mon amour ❤️)..." class="w-full text-xs bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-3 focus:outline-none focus:border-pink-400" />
 
         <button onclick="sendDrawingToPartner()" class="w-full gradient-card text-white font-extrabold text-sm py-3.5 rounded-2xl shadow-md active:scale-[0.99] transition">
-          🚀 Envoyer sur l'écran & Archiver dans le Cloud R2
+          🚀 Envoyer sur l'écran (15s) & Archiver R2
         </button>
       </div>
 
-      <!-- GALERIE CLOUD R2 ILLIMITÉE -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <h3 class="font-extrabold text-sm flex items-center gap-1.5">☁️ Album Cloud R2 (<span id="archiveCountBadge">0</span> souvenirs)</h3>
@@ -425,7 +447,7 @@
       </div>
     </section>
 
-    <!-- ==================== ONGLET 3 : DOUGLASSE + BOUTIQUE D'ACCESSOIRES ==================== -->
+    <!-- ==================== ONGLET 3 : DOUGLASSE + ACCESSOIRES POSITIONNÉS SUR TÊTE, YEUX, COU & AURA ==================== -->
     <section id="tab-douglasse" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 text-center space-y-3">
         <div class="flex items-center justify-between">
@@ -442,31 +464,72 @@
           « Miaou ! Touche-moi pour me caresser 🐾 »
         </div>
 
-        <!-- AVATAR DE DOUGLASSE AVEC ACCESSOIRES SUPERPOSÉS -->
+        <!-- PORTRAIT DE DOUGLASSE (PHOTO SNAPCHAT OU SVG GRIS & BLANC SUR MESURE) + CALQUES ANATOMIQUES -->
         <div class="py-2 flex flex-col items-center justify-center gap-2">
-          <div id="catVisualContainer" onclick="interactCat('caresser')" class="relative w-44 h-44 rounded-3xl flex items-center justify-center cursor-pointer cat-bounce overflow-hidden border-4 border-amber-200 shadow-md bg-amber-50/40">
-            <img id="mainCatPhoto" src="" class="w-full h-full object-cover hidden" />
-            <svg id="catSvg" class="w-40 h-40" viewBox="0 0 200 200">
-              <ellipse cx="100" cy="175" rx="55" ry="10" fill="#ede9fe" />
-              <path d="M135 145 Q175 135 165 95" stroke="#f59e0b" stroke-width="14" stroke-linecap="round" fill="none" />
-              <ellipse cx="100" cy="135" rx="42" ry="36" fill="#fbbf24" />
-              <ellipse cx="100" cy="140" rx="24" ry="24" fill="#fef3c7" />
-              <circle cx="100" cy="82" r="40" fill="#fbbf24" />
-              <polygon points="65,60 58,22 90,46" fill="#f59e0b" />
-              <polygon points="68,55 63,30 85,47" fill="#fda4af" />
-              <polygon points="135,60 142,22 110,46" fill="#f59e0b" />
-              <polygon points="132,55 137,30 115,47" fill="#fda4af" />
-              <circle cx="83" cy="82" r="7" fill="#1e293b" />
-              <circle cx="117" cy="82" r="7" fill="#1e293b" />
-              <path id="catMouth" d="M93 95 Q100 101 107 95" stroke="#1e293b" stroke-width="3" fill="none" stroke-linecap="round" />
-              <path d="M68 112 Q100 124 132 112" stroke="#ec4899" stroke-width="7" fill="none" stroke-linecap="round" />
-              <circle cx="100" cy="120" r="6" fill="#f43f5e" />
+          <div id="catVisualContainer" onclick="interactCat('caresser')" class="relative w-52 h-52 rounded-3xl flex items-center justify-center cursor-pointer cat-bounce overflow-visible border-4 border-slate-200 shadow-lg bg-slate-100">
+
+            <!-- Photo réelle de Douglasse (ou upload) -->
+            <img id="mainCatPhoto" src="Snapchat-1098749864.jpg" onerror="this.classList.add('hidden')" onload="document.getElementById('catSvg').classList.add('hidden')" class="w-full h-full rounded-2xl object-cover object-center" />
+
+            <!-- Portrait SVG fidèle de Douglasse (Gris anthracite et Blanc, yeux verts, petite tache sur le museau rose) -->
+            <svg id="catSvg" class="w-48 h-48" viewBox="0 0 200 200">
+              <ellipse cx="100" cy="182" rx="58" ry="9" fill="#e2e8f0" />
+              <!-- Queue grise -->
+              <path d="M138 150 Q178 135 168 92" stroke="#475569" stroke-width="14" stroke-linecap="round" fill="none" />
+              <!-- Corps gris et poitrail blanc -->
+              <ellipse cx="100" cy="142" rx="44" ry="38" fill="#475569" />
+              <ellipse cx="100" cy="146" rx="28" ry="32" fill="#ffffff" />
+              <!-- Pattes blanches -->
+              <circle cx="78" cy="172" r="11" fill="#ffffff" />
+              <circle cx="122" cy="172" r="11" fill="#ffffff" />
+              <!-- Tête grise -->
+              <circle cx="100" cy="82" r="42" fill="#475569" />
+              <!-- Oreilles grises & intérieur rose -->
+              <polygon points="62,58 54,18 88,44" fill="#334155" />
+              <polygon points="66,53 60,26 84,45" fill="#fda4af" />
+              <polygon points="138,58 146,18 112,44" fill="#334155" />
+              <polygon points="134,53 140,26 116,45" fill="#fda4af" />
+              <!-- Masque blanc en V inversé sur le museau (comme sur ta photo) -->
+              <polygon points="100,56 70,106 100,122 130,106" fill="#ffffff" />
+              <!-- Yeux vert-jaune de Douglasse -->
+              <circle cx="82" cy="80" r="8.5" fill="#a3e635" stroke="#1e293b" stroke-width="1.5" />
+              <ellipse cx="82" cy="80" rx="2.8" ry="5.5" fill="#0f172a" />
+              <circle cx="80" cy="77" r="2" fill="#ffffff" />
+              <circle cx="118" cy="80" r="8.5" fill="#a3e635" stroke="#1e293b" stroke-width="1.5" />
+              <ellipse cx="118" cy="80" rx="2.8" ry="5.5" fill="#0f172a" />
+              <circle cx="116" cy="77" r="2" fill="#ffffff" />
+              <!-- Truffe rose avec sa petite tache noire à gauche -->
+              <polygon points="95,93 105,93 100,100" fill="#fb7185" />
+              <circle cx="97.5" cy="95" r="1.8" fill="#1e293b" />
+              <!-- Bouche et moustaches blanches -->
+              <path id="catMouth" d="M93 103 Q100 108 107 103" stroke="#334155" stroke-width="2.5" fill="none" stroke-linecap="round" />
+              <line x1="48" y1="92" x2="78" y2="96" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+              <line x1="46" y1="100" x2="78" y2="101" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+              <line x1="152" y1="92" x2="122" y2="96" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+              <line x1="154" y1="100" x2="122" y2="101" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
             </svg>
-            <!-- Accessoire équipé sur Douglasse -->
-            <div id="catEquippedOverlay" class="pointer-events-none absolute top-2 left-1/2 transform -translate-x-1/2 text-5xl drop-shadow-md"></div>
+
+            <!-- 1. CALQUE TÊTE : Chapeau / Bonnet / Couronne (pile sur le haut du crâne) -->
+            <div id="accSlotHat" class="pointer-events-none absolute -top-4 left-1/2 transform -translate-x-1/2 text-5xl drop-shadow-lg z-20"></div>
+
+            <!-- 2. CALQUE YEUX : Lunettes de soleil (ajustées pile sur la ligne des yeux) -->
+            <div id="accSlotEyes" class="pointer-events-none absolute top-[28%] left-1/2 transform -translate-x-1/2 text-5xl drop-shadow-md z-20"></div>
+
+            <!-- 3. CALQUE COU : Nœud papillon (ajusté sous le menton blanc, au niveau du cou) -->
+            <div id="accSlotNeck" class="pointer-events-none absolute top-[54%] left-1/2 transform -translate-x-1/2 text-4xl drop-shadow-md z-20"></div>
+
+            <!-- 4. CALQUE AURA / BITMOJIS FLOTTANTS TOUT AUTOUR DE DOUGLASSE -->
+            <div id="accSlotAura" class="pointer-events-none absolute inset-0 z-30 hidden">
+              <span id="auraItem1" class="orbit-item-1 absolute -top-3 -left-3 text-3xl drop-shadow">✨</span>
+              <span id="auraItem2" class="orbit-item-2 absolute -top-3 -right-3 text-3xl drop-shadow">💖</span>
+              <span id="auraItem3" class="orbit-item-3 absolute bottom-2 -left-4 text-3xl drop-shadow">✨</span>
+              <span id="auraItem4" class="orbit-item-4 absolute bottom-2 -right-4 text-3xl drop-shadow">💖</span>
+            </div>
+
           </div>
-          <button onclick="triggerCatPhotoUpload()" class="text-[11px] font-bold text-amber-800 bg-amber-100/80 px-3 py-1 rounded-full border border-amber-200">
-            📷 Choisir la photo de Douglasse
+
+          <button onclick="triggerCatPhotoUpload()" class="text-[11px] font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full border border-slate-300 mt-1">
+            📷 Importer la photo de Douglasse depuis le téléphone
           </button>
         </div>
 
@@ -516,11 +579,14 @@
         </div>
       </div>
 
-      <!-- BOUTIQUE D'ACCESSOIRES & DÉGUISEMENTS DE DOUGLASSE -->
+      <!-- BOUTIQUE D'ACCESSOIRES MULTI-ZONES (TÊTE, YEUX, COU, AURA FLOTTANTE) -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
-          <h3 class="font-extrabold text-sm">👑 Boutique & Déguisements de Douglasse</h3>
-          <button onclick="equipAccessory('')" class="text-[11px] font-bold text-slate-400">Retirer</button>
+          <div>
+            <h3 class="font-extrabold text-sm">👑 Dressing de Douglasse</h3>
+            <p class="text-[10px] text-slate-400">Combine lunettes (yeux), chapeau (tête), nœud (cou) et aura !</p>
+          </div>
+          <button onclick="clearAllAccessories()" class="text-[11px] font-bold text-rose-500">Tout retirer</button>
         </div>
         <div id="catShopGrid" class="grid grid-cols-3 gap-2.5 text-center"></div>
       </div>
@@ -531,45 +597,34 @@
       </div>
     </section>
 
-    <!-- ==================== ONGLET 4 : JEUX & BONS D'AMOUR (QUIZ + COUPONS) ==================== -->
+    <!-- ==================== ONGLET 4 : JEUX & BONS D'AMOUR ==================== -->
     <section id="tab-jeux" class="hidden space-y-4">
-
-      <!-- QUIZ « TU ME CONNAIS PAR COEUR ? » -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <span class="bg-purple-100 text-purple-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">🎯 QUIZ : TU ME CONNAIS PAR CŒUR ?</span>
           <button onclick="nextQuizQuestion()" class="text-xs font-bold text-pink-600">🔀 Autre question</button>
         </div>
-
         <p id="quizQuestionTitle" class="font-extrabold text-sm text-slate-800"></p>
         <p id="quizModeSubtitle" class="text-xs text-slate-500"></p>
-
         <div id="quizOptionsGrid" class="grid grid-cols-2 gap-2 text-xs font-bold"></div>
-
         <div id="quizStatusBox" class="bg-pink-50/70 border border-pink-200 rounded-2xl p-3 text-xs font-bold text-pink-900 text-center"></div>
       </div>
 
-      <!-- CARNET DE « BONS D'AMOUR » (COUPONS CADEAUX) -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="font-extrabold text-sm">🎟️ Carnet de « Bons d'Amour »</h3>
-            <p class="text-[11px] text-slate-400">Envoie un ticket cadeau ou valide un bon reçu</p>
-          </div>
+        <div>
+          <h3 class="font-extrabold text-sm">🎟️ Carnet de « Bons d'Amour »</h3>
+          <p class="text-[11px] text-slate-400">Envoie un ticket cadeau ou valide un bon reçu</p>
         </div>
-
         <div class="grid grid-cols-2 gap-2 text-xs font-bold">
           <button onclick="createCoupon('💆‍♂️ Bon pour un massage de 15 min')" class="bg-pink-50 hover:bg-pink-100 text-pink-800 border border-pink-200 p-2.5 rounded-2xl text-left">➕ 💆‍♂️ Massage 15 min</button>
           <button onclick="createCoupon('🎬 Bon pour choisir le film ce soir')" class="bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 p-2.5 rounded-2xl text-left">➕ 🎬 Choix du film</button>
           <button onclick="createCoupon('🥐 Bon pour un petit-déj au lit')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 p-2.5 rounded-2xl text-left">➕ 🥐 Petit-déj au lit</button>
           <button onclick="createCoupon('🔥 Bon pour un joker coquin ce soir')" class="bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 p-2.5 rounded-2xl text-left">➕ 🔥 Joker coquin</button>
         </div>
-
         <div class="flex gap-2">
           <input id="customCouponInput" type="text" placeholder="Créer un bon personnalisé..." class="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2.5" />
           <button onclick="addCustomCoupon()" class="gradient-card text-white text-xs font-extrabold px-4 rounded-2xl shadow">Offrir</button>
         </div>
-
         <div id="couponsListContainer" class="space-y-2.5 pt-1"></div>
       </div>
     </section>
@@ -581,13 +636,11 @@
           <h2 class="font-extrabold text-base flex items-center gap-1.5">⏳ Notre Histoire</h2>
           <span class="text-xs font-bold text-purple-600">Depuis le 12 déc. 2019</span>
         </div>
-
         <div class="gradient-card text-white rounded-2xl p-5 text-center shadow-md">
           <p class="text-xs uppercase tracking-widest font-bold text-pink-100">JORDAN & LYDIE</p>
           <p class="text-4xl font-extrabold my-1"><span id="totalDaysMain">2525</span> Jours</p>
           <p class="text-xs text-pink-100">Depuis le 12 décembre 2019 ❤️</p>
         </div>
-
         <div class="grid grid-cols-3 gap-2.5 text-center">
           <div class="bg-slate-50 rounded-2xl p-3 border border-slate-100">
             <p id="statYears" class="text-lg font-extrabold text-purple-700">6.9</p>
@@ -604,26 +657,21 @@
         </div>
       </div>
 
-      <!-- CAPSULE TEMPORELLE VERROUILLÉE PAR DATE -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div>
           <h3 class="font-extrabold text-sm flex items-center gap-1.5">🔐 Capsules Temporelles</h3>
           <p class="text-[11px] text-slate-400">Écris un message ou dépose une photo qui ne s'ouvrira qu'à la date choisie</p>
         </div>
-
         <textarea id="capsuleTextInput" rows="2" placeholder="Message secret pour le futur..." class="w-full text-xs bg-slate-50 border border-slate-200 rounded-2xl p-3 focus:outline-none focus:border-purple-400"></textarea>
-
         <div class="flex items-center gap-2">
           <input id="capsuleDateInput" type="datetime-local" class="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
           <button onclick="document.getElementById('fileInputCapsule').click()" id="btnCapsulePhoto" class="px-3 py-2 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 text-xs font-bold">
             📷 Photo
           </button>
         </div>
-
         <button onclick="createTimeCapsule()" class="w-full gradient-card text-white text-xs font-extrabold py-3 rounded-2xl shadow">
           🔒 Sceller la Capsule Temporelle
         </button>
-
         <div id="capsulesListContainer" class="space-y-2.5 pt-1"></div>
       </div>
 
@@ -639,7 +687,6 @@
 
   </main>
 
-  <!-- BARRE DE NAVIGATION BASSE (5 ONGLETS) -->
   <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-pink-100 px-3 py-2 flex justify-around items-center text-[10px] font-bold text-slate-400">
     <button id="nav-nous" onclick="showTab('nous')" class="flex flex-col items-center gap-0.5 text-pink-600">
       <span class="text-lg">💞</span>
@@ -670,18 +717,21 @@
     let avatarUploadTarget = 'jordan';
     let activeTab = 'nous';
     let pendingCapsulePhoto = '';
+    let blackRainTimer = null;
+    let sleep15sTimer = null;
+    let sleepCountdownInterval = null;
 
-    // Catalogue de la boutique d'accessoires de Douglasse
+    // Catalogue d'accessoires avec leur zone anatomique (eyes = sur les yeux, hat = sur la tête, neck = au cou, aura = bitmojis flottants autour)
     const catAccessoriesCatalog = [
-      { id: 'sunglasses', name: 'Lunettes Cool', emoji: '🕶️', price: 40 },
-      { id: 'crown', name: 'Couronne Roi', emoji: '👑', price: 80 },
-      { id: 'xmas', name: 'Bonnet Noël', emoji: '🎅', price: 60 },
-      { id: 'bowtie', name: 'Nœud Papillon', emoji: '🎀', price: 50 },
-      { id: 'halo', name: 'Petit Ange', emoji: '😇', price: 70 },
-      { id: 'party', name: 'Fête Love', emoji: '🥳', price: 55 }
+      { id: 'sunglasses', name: 'Lunettes (Yeux)', emoji: '🕶️', slot: 'eyes', price: 40 },
+      { id: 'crown',      name: 'Couronne (Tête)', emoji: '👑', slot: 'hat',  price: 80 },
+      { id: 'xmas',       name: 'Bonnet (Tête)',   emoji: '🎅', slot: 'hat',  price: 60 },
+      { id: 'tophat',     name: 'Chapeau (Tête)',  emoji: '🎩', slot: 'hat',  price: 55 },
+      { id: 'bowtie',     name: 'Nœud (Cou)',      emoji: '🎀', slot: 'neck', price: 50 },
+      { id: 'halo',       name: 'Bitmojis Amour',  emoji: '🥰', slot: 'aura', price: 70 },
+      { id: 'party',      name: 'Bitmojis Fête',   emoji: '🥳', slot: 'aura', price: 65 }
     ];
 
-    // Questions du Quiz "Tu me connais par cœur ?"
     const coupleQuizPool = [
       {
         q: "Quel est mon plat réconfort préféré ?",
@@ -704,11 +754,11 @@
     let state = JSON.parse(localStorage.getItem('love8_state')) || {
       updatedAt: Date.now(),
       pingsToday: 41,
-      coins: 150,
-      vibCounts: { env: 12, peach: 9, cuc: 8, chili: 12 },
+      coins: 180,
+      vibCounts: { env: 12, peach: 9, cuc: 8, chili: 12, straw: 4, devil: 6, lips: 10, rose: 7 },
       separationStart: null,
       lastDistanceMeters: 0,
-      lastEvent: { id: 0, sender: 'Jordan', title: '', message: '', emoji: '❤️', sound: 'love', pattern: [150, 80, 250] },
+      lastEvent: { id: 0, sender: 'Jordan', type: 'vibration', title: '', message: '', emoji: '❤️', sound: 'love', pattern: [150, 80, 250] },
       jordan: { mood: '😍', text: 'Pense à toi ❤️', loc: '📍 À la maison', bat: 61, lat: null, lng: null, avatar: '' },
       lydie: { mood: '😍', text: 'Hâte de te voir 💕', loc: '📍 À la maison', bat: 47, lat: null, lng: null, avatar: '' },
       cat: {
@@ -718,8 +768,8 @@
         love: 100,
         energy: 100,
         photo: '',
-        equipped: '👑',
-        ownedAcc: ['crown'],
+        equippedSlots: { hat: '👑', eyes: '', neck: '🎀', aura: '' },
+        ownedAcc: ['crown', 'bowtie'],
         lastDecay: Date.now(),
         journal: [
           { text: 'Jordan a donné des croquettes à Douglasse 🐟', time: '19:47' }
@@ -735,35 +785,22 @@
         qIndex: 0,
         targetUser: 'Jordan',
         secretChoice: null,
-        guessedByPartner: false,
         statusText: 'Jordan : Choisis ta réponse secrète pour que Lydie devine !'
       },
-      capsules: [
-        {
-          id: 101,
-          author: 'Jordan',
-          text: 'Je t\'aime chaque jour un peu plus mon amour ❤️',
-          photo: '',
-          unlockAt: Date.now() - 60000
-        }
-      ],
+      capsules: [],
       wishes: [
         { text: 'Soirée resto en amoureux aux chandelles 🕯️', done: false },
         { text: 'Week-end détente & spa tous les deux 💆‍♀️', done: false }
       ]
     };
 
-    // Migrations douces si ancien state en cache
-    if (typeof state.coins !== 'number') state.coins = 150;
-    if (!state.vibCounts) state.vibCounts = { env: 12, peach: 9, cuc: 8, chili: 12 };
+    if (typeof state.coins !== 'number') state.coins = 180;
+    if (!state.vibCounts) state.vibCounts = { env: 12, peach: 9, cuc: 8, chili: 12, straw: 4, devil: 6, lips: 10, rose: 7 };
     if (!state.cat.ownedAcc) state.cat.ownedAcc = ['crown'];
+    if (!state.cat.equippedSlots) state.cat.equippedSlots = { hat: state.cat.equipped || '👑', eyes: '', neck: '', aura: '' };
     if (!state.coupons) state.coupons = [];
     if (!state.quiz) state.quiz = { qIndex: 0, targetUser: 'Jordan', secretChoice: null, statusText: 'Choisis une réponse !' };
     if (!state.capsules) state.capsules = [];
-    if (!state.lastDistanceMeters || state.lastDistanceMeters <= 300) {
-      state.separationStart = null;
-      state.lastDistanceMeters = 0;
-    }
 
     function downloadLatestApk() {
       const apkUrl = "https://github.com/LeeLooVF/Love8-apps/releases/download/latest/Love8.apk?t=" + Date.now();
@@ -783,38 +820,131 @@
       refreshBatteryAndGPS(true);
     }
 
+    // ==================== MOTEUR AUDIO SYNTHÉTIQUE RÉALISTE PAR ACTION ====================
     let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
     function playLoveSound(type = 'love') {
       try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const now = audioCtx.currentTime;
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
 
-        const melodies = {
-          heart:  [[523, 0.12], [659, 0.12], [784, 0.25]],
-          env:    [[440, 0.1], [554, 0.1], [659, 0.22]],
-          peach:  [[392, 0.12], [523, 0.12], [659, 0.15], [784, 0.25]],
-          cuc:    [[330, 0.12], [440, 0.12], [554, 0.22]],
-          chili:  [[587, 0.08], [659, 0.08], [784, 0.08], [880, 0.25]],
-          love:   [[523, 0.14], [659, 0.14], [784, 0.14], [1046, 0.3]],
-          kiss:   [[659, 0.1], [880, 0.22]],
-          hug:    [[349, 0.2], [440, 0.2], [523, 0.3]],
-          fire:   [[440, 0.09], [587, 0.09], [784, 0.25]],
+        // 1. BRUIT DE BISOUS (Smack / Muah réaliste)
+        if (type === 'kiss' || type === 'lips') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.exponentialRampToValueAtTime(1150, now + 0.09);
+          osc.frequency.exponentialRampToValueAtTime(480, now + 0.22);
+          gain.gain.setValueAtTime(0.35, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.25);
+          return;
+        }
+
+        // 2. BRUIT D'ENVOI D'ENVELOPPE (Swoosh d'air montant)
+        if (type === 'env') {
+          const bufferSize = ctx.sampleRate * 0.35;
+          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+          const noise = ctx.createBufferSource();
+          noise.buffer = buffer;
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(300, now);
+          filter.frequency.exponentialRampToValueAtTime(2400, now + 0.32);
+          filter.Q.value = 3.5;
+
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0.01, now);
+          gain.gain.linearRampToValueAtTime(0.4, now + 0.15);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+          noise.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          noise.start(now);
+          return;
+        }
+
+        // 3. BRUIT DE FLAMME / FEU OU PIMENT (Crépitement + souffle ardent)
+        if (type === 'fire' || type === 'chili') {
+          const dur = 0.55;
+          const bufferSize = Math.floor(ctx.sampleRate * dur);
+          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            const crackle = Math.random() > 0.92 ? (Math.random() * 2 - 1) * 1.8 : (Math.random() * 2 - 1) * 0.35;
+            data[i] = crackle;
+          }
+          const noise = ctx.createBufferSource();
+          noise.buffer = buffer;
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(type === 'chili' ? 1800 : 950, now);
+
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0.45, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+          noise.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          noise.start(now);
+          return;
+        }
+
+        // 4. BATTEMENT DE COEUR SOURD (Boum-Boum)
+        if (type === 'heart' || type === 'love') {
+          [0, 0.22].forEach(delay => {
+            const osc = ctx.createOscillator();
+            const g = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(110, now + delay);
+            osc.frequency.exponentialRampToValueAtTime(45, now + delay + 0.16);
+            g.gain.setValueAtTime(0.5, now + delay);
+            g.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.18);
+            osc.connect(g);
+            g.connect(ctx.destination);
+            osc.start(now + delay);
+            osc.stop(now + delay + 0.19);
+          });
+          return;
+        }
+
+        // 5. PÊCHE / CONCOMBRE / FRAISE / DÉMON / CÂLIN / ROSE
+        const customNotes = {
+          peach:  [[380, 0.1], [520, 0.12], [680, 0.2]],
+          cuc:    [[260, 0.08], [340, 0.08], [460, 0.15]],
+          straw:  [[587, 0.1], [784, 0.12], [1046, 0.22]],
+          devil:  [[220, 0.14], [207, 0.14], [196, 0.28]],
+          rose:   [[440, 0.12], [554, 0.12], [659, 0.14], [880, 0.28]],
+          hug:    [[349, 0.2], [440, 0.25], [523, 0.35]],
           cat:    [[700, 0.12], [950, 0.18], [620, 0.22]],
-          fusion: [[523, 0.15], [659, 0.15], [784, 0.15], [987, 0.18], [1046, 0.35]]
+          fusion: [[523, 0.15], [659, 0.15], [784, 0.15], [1046, 0.35]]
         };
 
-        const notes = melodies[type] || melodies.love;
+        const notes = customNotes[type] || customNotes.rose;
         let offset = 0;
         notes.forEach(([freq, dur]) => {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = type === 'chili' || type === 'fire' ? 'triangle' : 'sine';
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = type === 'devil' ? 'sawtooth' : 'sine';
           osc.frequency.setValueAtTime(freq, now + offset);
           gain.gain.setValueAtTime(0.24, now + offset);
           gain.gain.exponentialRampToValueAtTime(0.001, now + offset + dur);
           osc.connect(gain);
-          gain.connect(audioCtx.destination);
+          gain.connect(ctx.destination);
           osc.start(now + offset);
           osc.stop(now + offset + dur);
           offset += dur + 0.03;
@@ -832,42 +962,97 @@
       } catch (e) {}
     }
 
-    function pushSystemNotification(title, body) {
-      if (window.AndroidNative && window.AndroidNative.showSystemNotification) {
-        window.AndroidNative.showSystemNotification(title, body);
-      } else if ('Notification' in window && Notification.permission === 'granted') {
-        try {
-          new Notification(title, { body, vibrate: [200, 100, 250] });
-        } catch (e) {}
+    // Demande au téléphone Android de repartir en veille immédiatement
+    function requestPhoneSleepNow() {
+      if (window.AndroidNative && window.AndroidNative.turnOffScreenAndSleep) {
+        window.AndroidNative.turnOffScreenAndSleep();
       }
     }
 
-    function triggerLockscreenBurst(emoji, labelText, soundType = 'love', pattern = [200, 80, 300]) {
+    // ==================== PLUIE SUR FOND 100% NOIR + MISE EN VEILLE 1 SECONDE APRÈS L'ANIMATION ====================
+    function triggerBlackScreenRain(emoji, labelText, soundType = 'love', pattern = [200, 80, 300], shouldSleepAfter = false) {
+      const blackOverlay = document.getElementById('pureBlackRainOverlay');
+      document.getElementById('blackRainSubtitle').innerText = labelText || '';
+      blackOverlay.classList.remove('hidden');
+
       playLoveSound(soundType);
       triggerDeviceVibration(pattern);
-      spawnParticles(emoji, pattern);
 
-      const burst = document.getElementById('lockGiantBurst');
-      const giantEmoji = document.getElementById('lockGiantEmoji');
-      const giantLabel = document.getElementById('lockGiantLabel');
+      // Durée de l'animation de chute = 2.6s
+      const animDurationMs = 2600;
+      spawnParticles(emoji, pattern, animDurationMs);
 
-      giantEmoji.innerText = emoji;
-      giantLabel.innerText = labelText;
-      burst.classList.remove('hidden');
-
-      setTimeout(() => {
-        burst.classList.add('hidden');
-      }, 2400);
+      if (blackRainTimer) clearTimeout(blackRainTimer);
+      // 1 seconde exactement après la fin de l'animation (2600ms + 1000ms = 3600ms), on ferme et on remet en veille
+      blackRainTimer = setTimeout(() => {
+        blackOverlay.classList.add('hidden');
+        if (shouldSleepAfter) {
+          requestPhoneSleepNow();
+        }
+      }, animDurationMs + 1000);
     }
 
-    window.onNativeWakeAlert = function(emoji, title, message) {
-      toggleLockscreen(true);
-      triggerLockscreenBurst(
-        emoji || state.lastEvent?.emoji || '❤️',
-        message || state.lastEvent?.message || 'Vibration d\'amour reçue !',
-        state.lastEvent?.sound || 'love',
-        [250, 100, 350]
-      );
+    function closeBlackRainNow() {
+      if (blackRainTimer) clearTimeout(blackRainTimer);
+      document.getElementById('pureBlackRainOverlay').classList.add('hidden');
+    }
+
+    // ==================== SORTIE DE VEILLE (15 SECONDES POUR LES AUTRES ÉVÉNEMENTS COMME DESSIN / BON) ====================
+    function toggleLockscreen(show, autoSleep15s = false) {
+      const el = document.getElementById('lockscreenOverlay');
+      const badge = document.getElementById('lockSleepCountdown');
+      if (sleep15sTimer) clearTimeout(sleep15sTimer);
+      if (sleepCountdownInterval) clearInterval(sleepCountdownInterval);
+
+      if (show) {
+        el.classList.remove('hidden');
+        if (autoSleep15s) {
+          let secLeft = 15;
+          badge.innerText = `Veille dans ${secLeft}s`;
+          badge.classList.remove('hidden');
+          sleepCountdownInterval = setInterval(() => {
+            secLeft -= 1;
+            if (secLeft > 0) badge.innerText = `Veille dans ${secLeft}s`;
+          }, 1000);
+          sleep15sTimer = setTimeout(() => {
+            clearInterval(sleepCountdownInterval);
+            badge.classList.add('hidden');
+            el.classList.add('hidden');
+            requestPhoneSleepNow();
+          }, 15000);
+        } else {
+          badge.classList.add('hidden');
+        }
+      } else {
+        badge.classList.add('hidden');
+        el.classList.add('hidden');
+      }
+    }
+
+    // Appelé automatiquement par Android quand le téléphone sort de veille
+    window.onNativeWakeAlert = function(emoji, title, message, evType, soundType) {
+      // Sécurité : Ignore totalement Douglasse en veille
+      if (evType === 'cat' || (title && title.toLowerCase().includes('douglasse'))) {
+        requestPhoneSleepNow();
+        return;
+      }
+
+      // Si c'est une vibration : Fond noir pur + Pluie + Extinction 1s après l'animation
+      if (!evType || evType === 'vibration') {
+        toggleLockscreen(false);
+        triggerBlackScreenRain(
+          emoji || state.lastEvent?.emoji || '❤️',
+          message || state.lastEvent?.message || '',
+          soundType || state.lastEvent?.sound || 'love',
+          [250, 100, 350],
+          true
+        );
+      } else {
+        // Pour toute autre sortie de veille (Dessin, Bon d'amour...) : Affiche l'écran 15 secondes puis repart en veille
+        playLoveSound(soundType || 'love');
+        triggerDeviceVibration([200, 80, 250]);
+        toggleLockscreen(true, true);
+      }
     };
 
     if (window.AndroidNative && window.AndroidNative.setUser) {
@@ -904,15 +1089,26 @@
           if (remote.lastEvent && remote.lastEvent.id > lastEventId && remote.lastEvent.sender !== currentUser) {
             lastEventId = remote.lastEvent.id;
             localStorage.setItem('love8_last_event', String(lastEventId));
-            toggleLockscreen(true);
-            triggerLockscreenBurst(
-              remote.lastEvent.emoji || '❤️',
-              remote.lastEvent.message || 'Nouvelle vibration !',
-              remote.lastEvent.sound || 'love',
-              remote.lastEvent.pattern || [200, 80, 300]
-            );
-            triggerBanner(remote.lastEvent.title, remote.lastEvent.message, remote.lastEvent.emoji || '❤️');
-            pushSystemNotification(remote.lastEvent.title, remote.lastEvent.message);
+
+            const isLocked = window.AndroidNative && window.AndroidNative.isDeviceLocked && window.AndroidNative.isDeviceLocked();
+            const evType = remote.lastEvent.type || 'vibration';
+
+            // Pas de notification Douglasse si le téléphone est verrouillé
+            if (evType === 'cat' && isLocked) return;
+
+            if (evType === 'vibration') {
+              triggerBlackScreenRain(
+                remote.lastEvent.emoji || '❤️',
+                remote.lastEvent.message || '',
+                remote.lastEvent.sound || 'love',
+                remote.lastEvent.pattern || [200, 80, 300],
+                isLocked
+              );
+            } else if (evType === 'other') {
+              playLoveSound(remote.lastEvent.sound || 'love');
+              triggerBanner(remote.lastEvent.title, remote.lastEvent.message, remote.lastEvent.emoji || '🎨');
+              toggleLockscreen(true, true);
+            }
           }
         }
       } catch (e) {}
@@ -995,15 +1191,15 @@
       state.lastEvent = {
         id: eventId,
         sender: currentUser,
+        type: 'vibration',
         title: `❤️ COEUR EN DIRECT`,
-        message: `${currentUser} fait battre ton cœur sur l'écran de verrouillage !`,
+        message: `${currentUser} → ${partner} : Battement de cœur ❤️`,
         emoji: '❤️',
         sound: 'heart',
         pattern: [120, 60, 120, 60, 280]
       };
 
-      triggerLockscreenBurst('❤️', `Cœur envoyé sur l'écran de ${partner} (+5 🪙) !`, 'heart', [120, 60, 120, 60, 280]);
-      triggerBanner('❤️ COEUR ENVOYÉ (+5 🪙)', `Cœur animé envoyé en direct à ${partner} !`, '❤️');
+      triggerBlackScreenRain('❤️', `${currentUser} → ${partner} ❤️`, 'heart', [120, 60, 120, 60, 280], false);
       saveState();
     }
 
@@ -1020,7 +1216,7 @@
           c.width = w;
           c.height = h;
           c.getContext('2d').drawImage(img, 0, 0, w, h);
-          callback(c.toDataURL('image/jpeg', 0.82));
+          callback(c.toDataURL('image/jpeg', 0.84));
         };
         img.src = e.target.result;
       };
@@ -1049,7 +1245,7 @@
     function handleCatPhotoUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
-      resizeImageToDataUrl(file, 300, (dataUrl) => {
+      resizeImageToDataUrl(file, 360, (dataUrl) => {
         state.cat.photo = dataUrl;
         triggerBanner('🐱 DOUGLASSE', 'La vraie photo de Douglasse est enregistrée !', '🐾');
         saveState();
@@ -1088,23 +1284,19 @@
       if (tab === 'dessin') loadCloudArchives();
     }
 
-    function toggleLockscreen(show) {
-      const el = document.getElementById('lockscreenOverlay');
-      if (show) el.classList.remove('hidden');
-      else el.classList.add('hidden');
-    }
-
-    function spawnParticles(emoji, pattern = [150, 70, 250]) {
+    function spawnParticles(emoji, pattern = [150, 70, 250], maxDurationMs = 2600) {
       triggerDeviceVibration(pattern);
-      for (let i = 0; i < 36; i++) {
+      for (let i = 0; i < 42; i++) {
         const el = document.createElement('div');
-        el.className = 'heart-particle text-3xl';
+        el.className = 'heart-particle text-4xl';
         el.innerText = emoji;
         el.style.left = (Math.random() * 92 + 2) + 'vw';
-        el.style.animationDuration = (1.8 + Math.random() * 1.5) + 's';
-        el.style.animationDelay = (Math.random() * 0.45) + 's';
+        const dur = (1.4 + Math.random() * 1.0);
+        const delay = (Math.random() * 0.25);
+        el.style.animationDuration = dur + 's';
+        el.style.animationDelay = delay + 's';
         document.body.appendChild(el);
-        setTimeout(() => el.remove(), 3600);
+        setTimeout(() => el.remove(), maxDurationMs);
       }
     }
 
@@ -1114,13 +1306,14 @@
       document.getElementById('bannerIcon').innerText = icon;
       const b = document.getElementById('liveBanner');
       b.classList.remove('hidden');
-      setTimeout(() => b.classList.add('hidden'), 4500);
+      setTimeout(() => b.classList.add('hidden'), 4000);
     }
 
     function hideBanner() {
       document.getElementById('liveBanner').classList.add('hidden');
     }
 
+    // Envoi d'une des 8 vibrations carrées -> Fond Noir Pur + Pluie + Son personnalisé
     function sendSpecialVibration(key, label, emoji, pattern, soundType) {
       state.pingsToday += 1;
       state.coins = (state.coins || 0) + 5;
@@ -1133,6 +1326,7 @@
       state.lastEvent = {
         id: eventId,
         sender: currentUser,
+        type: 'vibration',
         title: `⚡ VIBRATION D'AMOUR`,
         message: `${currentUser} → ${partner} : ${label}`,
         emoji,
@@ -1140,11 +1334,11 @@
         pattern
       };
 
-      triggerLockscreenBurst(emoji, `${currentUser} → ${partner} : ${label}`, soundType, pattern);
-      triggerBanner('⚡ VIBRATION (+5 🪙)', `${currentUser} → ${partner} : ${label}`, emoji);
+      triggerBlackScreenRain(emoji, `${currentUser} → ${partner} : ${label}`, soundType, pattern, false);
       saveState();
     }
 
+    // Envoi des 4 boutons texte (Je t'aime, Bisou, Câlin, Ce soir ?) -> Fond Noir Pur + Pluie + Son personnalisé
     function sendLovePing(label, emoji, pattern, soundType) {
       state.pingsToday += 1;
       state.coins = (state.coins || 0) + 5;
@@ -1155,18 +1349,18 @@
       state.lastEvent = {
         id: eventId,
         sender: currentUser,
+        type: 'vibration',
         title: `⚡ VIBRATION D'AMOUR`,
         message: `${currentUser} → ${partner} : ${label}`,
         emoji,
         sound: soundType,
         pattern
       };
-      triggerLockscreenBurst(emoji, `${currentUser} → ${partner} : ${label}`, soundType, pattern);
-      triggerBanner('⚡ VIBRATION (+5 🪙)', `${currentUser} → ${partner} : ${label}`, emoji);
+      triggerBlackScreenRain(emoji, `${currentUser} → ${partner} : ${label}`, soundType, pattern, false);
       saveState();
     }
 
-    // ==================== DOUGLASSE & BOUTIQUE D'ACCESSOIRES ====================
+    // ==================== DOUGLASSE (SANS NOTIFICATION SUR ÉCRAN VERROUILLÉ) & ACCESSOIRES ANATOMIQUES ====================
     function interactCat(action) {
       const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
       const box = document.getElementById('catVisualContainer');
@@ -1201,20 +1395,9 @@
       state.cat.journal.unshift({ text: msg, time: now });
       state.cat.journal = state.cat.journal.slice(0, 6);
 
-      const eventId = Date.now();
-      lastEventId = eventId;
-      state.lastEvent = {
-        id: eventId,
-        sender: currentUser,
-        title: '🐱 DOUGLASSE',
-        message: msg,
-        emoji,
-        sound: 'cat',
-        pattern: [100, 60, 160]
-      };
-
+      // Type = 'cat' : n'envoie PAS de notification de réveil quand le téléphone est verrouillé
       playLoveSound('cat');
-      spawnParticles(emoji, [100, 60, 160]);
+      spawnParticles(emoji, [100, 60, 160], 2200);
       saveState();
     }
 
@@ -1222,10 +1405,12 @@
       const item = catAccessoriesCatalog.find(a => a.id === accId);
       if (!item) return;
       if (!state.cat.ownedAcc) state.cat.ownedAcc = [];
+      if (!state.cat.equippedSlots) state.cat.equippedSlots = { hat: '', eyes: '', neck: '', aura: '' };
 
       if (state.cat.ownedAcc.includes(accId)) {
-        state.cat.equipped = state.cat.equipped === item.emoji ? '' : item.emoji;
-        triggerBanner('👑 DOUGLASSE', `Accessoire ${item.emoji} équipé !`, item.emoji);
+        const currentInSlot = state.cat.equippedSlots[item.slot];
+        state.cat.equippedSlots[item.slot] = currentInSlot === item.emoji ? '' : item.emoji;
+        playLoveSound('cat');
         saveState();
       } else {
         if ((state.coins || 0) < item.price) {
@@ -1234,19 +1419,19 @@
         }
         state.coins -= item.price;
         state.cat.ownedAcc.push(accId);
-        state.cat.equipped = item.emoji;
-        spawnParticles(item.emoji, [150, 80, 250]);
+        state.cat.equippedSlots[item.slot] = item.emoji;
+        spawnParticles(item.emoji, [150, 80, 250], 2200);
         triggerBanner('🎉 ACCESSOIRE DÉBLOQUÉ !', `Douglasse porte maintenant ${item.name} ${item.emoji} !`, item.emoji);
         saveState();
       }
     }
 
-    function equipAccessory(emoji) {
-      state.cat.equipped = emoji;
+    function clearAllAccessories() {
+      state.cat.equippedSlots = { hat: '', eyes: '', neck: '', aura: '' };
       saveState();
     }
 
-    // ==================== CARNET DE BONS D'AMOUR (COUPONS) ====================
+    // ==================== CARNET DE BONS D'AMOUR ====================
     function createCoupon(title) {
       const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
       state.coupons.unshift({
@@ -1262,10 +1447,11 @@
       state.lastEvent = {
         id: eventId,
         sender: currentUser,
+        type: 'other',
         title: '🎟️ NOUVEAU BON D\'AMOUR !',
         message: `${currentUser} t'offre : ${title}`,
         emoji: '🎟️',
-        sound: 'love',
+        sound: 'rose',
         pattern: [180, 80, 280]
       };
       spawnParticles('🎟️', [180, 80, 280]);
@@ -1291,17 +1477,18 @@
       state.lastEvent = {
         id: eventId,
         sender: currentUser,
+        type: 'other',
         title: '🎟️ BON D\'AMOUR ACTIVÉ !',
         message: `${currentUser} utilise le bon : ${c.title} !`,
         emoji: '🔥',
         sound: 'fire',
         pattern: [200, 80, 200, 80, 400]
       };
-      triggerLockscreenBurst('🎟️', `${currentUser} utilise : ${c.title} !`, 'fire', [200, 80, 350]);
+      triggerBlackScreenRain('🎟️', `${currentUser} utilise : ${c.title} !`, 'fire', [200, 80, 350], false);
       saveState();
     }
 
-    // ==================== QUIZ « TU ME CONNAIS PAR COEUR ? » ====================
+    // ==================== QUIZ COUPLE ====================
     function nextQuizQuestion() {
       state.quiz.qIndex = (state.quiz.qIndex + 1) % coupleQuizPool.length;
       state.quiz.targetUser = currentUser;
@@ -1314,7 +1501,6 @@
       const qObj = coupleQuizPool[state.quiz.qIndex || 0];
       const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
 
-      // Étape 1 : La personne cible choisit sa réponse secrète
       if (state.quiz.secretChoice === null || state.quiz.targetUser === currentUser) {
         state.quiz.targetUser = currentUser;
         state.quiz.secretChoice = optIndex;
@@ -1324,7 +1510,6 @@
         return;
       }
 
-      // Étape 2 : Le partenaire tente de deviner
       if (optIndex === state.quiz.secretChoice) {
         state.coins = (state.coins || 0) + 25;
         state.cat.xp = (state.cat.xp || 0) + 30;
@@ -1373,7 +1558,7 @@
       saveState();
     }
 
-    // ==================== DESSIN LIVE À DEUX + TOUCHER SYNCHRONISÉ HAPTIQUE + CLOUD R2 ====================
+    // ==================== DESSIN LIVE + TOUCHER HAPTIQUE + CLOUD R2 ====================
     const canvas = document.getElementById('drawCanvas');
     const ctx = canvas.getContext('2d');
     let drawing = false;
@@ -1419,7 +1604,7 @@
           const x = (canvas.width - w) / 2;
           const y = (canvas.height - h) / 2;
           ctx.drawImage(img, x, y, w, h);
-          broadcastLiveCanvas();
+          broadcastLiveCanvas(true);
         };
         img.src = e.target.result;
       };
@@ -1436,7 +1621,6 @@
       };
     }
 
-    // Envoie le trait en direct + la position du doigt pour la Magie Haptique
     async function broadcastLiveCanvas(force = false) {
       if (!liveDrawEnabled) return;
       const now = Date.now();
@@ -1458,7 +1642,6 @@
       } catch (e) {}
     }
 
-    // Réception en direct des traits de l'autre + Détection du Toucher Synchronisé Haptique
     async function pollLiveCanvas() {
       if (activeTab !== 'dessin' || !liveDrawEnabled) return;
       try {
@@ -1470,14 +1653,12 @@
         const cursor = document.getElementById('partnerLiveCursor');
         const orb = document.getElementById('hapticFusionOrb');
 
-        // Affichage du curseur en direct du partenaire
         if (live.touching && live.x !== null && live.y !== null && (Date.now() - live.updatedAt < 4000)) {
           cursor.style.left = (live.x / canvas.width * 100) + '%';
           cursor.style.top = (live.y / canvas.height * 100) + '%';
           document.getElementById('partnerCursorLabel').innerText = live.sender;
           cursor.classList.remove('hidden');
 
-          // MAGIE HAPTIQUE : Si nos 2 doigts touchent au même endroit (< 65px d'écart) en même temps !
           if (drawing && myFingerPos) {
             const dist = Math.hypot(live.x - myFingerPos.x, live.y - myFingerPos.y);
             if (dist < 65) {
@@ -1499,7 +1680,6 @@
           orb.classList.add('hidden');
         }
 
-        // Met à jour les traits du canvas sous tes yeux
         if (live.updatedAt > lastRemoteLiveStamp && live.dataUrl && !drawing) {
           lastRemoteLiveStamp = live.updatedAt;
           const img = new Image();
@@ -1605,7 +1785,6 @@
       broadcastLiveCanvas(true);
     }
 
-    // Envoie le dessin + Archive dans le Cloud R2 illimité
     async function sendDrawingToPartner() {
       const dataUrl = canvas.toDataURL('image/png');
       const note = document.getElementById('sweetNoteInput').value.trim() || 'Mot doux pour toi ❤️';
@@ -1619,7 +1798,6 @@
       state.gallery = state.gallery.slice(0, 6);
       state.coins = (state.coins || 0) + 15;
 
-      // Archivage Cloud R2 illimité
       try {
         await fetch(API_ENDPOINT + '?action=archive', {
           method: 'POST',
@@ -1633,15 +1811,17 @@
       state.lastEvent = {
         id: eventId,
         sender: currentUser,
+        type: 'other',
         title: `🖌️ Nouveau dessin de ${currentUser}`,
         message: note,
         emoji: '🎨',
-        sound: 'love',
+        sound: 'rose',
         pattern: [150, 70, 250]
       };
 
       document.getElementById('sweetNoteInput').value = '';
-      triggerLockscreenBurst('🎨', `Dessin envoyé à ${partner} & archivé dans R2 (+15 🪙) !`, 'love', [150, 70, 250]);
+      playLoveSound('rose');
+      triggerBanner('DESSIN ENVOYÉ (15S)', `Affiché pendant 15s sur l'écran de ${partner} !`, '🎨');
       saveState();
       loadCloudArchives();
       showTab('nous');
@@ -1765,27 +1945,37 @@
       }
 
       if (state.cat && state.cat.photo) {
-        ['mainCatPhoto', 'miniCatPhoto', 'lockCatPhoto'].forEach(id => {
+        ['mainCatPhoto', 'miniCatPhoto'].forEach(id => {
           const el = document.getElementById(id);
           if (el) { el.src = state.cat.photo; el.classList.remove('hidden'); }
         });
-        ['catSvg', 'miniCatEmoji', 'lockCatEmoji'].forEach(id => {
+        ['catSvg', 'miniCatEmoji'].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.classList.add('hidden');
         });
       }
 
-      // Accessoire équipé sur Douglasse
-      const eq = state.cat.equipped || '';
-      document.getElementById('catEquippedOverlay').innerText = eq;
-      document.getElementById('miniCatAcc').innerText = eq;
-      document.getElementById('lockCatAccBadge').innerText = eq;
+      // Positionnement anatomique des accessoires sur Douglasse (Tête, Yeux, Cou, Aura flottante)
+      const slots = state.cat.equippedSlots || { hat: '', eyes: '', neck: '', aura: '' };
+      document.getElementById('accSlotHat').innerText = slots.hat || '';
+      document.getElementById('accSlotEyes').innerText = slots.eyes || '';
+      document.getElementById('accSlotNeck').innerText = slots.neck || '';
 
-      // Rendu de la boutique d'accessoires
+      const auraBox = document.getElementById('accSlotAura');
+      if (slots.aura) {
+        auraBox.classList.remove('hidden');
+        document.getElementById('auraItem1').innerText = slots.aura;
+        document.getElementById('auraItem2').innerText = '💖';
+        document.getElementById('auraItem3').innerText = '✨';
+        document.getElementById('auraItem4').innerText = slots.aura;
+      } else {
+        auraBox.classList.add('hidden');
+      }
+
       const owned = state.cat.ownedAcc || [];
       document.getElementById('catShopGrid').innerHTML = catAccessoriesCatalog.map(item => {
         const isOwned = owned.includes(item.id);
-        const isEq = state.cat.equipped === item.emoji;
+        const isEq = slots[item.slot] === item.emoji;
         return `
           <button onclick="buyOrEquipAccessory('${item.id}')" class="p-2.5 rounded-2xl border ${isEq ? 'border-pink-500 bg-pink-50' : 'border-slate-200 bg-slate-50'} flex flex-col items-center gap-1 active:scale-95 transition">
             <span class="text-2xl">${item.emoji}</span>
@@ -1797,11 +1987,15 @@
         `;
       }).join('');
 
-      const vc = state.vibCounts || { env: 0, peach: 0, cuc: 0, chili: 0 };
+      const vc = state.vibCounts || {};
       document.getElementById('badgeVibEnv').innerText = vc.env || 0;
       document.getElementById('badgeVibPeach').innerText = vc.peach || 0;
       document.getElementById('badgeVibCuc').innerText = vc.cuc || 0;
       document.getElementById('badgeVibChili').innerText = vc.chili || 0;
+      document.getElementById('badgeVibStraw').innerText = vc.straw || 0;
+      document.getElementById('badgeVibDevil').innerText = vc.devil || 0;
+      document.getElementById('badgeVibLips').innerText = vc.lips || 0;
+      document.getElementById('badgeVibRose').innerText = vc.rose || 0;
 
       document.getElementById('lockCountEnv').innerText = vc.env || 0;
       document.getElementById('lockCountPeach').innerText = vc.peach || 0;
@@ -1836,7 +2030,6 @@
       }
 
       document.getElementById('catSpeechBubble').innerText = speech;
-      document.getElementById('lockCatSpeech').innerText = speech;
       document.getElementById('miniCatBadge').innerText = badge;
       document.getElementById('catMoodPill').innerText = badge;
 
@@ -1844,7 +2037,6 @@
       document.getElementById('catXp').innerText = state.cat.xp || 40;
       document.getElementById('miniHunger').innerText = state.cat.hunger + '%';
       document.getElementById('miniLove').innerText = state.cat.love + '%';
-      document.getElementById('lockCatStats').innerText = `🍖 ${state.cat.hunger}% • 💖 ${state.cat.love}%`;
       document.getElementById('barHunger').style.width = state.cat.hunger + '%';
       document.getElementById('barHungerLabel').innerText = state.cat.hunger + '%';
       document.getElementById('barLove').style.width = state.cat.love + '%';
@@ -1859,7 +2051,6 @@
         </div>
       `).join('');
 
-      // Rendu du Quiz Couple
       const qObj = coupleQuizPool[state.quiz.qIndex || 0];
       document.getElementById('quizQuestionTitle').innerText = `Pour ${state.quiz.targetUser} : « ${qObj.q} »`;
       document.getElementById('quizModeSubtitle').innerText = state.quiz.secretChoice === null
@@ -1872,7 +2063,6 @@
       `).join('');
       document.getElementById('quizStatusBox').innerText = state.quiz.statusText || '';
 
-      // Rendu des Bons d'Amour (Coupons)
       document.getElementById('couponsListContainer').innerHTML = (state.coupons || []).map(c => `
         <div class="flex items-center justify-between p-3 rounded-2xl border ${c.used ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200'}">
           <div>
@@ -1886,7 +2076,6 @@
         </div>
       `).join('');
 
-      // Rendu des Capsules Temporelles
       const now = Date.now();
       document.getElementById('capsulesListContainer').innerHTML = (state.capsules || []).map(cap => {
         const unlocked = now >= cap.unlockAt;
