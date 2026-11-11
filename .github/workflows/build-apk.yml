@@ -29,6 +29,8 @@ jobs:
 
       - name: 📦 Préparation du dossier Web & Capacitor 6
         run: |
+          # Supprime tout dossier android résiduel du dépôt pour éviter le blocage à 17s
+          rm -rf android www package.json package-lock.json capacitor.config.json
           mkdir -p www
           cp index.html www/index.html
 
@@ -51,6 +53,15 @@ jobs:
 
           npx cap add android
           npx cap sync android
+
+          # Applique ton fichier icone.png comme icône de l'APK s'il est présent
+          if [ -f "icone.png" ]; then
+            for dir in android/app/src/main/res/mipmap-*; do
+              cp icone.png "$dir/ic_launcher.png" 2>/dev/null || true
+              cp icone.png "$dir/ic_launcher_round.png" 2>/dev/null || true
+              cp icone.png "$dir/ic_launcher_foreground.png" 2>/dev/null || true
+            done
+          fi
 
       - name: 🔒 Injection Maximum d'Autorisations, Service Veille & Téléchargeur APK
         run: |
@@ -127,7 +138,6 @@ jobs:
             fs.writeFileSync(manifestPath, xml, "utf8");
           '
 
-          # 1. Récepteur de démarrage automatique (Relance Love8 au redémarrage du téléphone ou après une mise à jour)
           cat << 'EOF' > android/app/src/main/java/com/love8/app/BootReceiver.java
           package com.love8.app;
 
@@ -151,7 +161,6 @@ jobs:
           }
           EOF
 
-          # 2. Service Temps Réel en arrière-plan
           cat << 'EOF' > android/app/src/main/java/com/love8/app/Love8Service.java
           package com.love8.app;
 
@@ -393,7 +402,6 @@ jobs:
           }
           EOF
 
-          # 3. MainActivity avec Demande de Toutes les Autorisations + Téléchargeur APK Natif
           cat << 'EOF' > android/app/src/main/java/com/love8/app/MainActivity.java
           package com.love8.app;
 
@@ -484,7 +492,6 @@ jobs:
                           requestPermissions(toRequest.toArray(new String[0]), 101);
                       }
 
-                      // 1. Exemption d'économie de batterie
                       PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
                       if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
                           try {
@@ -494,7 +501,6 @@ jobs:
                           } catch (Exception ignored) {}
                       }
 
-                      // 2. Superposition sur les autres applications
                       if (!Settings.canDrawOverlays(this)) {
                           try {
                               Intent ov = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
@@ -502,7 +508,6 @@ jobs:
                           } catch (Exception ignored) {}
                       }
 
-                      // 3. Notifications Plein Écran sur Écran de Verrouillage (Android 14 / 15)
                       if (Build.VERSION.SDK_INT >= 34) {
                           NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                           if (nm != null && !nm.canUseFullScreenIntent()) {
@@ -567,7 +572,7 @@ jobs:
                           @Override
                           public void run() {
                               requestAllNeededPermissions();
-                              Toast.makeText(ctx, "Vérification des autorisations effectuée ✅", Toast.LENGTH_SHORT).show();
+                              Toast.makeText(ctx, "Autorisations vérifiées ✅", Toast.LENGTH_SHORT).show();
                           }
                       });
                   }
