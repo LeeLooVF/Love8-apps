@@ -49,7 +49,7 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: 🔒 Injection Service Arrière-Plan, Vraies Notifications & Réveil Écran Verrouillé
+      - name: 🔒 Injection Service Arrière-Plan, GPS, Vibreur Natif & Réveil Écran Verrouillé
         run: |
           node -e '
             const fs = require("fs");
@@ -60,6 +60,8 @@ jobs:
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.VIBRATE" />
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
               <uses-permission android:name="android.permission.WAKE_LOCK" />
               <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -85,7 +87,6 @@ jobs:
             fs.writeFileSync(manifestPath, xml, "utf8");
           '
 
-          # 1. Service Android Natif pur SDK (zéro erreur d'import androidx)
           cat << 'EOF' > android/app/src/main/java/com/love8/app/Love8Service.java
           package com.love8.app;
 
@@ -98,6 +99,8 @@ jobs:
           import android.content.Intent;
           import android.content.SharedPreferences;
           import android.content.pm.ServiceInfo;
+          import android.media.RingtoneManager;
+          import android.net.Uri;
           import android.os.Build;
           import android.os.Handler;
           import android.os.IBinder;
@@ -113,7 +116,7 @@ jobs:
 
           public class Love8Service extends Service {
               private static final String CHANNEL_BG = "love8_bg_service";
-              private static final String CHANNEL_ALERTS = "love8_alerts_high";
+              private static final String CHANNEL_ALERTS = "love8_alerts_v2";
               private Handler handler = new Handler(Looper.getMainLooper());
               private Runnable poller;
 
@@ -121,12 +124,10 @@ jobs:
               public void onCreate() {
                   super.onCreate();
                   createChannels();
-                  Notification.Builder builder;
-                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                      builder = new Notification.Builder(this, CHANNEL_BG);
-                  } else {
-                      builder = new Notification.Builder(this);
-                  }
+                  Notification.Builder builder = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                      ? new Notification.Builder(this, CHANNEL_BG)
+                      : new Notification.Builder(this);
+
                   Notification bgNotif = builder
                       .setContentTitle("Love8 connecté ❤️")
                       .setContentText("Veille active Jordan & Lydie")
@@ -148,9 +149,9 @@ jobs:
                       NotificationChannel bg = new NotificationChannel(CHANNEL_BG, "Veille Permanente Love8", NotificationManager.IMPORTANCE_LOW);
                       nm.createNotificationChannel(bg);
 
-                      NotificationChannel alerts = new NotificationChannel(CHANNEL_ALERTS, "Alertes & Pings Love8", NotificationManager.IMPORTANCE_HIGH);
+                      NotificationChannel alerts = new NotificationChannel(CHANNEL_ALERTS, "Vibrations & Alertes Love8", NotificationManager.IMPORTANCE_HIGH);
                       alerts.enableVibration(true);
-                      alerts.setVibrationPattern(new long[]{0, 250, 120, 350});
+                      alerts.setVibrationPattern(new long[]{0, 250, 100, 350});
                       alerts.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
                       nm.createNotificationChannel(alerts);
                   }
@@ -190,7 +191,7 @@ jobs:
                       long evId = ev.optLong("id", 0);
                       String sender = ev.optString("sender", "");
                       String title = ev.optString("title", "Love8 ❤️");
-                      String message = ev.optString("message", "Nouveau message !");
+                      String message = ev.optString("message", "Nouvelle vibration !");
                       String emoji = ev.optString("emoji", "❤️");
 
                       SharedPreferences prefs = getSharedPreferences("love8_native", MODE_PRIVATE);
@@ -220,9 +221,9 @@ jobs:
                       Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                       if (v != null) {
                           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                              v.vibrate(VibrationEffect.createWaveform(new long[]{0, 200, 100, 350}, -1));
+                              v.vibrate(VibrationEffect.createWaveform(new long[]{0, 250, 100, 400}, -1));
                           } else {
-                              v.vibrate(500);
+                              v.vibrate(600);
                           }
                       }
 
@@ -236,12 +237,10 @@ jobs:
                           PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
                       );
 
-                      Notification.Builder nb;
-                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                          nb = new Notification.Builder(this, CHANNEL_ALERTS);
-                      } else {
-                          nb = new Notification.Builder(this);
-                      }
+                      Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                      Notification.Builder nb = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                          ? new Notification.Builder(this, CHANNEL_ALERTS)
+                          : new Notification.Builder(this).setSound(soundUri);
 
                       nb.setSmallIcon(android.R.drawable.ic_dialog_email)
                         .setContentTitle(title)
@@ -274,7 +273,6 @@ jobs:
           }
           EOF
 
-          # 2. MainActivity pur SDK Android
           cat << 'EOF' > android/app/src/main/java/com/love8/app/MainActivity.java
           package com.love8.app;
 
@@ -289,6 +287,8 @@ jobs:
           import android.content.pm.PackageManager;
           import android.os.Build;
           import android.os.Bundle;
+          import android.os.VibrationEffect;
+          import android.os.Vibrator;
           import android.view.WindowManager;
           import android.webkit.JavascriptInterface;
           import com.getcapacitor.BridgeActivity;
@@ -308,10 +308,12 @@ jobs:
                       WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
                   );
 
-                  if (Build.VERSION.SDK_INT >= 33) {
-                      if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                          requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
-                      }
+                  if (Build.VERSION.SDK_INT >= 23) {
+                      requestPermissions(new String[]{
+                          Manifest.permission.POST_NOTIFICATIONS,
+                          Manifest.permission.ACCESS_FINE_LOCATION,
+                          Manifest.permission.ACCESS_COARSE_LOCATION
+                      }, 101);
                   }
 
                   Intent svc = new Intent(this, Love8Service.class);
@@ -359,13 +361,34 @@ jobs:
                   }
 
                   @JavascriptInterface
+                  public void vibrateDevice(String csvPattern) {
+                      try {
+                          String[] parts = csvPattern.split(",");
+                          long[] timings = new long[parts.length + 1];
+                          timings[0] = 0;
+                          for (int i = 0; i < parts.length; i++) {
+                              timings[i + 1] = Long.parseLong(parts[i].trim());
+                          }
+                          Vibrator v = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
+                          if (v != null) {
+                              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                  v.vibrate(VibrationEffect.createWaveform(timings, -1));
+                              } else {
+                                  v.vibrate(350);
+                              }
+                          }
+                      } catch (Exception ignored) {}
+                  }
+
+                  @JavascriptInterface
                   public void showSystemNotification(String title, String message) {
                       NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
                       Notification.Builder b;
                       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                          NotificationChannel ch = new NotificationChannel("love8_alerts_high", "Alertes & Pings Love8", NotificationManager.IMPORTANCE_HIGH);
+                          NotificationChannel ch = new NotificationChannel("love8_alerts_v2", "Vibrations & Alertes Love8", NotificationManager.IMPORTANCE_HIGH);
+                          ch.enableVibration(true);
                           nm.createNotificationChannel(ch);
-                          b = new Notification.Builder(ctx, "love8_alerts_high");
+                          b = new Notification.Builder(ctx, "love8_alerts_v2");
                       } else {
                           b = new Notification.Builder(ctx);
                       }
