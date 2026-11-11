@@ -53,7 +53,6 @@ jobs:
           npx cap add android
           npx cap sync android
 
-          # Applique ton fichier icone.png sans conflit avec mipmap-anydpi-v26
           if [ -f "icone.png" ]; then
             rm -rf android/app/src/main/res/mipmap-anydpi-v26
             for dir in android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-hdpi android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi android/app/src/main/res/mipmap-xxxhdpi; do
@@ -63,14 +62,13 @@ jobs:
             done
           fi
 
-      - name: 🔒 Injection Maximum d'Autorisations, Service Veille & Téléchargeur APK
+      - name: 🔒 Écriture propre du AndroidManifest.xml et des classes Java
         run: |
-          node -e '
-            const fs = require("fs");
-            const manifestPath = "android/app/src/main/AndroidManifest.xml";
-            let xml = fs.readFileSync(manifestPath, "utf8");
+          # 1. Écriture directe d'un AndroidManifest.xml complet et 100% valide
+          cat << 'EOF' > android/app/src/main/AndroidManifest.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-            const perms = `
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
               <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -107,37 +105,63 @@ jobs:
               <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
               <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
               <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-            `;
 
-            xml = xml.replace("<application", perms + "\n    <application android:usesCleartextTraffic=\"true\" android:requestLegacyExternalStorage=\"true\"");
-            xml = xml.replace(
-              "android:name=\".MainActivity\"",
-              "android:name=\".MainActivity\" android:showWhenLocked=\"true\" android:turnScreenOn=\"true\" android:launchMode=\"singleTask\""
-            );
+              <application
+                  android:allowBackup="true"
+                  android:icon="@mipmap/ic_launcher"
+                  android:label="@string/app_name"
+                  android:roundIcon="@mipmap/ic_launcher_round"
+                  android:supportsRtl="true"
+                  android:usesCleartextTraffic="true"
+                  android:requestLegacyExternalStorage="true"
+                  android:theme="@style/AppTheme">
 
-            const components = `
-              <service
-                android:name=".Love8Service"
-                android:enabled="true"
-                android:exported="false"
-                android:foregroundServiceType="specialUse" />
+                  <activity
+                      android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+                      android:name=".MainActivity"
+                      android:label="@string/title_activity_main"
+                      android:theme="@style/AppTheme.NoActionBarLaunch"
+                      android:launchMode="singleTask"
+                      android:showWhenLocked="true"
+                      android:turnScreenOn="true"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
 
-              <receiver
-                android:name=".BootReceiver"
-                android:enabled="true"
-                android:exported="true">
-                <intent-filter>
-                  <action android:name="android.intent.action.BOOT_COMPLETED" />
-                  <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-                  <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-                </intent-filter>
-              </receiver>
-            </application>`;
+                  <service
+                      android:name=".Love8Service"
+                      android:enabled="true"
+                      android:exported="false"
+                      android:foregroundServiceType="specialUse" />
 
-            xml = xml.replace("</application>", components);
-            fs.writeFileSync(manifestPath, xml, "utf8");
-          '
+                  <receiver
+                      android:name=".BootReceiver"
+                      android:enabled="true"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.BOOT_COMPLETED" />
+                          <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                          <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                      </intent-filter>
+                  </receiver>
 
+                  <provider
+                      android:name="androidx.core.content.FileProvider"
+                      android:authorities="${applicationId}.fileprovider"
+                      android:exported="false"
+                      android:grantUriPermissions="true">
+                      <meta-data
+                          android:name="android.support.FILE_PROVIDER_PATHS"
+                          android:resource="@xml/file_paths" />
+                  </provider>
+              </application>
+          </manifest>
+          EOF
+
+          # 2. BootReceiver.java
           cat << 'EOF' > android/app/src/main/java/com/love8/app/BootReceiver.java
           package com.love8.app;
 
@@ -161,6 +185,7 @@ jobs:
           }
           EOF
 
+          # 3. Love8Service.java
           cat << 'EOF' > android/app/src/main/java/com/love8/app/Love8Service.java
           package com.love8.app;
 
@@ -402,6 +427,7 @@ jobs:
           }
           EOF
 
+          # 4. MainActivity.java
           cat << 'EOF' > android/app/src/main/java/com/love8/app/MainActivity.java
           package com.love8.app;
 
