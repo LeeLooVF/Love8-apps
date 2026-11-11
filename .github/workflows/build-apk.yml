@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: ☕ Configuration de Java 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -62,7 +62,7 @@ jobs:
             done
           fi
 
-      - name: 🔒 Écriture du AndroidManifest.xml et des classes Java (Extinction stricte 1s après pluie & 15s après dessin)
+      - name: 🔒 Écriture du AndroidManifest.xml et des classes Java (Flash LED SOS + Veille 1s/15s)
         run: |
           cat << 'EOF' > android/app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
@@ -195,6 +195,8 @@ jobs:
           import android.content.Intent;
           import android.content.SharedPreferences;
           import android.content.pm.ServiceInfo;
+          import android.hardware.camera2.CameraCharacteristics;
+          import android.hardware.camera2.CameraManager;
           import android.media.AudioAttributes;
           import android.media.RingtoneManager;
           import android.net.Uri;
@@ -213,8 +215,8 @@ jobs:
           import java.net.URL;
 
           public class Love8Service extends Service {
-              private static final String CHANNEL_BG = "love8_bg_service_v7";
-              private static final String CHANNEL_ALERTS = "love8_alerts_v7";
+              private static final String CHANNEL_BG = "love8_bg_service_v8";
+              private static final String CHANNEL_ALERTS = "love8_alerts_v8";
               private Handler handler = new Handler(Looper.getMainLooper());
               private Runnable poller;
               private PowerManager.WakeLock cpuWakeLock;
@@ -280,6 +282,35 @@ jobs:
                       alerts.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
                       nm.createNotificationChannel(alerts);
                   }
+              }
+
+              // Stroboscope Flash LED Arrière en cas d'alerte S.O.S Amour
+              public static void triggerSosFlashStrobe(final Context context, final int pulses) {
+                  if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
+                  new Thread(new Runnable() {
+                      @Override
+                      public void run() {
+                          try {
+                              CameraManager camManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+                              if (camManager == null) return;
+                              String torchCamId = null;
+                              for (String id : camManager.getCameraIdList()) {
+                                  Boolean hasFlash = camManager.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
+                                  if (hasFlash != null && hasFlash) {
+                                      torchCamId = id;
+                                      break;
+                                  }
+                              }
+                              if (torchCamId == null) return;
+                              for (int i = 0; i < pulses; i++) {
+                                  camManager.setTorchMode(torchCamId, true);
+                                  Thread.sleep(120);
+                                  camManager.setTorchMode(torchCamId, false);
+                                  Thread.sleep(100);
+                              }
+                          } catch (Exception ignored) {}
+                      }
+                  }).start();
               }
 
               private void startPolling() {
@@ -352,8 +383,12 @@ jobs:
                       @Override
                       public void run() {
                           try {
-                              // 2500ms d'animation de pluie + 1000ms = 3500ms pile avant extinction
                               long wakeDurationMs = "vibration".equalsIgnoreCase(evType) ? 3500 : 15000;
+
+                              // Si c'est un S.O.S Amour, fait clignoter le Flash LED arrière 12 fois !
+                              if ("siren".equalsIgnoreCase(sound) || title.contains("S.O.S")) {
+                                  triggerSosFlashStrobe(Love8Service.this, 12);
+                              }
 
                               PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
                               if (pm != null) {
@@ -366,10 +401,13 @@ jobs:
 
                               Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                               if (v != null) {
+                                  long[] vibPattern = "siren".equalsIgnoreCase(sound)
+                                      ? new long[]{0, 400, 100, 400, 100, 400, 100, 600}
+                                      : new long[]{0, 300, 100, 450};
                                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                      v.vibrate(VibrationEffect.createWaveform(new long[]{0, 300, 100, 450}, -1));
+                                      v.vibrate(VibrationEffect.createWaveform(vibPattern, -1));
                                   } else {
-                                      v.vibrate(700);
+                                      v.vibrate(800);
                                   }
                               }
 
@@ -613,7 +651,11 @@ jobs:
                       prefs.edit().putString("current_user", user).apply();
                   }
 
-                  // Coupe l'affichage par-dessus le verrouillage et replonge immédiatement le téléphone en veille
+                  @JavascriptInterface
+                  public void flashTorchStrobe(int pulses) {
+                      Love8Service.triggerSosFlashStrobe(ctx, pulses > 0 ? pulses : 10);
+                  }
+
                   @JavascriptInterface
                   public void turnOffScreenAndSleep() {
                       runOnUiThread(new Runnable() {
@@ -708,10 +750,10 @@ jobs:
                       NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
                       Notification.Builder b;
                       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                          NotificationChannel ch = new NotificationChannel("love8_alerts_v7", "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
+                          NotificationChannel ch = new NotificationChannel("love8_alerts_v8", "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
                           ch.enableVibration(true);
                           nm.createNotificationChannel(ch);
-                          b = new Notification.Builder(ctx, "love8_alerts_v7");
+                          b = new Notification.Builder(ctx, "love8_alerts_v8");
                       } else {
                           b = new Notification.Builder(ctx);
                       }
