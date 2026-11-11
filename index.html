@@ -81,9 +81,7 @@
   <input id="fileInputCat" type="file" accept="image/*" class="hidden" onchange="handleCatPhotoUpload(event)" />
   <input id="fileInputCanvas" type="file" accept="image/*" class="hidden" onchange="handleCanvasImageUpload(event)" />
 
-  <!-- ==================== ÉCRAN DE VERROUILLAGE INTERACTIF ==================== -->
   <div id="lockscreenOverlay" class="fixed inset-0 z-50 hidden bg-[#0c0d14] text-white flex flex-col justify-between p-4 overflow-hidden">
-
     <div id="lockGiantBurst" class="fixed inset-0 pointer-events-none z-50 hidden flex flex-col items-center justify-center bg-black/45 backdrop-blur-sm">
       <div id="lockGiantEmoji" class="text-[110px] lock-center-anim filter drop-shadow-[0_0_35px_rgba(236,72,153,0.9)]">❤️</div>
       <p id="lockGiantLabel" class="text-xl font-extrabold text-pink-200 tracking-wide mt-2 bg-black/70 px-5 py-2 rounded-full border border-pink-400/40 shadow-2xl text-center">
@@ -167,7 +165,6 @@
     <button onclick="hideBanner()" class="text-xs font-bold text-slate-400 px-2 py-1">OK</button>
   </div>
 
-  <!-- HEADER FIXE SANS BOUTON MAJ -->
   <header class="sticky top-0 z-30 bg-pink-50/85 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-pink-100/60">
     <div class="flex items-center gap-2.5">
       <div class="w-10 h-10 rounded-full gradient-card flex items-center justify-center shadow-md pulse-ring">
@@ -629,7 +626,7 @@
       "Quel est ton souvenir préféré de nous deux cette année ?",
       "Quelle destination rêves-tu qu'on visite ensemble prochainement ?",
       "Quel est le petit geste du quotidien qui te fait le plus craquer chez moi ?",
-      "Si on had une soirée rien que tous les deux ce week-end, quel serait ton programme idéal ?"
+      "Si on avait une soirée rien que tous les deux ce week-end, quel serait ton programme idéal ?"
     ];
 
     let audioCtx = null;
@@ -1412,7 +1409,7 @@
         mouthPath = 'M93 99 Q100 92 107 99';
       }
 
-      document.getElementById('catSpeechBubble').innerText = speech;
+          document.getElementById('catSpeechBubble').innerText = speech;
       document.getElementById('lockCatSpeech').innerText = speech;
       document.getElementById('miniCatBadge').innerText = badge;
       document.getElementById('catMoodPill').innerText = badge;
@@ -1442,7 +1439,7 @@
       document.getElementById('ansJordan').innerText = state.answers.Jordan;
       document.getElementById('ansLydie').innerText = state.answers.Lydie;
 
-      document.getElementById('wishListContainer').innerHTML = state.wishes.map((w, i) => `
+      document.getElementById('wishListContainer').innerHTML = state.wishes.wishes ? '' : state.wishes.map((w, i) => `
         <div onclick="toggleWish(${i})" class="flex items-center gap-2.5 bg-slate-50 p-3 rounded-2xl border border-slate-100 cursor-pointer">
           <span class="w-5 h-5 rounded-full border-2 border-pink-400 flex items-center justify-center text-xs">${w.done ? '✔️' : ''}</span>
           <span class="${w.done ? 'line-through text-slate-400' : 'font-semibold text-slate-700'}">${w.text}</span>
