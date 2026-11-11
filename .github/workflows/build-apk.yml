@@ -62,9 +62,8 @@ jobs:
             done
           fi
 
-      - name: 🔒 Écriture propre du AndroidManifest.xml et des classes Java
+      - name: 🔒 Écriture du AndroidManifest.xml et des classes Java (Gestion Veille 1s / 15s & Sans Douglasse en veille)
         run: |
-          # 1. Écriture directe d'un AndroidManifest.xml complet et 100% valide
           cat << 'EOF' > android/app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -161,7 +160,6 @@ jobs:
           </manifest>
           EOF
 
-          # 2. BootReceiver.java
           cat << 'EOF' > android/app/src/main/java/com/love8/app/BootReceiver.java
           package com.love8.app;
 
@@ -185,10 +183,10 @@ jobs:
           }
           EOF
 
-          # 3. Love8Service.java
           cat << 'EOF' > android/app/src/main/java/com/love8/app/Love8Service.java
           package com.love8.app;
 
+          import android.app.KeyguardManager;
           import android.app.Notification;
           import android.app.NotificationChannel;
           import android.app.NotificationManager;
@@ -216,8 +214,8 @@ jobs:
           import java.net.URL;
 
           public class Love8Service extends Service {
-              private static final String CHANNEL_BG = "love8_bg_service_v5";
-              private static final String CHANNEL_ALERTS = "love8_alerts_v5";
+              private static final String CHANNEL_BG = "love8_bg_service_v6";
+              private static final String CHANNEL_ALERTS = "love8_alerts_v6";
               private Handler handler = new Handler(Looper.getMainLooper());
               private Runnable poller;
               private PowerManager.WakeLock cpuWakeLock;
@@ -321,9 +319,11 @@ jobs:
                       JSONObject ev = json.getJSONObject("lastEvent");
                       long evId = ev.optLong("id", 0);
                       String sender = ev.optString("sender", "");
+                      String evType = ev.optString("type", "vibration");
                       String title = ev.optString("title", "Love8 ❤️");
                       String message = ev.optString("message", "Nouvelle vibration !");
                       String emoji = ev.optString("emoji", "❤️");
+                      String sound = ev.optString("sound", "love");
 
                       SharedPreferences prefs = getSharedPreferences("love8_native", MODE_PRIVATE);
                       long lastSeen = prefs.getLong("last_event_id", 0);
@@ -336,25 +336,34 @@ jobs:
 
                       if (evId > lastSeen) {
                           prefs.edit().putLong("last_event_id", evId).apply();
-                          if (!sender.equalsIgnoreCase(myUser) || title.contains("Douglasse")) {
-                              triggerWakeAndNotification(title, message, emoji);
+
+                          // BLOQUE TOTALEMENT LES NOTIFICATIONS DE DOUGLASSE QUAND LE TÉLÉPHONE EST VERROUILLÉ / EN VEILLE
+                          if (evType.equalsIgnoreCase("cat") || title.toLowerCase().contains("douglasse")) {
+                              return;
+                          }
+
+                          if (!sender.equalsIgnoreCase(myUser)) {
+                              triggerWakeAndNotification(title, message, emoji, evType, sound);
                           }
                       }
                   } catch (Exception ignored) {}
               }
 
-              public void triggerWakeAndNotification(final String title, final String message, final String emoji) {
+              public void triggerWakeAndNotification(final String title, final String message, final String emoji, final String evType, final String sound) {
                   handler.post(new Runnable() {
                       @Override
                       public void run() {
                           try {
+                              // Durée exacte du WakeLock écran : 3.6s pour une vibration (pluie + 1s), 15s pour les autres sorties de veille
+                              long wakeDurationMs = "vibration".equalsIgnoreCase(evType) ? 3800 : 15000;
+
                               PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
                               if (pm != null) {
                                   PowerManager.WakeLock screenLock = pm.newWakeLock(
-                                      PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE,
+                                      PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
                                       "love8:screenWake"
                                   );
-                                  screenLock.acquire(8000);
+                                  screenLock.acquire(wakeDurationMs);
                               }
 
                               Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -377,6 +386,8 @@ jobs:
                               fullIntent.putExtra("emoji", emoji);
                               fullIntent.putExtra("title", title);
                               fullIntent.putExtra("message", message);
+                              fullIntent.putExtra("evType", evType);
+                              fullIntent.putExtra("sound", sound);
 
                               PendingIntent fullPending = PendingIntent.getActivity(
                                   Love8Service.this, (int) System.currentTimeMillis(), fullIntent,
@@ -427,7 +438,6 @@ jobs:
           }
           EOF
 
-          # 4. MainActivity.java
           cat << 'EOF' > android/app/src/main/java/com/love8/app/MainActivity.java
           package com.love8.app;
 
@@ -467,9 +477,7 @@ jobs:
                   }
                   getWindow().addFlags(
                       WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
-                      WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
-                      WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
-                      WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+                      WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
                   );
 
                   requestAllNeededPermissions();
@@ -556,6 +564,7 @@ jobs:
 
               private void handleWakeIntent(Intent intent) {
                   if (intent != null && intent.getBooleanExtra("lock_alert", false)) {
+                      getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                           setShowWhenLocked(true);
                           setTurnScreenOn(true);
@@ -563,22 +572,28 @@ jobs:
                       String emoji = intent.getStringExtra("emoji");
                       String title = intent.getStringExtra("title");
                       String msg = intent.getStringExtra("message");
+                      String evType = intent.getStringExtra("evType");
+                      String sound = intent.getStringExtra("sound");
                       if (emoji == null) emoji = "❤️";
                       if (title == null) title = "Love8";
                       if (msg == null) msg = "Vibration reçue !";
+                      if (evType == null) evType = "vibration";
+                      if (sound == null) sound = "love";
 
                       final String safeEmoji = emoji.replace("'", "\\'");
                       final String safeTitle = title.replace("'", "\\'");
                       final String safeMsg = msg.replace("'", "\\'");
+                      final String safeType = evType.replace("'", "\\'");
+                      final String safeSound = sound.replace("'", "\\'");
 
                       this.bridge.getWebView().postDelayed(new Runnable() {
                           @Override
                           public void run() {
                               MainActivity.this.bridge.getWebView().evaluateJavascript(
-                                  "if(window.onNativeWakeAlert) window.onNativeWakeAlert('" + safeEmoji + "','" + safeTitle + "','" + safeMsg + "');", null
+                                  "if(window.onNativeWakeAlert) window.onNativeWakeAlert('" + safeEmoji + "','" + safeTitle + "','" + safeMsg + "','" + safeType + "','" + safeSound + "');", null
                               );
                           }
-                      }, 400);
+                      }, 350);
                   }
               }
 
@@ -590,6 +605,28 @@ jobs:
                   public void setUser(String user) {
                       SharedPreferences prefs = ctx.getSharedPreferences("love8_native", MODE_PRIVATE);
                       prefs.edit().putString("current_user", user).apply();
+                  }
+
+                  // Remet le téléphone en veille automatiquement (après 1s pour une pluie, ou 15s pour un dessin)
+                  @JavascriptInterface
+                  public void turnOffScreenAndSleep() {
+                      runOnUiThread(new Runnable() {
+                          @Override
+                          public void run() {
+                              try {
+                                  getWindow().clearFlags(
+                                      WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
+                                      WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
+                                      WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                                  );
+                                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                                      setTurnScreenOn(false);
+                                      setShowWhenLocked(false);
+                                  }
+                                  moveTaskToBack(true);
+                              } catch (Exception ignored) {}
+                          }
+                      });
                   }
 
                   @JavascriptInterface
@@ -655,10 +692,10 @@ jobs:
                       NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
                       Notification.Builder b;
                       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                          NotificationChannel ch = new NotificationChannel("love8_alerts_v5", "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
+                          NotificationChannel ch = new NotificationChannel("love8_alerts_v6", "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
                           ch.enableVibration(true);
                           nm.createNotificationChannel(ch);
-                          b = new Notification.Builder(ctx, "love8_alerts_v5");
+                          b = new Notification.Builder(ctx, "love8_alerts_v6");
                       } else {
                           b = new Notification.Builder(ctx);
                       }
