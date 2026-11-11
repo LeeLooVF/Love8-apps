@@ -499,7 +499,7 @@ jobs:
                        .setContentText(message)
                        .setAutoCancel(true);
                       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                          b.setVisibility(Notification.VISIBILITY_PUBLIC);
+                        b.setVisibility(Notification.VISIBILITY_PUBLIC);
                       }
                       nm.notify((int) (System.currentTimeMillis() % 10000), b.build());
                   }
