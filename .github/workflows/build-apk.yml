@@ -49,14 +49,15 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: 🔒 Injection Service Temps Réel (WakeLock CPU + WifiLock + Sortie de Veille)
+      - name: 🔒 Injection Propre AndroidManifest & Services (Python)
         run: |
-          node -e '
-            const fs = require("fs");
-            const manifestPath = "android/app/src/main/AndroidManifest.xml";
-            let xml = fs.readFileSync(manifestPath, "utf8");
+          python3 -c '
+          import re
+          manifest_path = "android/app/src/main/AndroidManifest.xml"
+          with open(manifest_path, "r") as f:
+              content = f.read()
 
-            const perms = `
+          perms = """
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
               <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -72,25 +73,38 @@ jobs:
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
               <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
-            `;
+          """
 
-            xml = xml.replace("<application", perms + "\n    <application");
-            xml = xml.replace(
+          service_tag = """
+              <service
+                  android:name=\".Love8Service\"
+                  android:enabled=\"true\"
+                  android:exported=\"false\"
+                  android:foregroundServiceType=\"specialUse\" />
+          """
+
+          # Insère les permissions juste après <manifest ...>
+          if "<manifest" in content and "INTERNET" not in content:
+              content = re.sub(r"(<manifest[^>]*>)", r"\1\n" + perms, content, count=1)
+
+          # Active showWhenLocked et turnScreenOn sur MainActivity
+          content = content.replace(
               "android:name=\".MainActivity\"",
               "android:name=\".MainActivity\" android:showWhenLocked=\"true\" android:turnScreenOn=\"true\" android:launchMode=\"singleTask\""
-            );
+          )
 
-            const serviceTag = `
-              <service
-                android:name=".Love8Service"
-                android:enabled="true"
-                android:exported="false"
-                android:foregroundServiceType="specialUse" />
-            </application>`;
+          # Insère le service avant </application>
+          if "Love8Service" not in content and "</application>" in content:
+              content = content.replace("</application>", service_tag + "\n    </application>")
 
-            xml = xml.replace("</application>", serviceTag);
-            fs.writeFileSync(manifestPath, xml, "utf8");
+          with open(manifest_path, "w") as f:
+              f.write(content)
+          print("Manifest mis à jour proprement.")
           '
+
+      - name: 💻 Création des services Java (Love8Service & MainActivity)
+        run: |
+          mkdir -p android/app/src/main/java/com/love8/app
 
           cat << 'EOF' > android/app/src/main/java/com/love8/app/Love8Service.java
           package com.love8.app;
@@ -122,8 +136,8 @@ jobs:
           import java.net.URL;
 
           public class Love8Service extends Service {
-              private static final String CHANNEL_BG = "love8_bg_service_v4";
-              private static final String CHANNEL_ALERTS = "love8_alerts_v4";
+              private static final String CHANNEL_BG = "love8_bg_service_v6";
+              private static final String CHANNEL_ALERTS = "love8_alerts_v6";
               private Handler handler = new Handler(Looper.getMainLooper());
               private Runnable poller;
               private PowerManager.WakeLock cpuWakeLock;
@@ -476,12 +490,12 @@ jobs:
                       NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
                       Notification.Builder b;
                       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                          NotificationChannel ch = new NotificationChannel("love8_alerts_v4", "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
+                          NotificationChannel ch = new NotificationChannel("love8_alerts_v6", "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
                           ch.enableVibration(true);
                           nm.createNotificationChannel(ch);
-                          b = new Notification.Builder(ctx, "love8_alerts_v4");
+                          b = new Notification.Builder(ctx, "love8_alerts_v6");
                       } else {
-                          b = new Notification.Builder(ctx);
+                        b = new Notification.Builder(ctx);
                       }
                       b.setSmallIcon(android.R.drawable.ic_dialog_email)
                        .setContentTitle(title)
