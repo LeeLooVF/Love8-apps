@@ -35,7 +35,6 @@
       0%, 100% { transform: translateY(0px) scale(1); }
       50% { transform: translateY(-14px) scale(1.06); }
     }
-    /* PLUIE CORRIGÉE : DÉPART TOUT EN HAUT DE L'ÉCRAN (-60px) JUSQU'À TOUT EN BAS (112vh) */
     .heart-particle {
       position: fixed;
       top: -60px;
@@ -78,7 +77,6 @@
 </head>
 <body class="min-h-screen pb-24 text-slate-800">
 
-  <!-- INPUTS FICHIERS CACHÉS -->
   <input id="fileInputAvatar" type="file" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)" />
   <input id="fileInputCat" type="file" accept="image/*" class="hidden" onchange="handleCatPhotoUpload(event)" />
   <input id="fileInputCanvas" type="file" accept="image/*" class="hidden" onchange="handleCanvasImageUpload(event)" />
@@ -86,7 +84,6 @@
   <!-- ==================== ÉCRAN DE VERROUILLAGE INTERACTIF ==================== -->
   <div id="lockscreenOverlay" class="fixed inset-0 z-50 hidden bg-[#0c0d14] text-white flex flex-col justify-between p-4 overflow-hidden">
 
-    <!-- ANIMATION GÉANTE CENTRALE SUR L'ÉCRAN DE VERROUILLAGE -->
     <div id="lockGiantBurst" class="fixed inset-0 pointer-events-none z-50 hidden flex flex-col items-center justify-center bg-black/45 backdrop-blur-sm">
       <div id="lockGiantEmoji" class="text-[110px] lock-center-anim filter drop-shadow-[0_0_35px_rgba(236,72,153,0.9)]">❤️</div>
       <p id="lockGiantLabel" class="text-xl font-extrabold text-pink-200 tracking-wide mt-2 bg-black/70 px-5 py-2 rounded-full border border-pink-400/40 shadow-2xl text-center">
@@ -94,7 +91,6 @@
       </p>
     </div>
 
-    <!-- HAUT : CADRE ROUGE (JOURS) + CENTRE (COMPTEUR SÉPARATION GPS) + CADRE VERT (4 VIBRATIONS) -->
     <div class="mt-2">
       <div class="grid grid-cols-3 items-center gap-2">
         <div class="bg-rose-500/15 border border-rose-400/35 rounded-2xl p-2.5 text-center">
@@ -123,7 +119,6 @@
       </p>
     </div>
 
-    <!-- GRAND CADRE CENTRAL : DESSIN AGRANDI -->
     <div class="flex-1 my-3 bg-[#181924] border border-white/10 rounded-3xl p-3.5 flex flex-col justify-between overflow-hidden shadow-2xl">
       <p id="lockDrawingMeta" class="text-xs text-slate-300 text-center font-medium">Dessiné par Jordan • À 21:22</p>
       
@@ -135,7 +130,6 @@
       <p id="lockDrawingCaption" class="text-xs font-bold text-pink-200 text-center">« Mot doux pour toi ❤️ »</p>
     </div>
 
-    <!-- BAS : CARTE DOUGLASSE EN DIRECT + BOUTON DÉVERROUILLER -->
     <div class="space-y-2.5">
       <div class="bg-[#181924] border border-white/10 rounded-3xl p-3.5 flex items-center gap-3.5">
         <div onclick="triggerCatPhotoUpload()" class="relative w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center overflow-hidden shrink-0 cat-bounce cursor-pointer">
@@ -162,7 +156,6 @@
     </div>
   </div>
 
-  <!-- BANNIÈRE DE NOTIFICATION FLOTTANTE (HEADS-UP) -->
   <div id="liveBanner" class="fixed top-3 left-4 right-4 z-50 hidden transform transition-all duration-300 bg-white/95 backdrop-blur-md border border-pink-200 rounded-2xl p-3.5 shadow-xl flex items-center justify-between">
     <div class="flex items-center gap-3">
       <div id="bannerIcon" class="w-10 h-10 rounded-full gradient-card flex items-center justify-center text-white text-xl">❤️</div>
@@ -174,7 +167,7 @@
     <button onclick="hideBanner()" class="text-xs font-bold text-slate-400 px-2 py-1">OK</button>
   </div>
 
-  <!-- HEADER FIXE -->
+  <!-- HEADER FIXE SANS BOUTON MAJ -->
   <header class="sticky top-0 z-30 bg-pink-50/85 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-pink-100/60">
     <div class="flex items-center gap-2.5">
       <div class="w-10 h-10 rounded-full gradient-card flex items-center justify-center shadow-md pulse-ring">
@@ -189,7 +182,6 @@
       </div>
     </div>
 
-    <!-- SÉLECTEUR PROFIL JORDAN / LYDIE -->
     <div class="bg-white p-1 rounded-full shadow-inner border border-pink-100 flex items-center text-xs font-bold">
       <button id="btnJordan" onclick="switchUser('Jordan')" class="px-3 py-1.5 rounded-full gradient-card text-white shadow transition-all flex items-center gap-1">
         👦🏻 Jordan
@@ -204,10 +196,8 @@
     </button>
   </header>
 
-  <!-- CONTENEUR PRINCIPAL -->
   <main class="max-w-md mx-auto px-4 pt-3 space-y-4">
 
-    <!-- ==================== ONGLET 1 : NOUS ==================== -->
     <section id="tab-nous" class="space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80">
         <div class="flex justify-between items-center mb-3">
@@ -220,7 +210,6 @@
         </div>
 
         <div class="grid grid-cols-3 items-center text-center">
-          <!-- Avatar Jordan -->
           <div class="flex flex-col items-center">
             <div onclick="triggerAvatarUpload('jordan')" class="relative w-20 h-20 rounded-full border-2 border-purple-500 p-0.5 flex items-center justify-center bg-purple-50/40 cursor-pointer overflow-hidden shadow-sm">
               <img id="jordanAvatarImg" src="" class="w-full h-full rounded-full object-cover hidden" />
@@ -233,7 +222,6 @@
             <span id="jordanLocText" class="mt-1 bg-purple-50 text-purple-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">📍 À la maison</span>
           </div>
 
-          <!-- COEUR CENTRAL INTERACTIF -->
           <div class="flex flex-col items-center justify-center">
             <div class="w-full flex items-center justify-center">
               <div class="h-[2px] w-5 bg-pink-200"></div>
@@ -247,7 +235,6 @@
             </span>
           </div>
 
-          <!-- Avatar Lydie -->
           <div class="flex flex-col items-center">
             <div onclick="triggerAvatarUpload('lydie')" class="relative w-20 h-20 rounded-full border-2 border-pink-500 p-0.5 flex items-center justify-center bg-pink-50/40 cursor-pointer overflow-hidden shadow-sm">
               <img id="lydieAvatarImg" src="" class="w-full h-full rounded-full object-cover hidden" />
@@ -271,7 +258,6 @@
         </div>
       </div>
 
-      <!-- CARTE VIBRATION D'AMOUR (NOTIFS EN DIRECT) -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-xs font-extrabold tracking-wider uppercase text-slate-500">⚡ VIBRATION D'AMOUR</span>
@@ -316,7 +302,6 @@
         </div>
       </div>
 
-      <!-- Mini Carte Douglasse -->
       <div onclick="showTab('douglasse')" class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 flex items-center justify-between cursor-pointer active:scale-[0.99] transition">
         <div class="flex items-center gap-3">
           <div class="w-12 h-12 rounded-2xl bg-amber-100/80 flex items-center justify-center text-2xl overflow-hidden">
@@ -337,7 +322,6 @@
       </div>
     </section>
 
-    <!-- ==================== ONGLET 2 : DESSIN ==================== -->
     <section id="tab-dessin" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
@@ -407,7 +391,6 @@
       </div>
     </section>
 
-    <!-- ==================== ONGLET 3 : DOUGLASSE ==================== -->
     <section id="tab-douglasse" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 text-center space-y-3">
         <div class="flex items-center justify-between">
@@ -445,7 +428,7 @@
             </svg>
           </div>
           <button onclick="triggerCatPhotoUpload()" class="text-[11px] font-bold text-amber-800 bg-amber-100/80 px-3 py-1 rounded-full border border-amber-200">
-            📷 Choisir la photo de Douglasse (l.jpg)
+            📷 Choisir la photo de Douglasse
           </button>
         </div>
 
@@ -508,7 +491,6 @@
       </div>
     </section>
 
-    <!-- ==================== ONGLET 4 : SOUVENIRS ==================== -->
     <section id="tab-souvenirs" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
@@ -577,7 +559,6 @@
 
   </main>
 
-  <!-- BARRE DE NAVIGATION BASSE -->
   <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-pink-100 px-6 py-2 flex justify-around items-center text-[11px] font-bold text-slate-400">
     <button id="nav-nous" onclick="showTab('nous')" class="flex flex-col items-center gap-0.5 text-pink-600">
       <span class="text-lg">💞</span>
@@ -648,7 +629,7 @@
       "Quel est ton souvenir préféré de nous deux cette année ?",
       "Quelle destination rêves-tu qu'on visite ensemble prochainement ?",
       "Quel est le petit geste du quotidien qui te fait le plus craquer chez moi ?",
-      "Si on avait une soirée rien que tous les deux ce week-end, quel serait ton programme idéal ?"
+      "Si on had une soirée rien que tous les deux ce week-end, quel serait ton programme idéal ?"
     ];
 
     let audioCtx = null;
@@ -727,7 +708,6 @@
       }, 2400);
     }
 
-    // Appelé immédiatement par Android quand le téléphone sort de veille
     window.onNativeWakeAlert = function(emoji, title, message) {
       toggleLockscreen(true);
       triggerLockscreenBurst(
@@ -758,7 +738,6 @@
       }
     }
 
-    // ÉCOUTE EN TEMPS RÉEL RAPIDE (1,5 SECONDE) POUR TOUTES LES NOTIFICATIONS & VIBRATIONS
     async function pollCloudState() {
       try {
         const res = await fetch(API_ENDPOINT + '?t=' + Date.now(), { cache: 'no-store' });
@@ -963,7 +942,6 @@
       else el.classList.add('hidden');
     }
 
-    // PLUIE D'EMOJIS DEPUIS TOUT EN HAUT DE L'ÉCRAN JUSQU'À TOUT EN BAS
     function spawnParticles(emoji, pattern = [150, 70, 250]) {
       triggerDeviceVibration(pattern);
       for (let i = 0; i < 36; i++) {
@@ -1131,7 +1109,6 @@
       document.getElementById('statHours').innerText = hours;
     }
 
-    // SEULS LA POSITION GPS ET LA BATTERIE SONT ACTUALISÉS TOUTES LES 5 MINUTES (SANS SPAMMER DE NOTIF)
     async function refreshBatteryAndGPS(isManual = false) {
       const key = currentUser.toLowerCase();
       if (navigator.getBattery) {
@@ -1159,7 +1136,6 @@
       }
     }
 
-    // Actualisation silencieuse GPS + Batterie toutes les 5 minutes (300 000 ms)
     setInterval(() => {
       refreshBatteryAndGPS(false);
     }, 300000);
@@ -1176,7 +1152,6 @@
       saveState();
     }
 
-    // Canvas
     const canvas = document.getElementById('drawCanvas');
     const ctx = canvas.getContext('2d');
     let drawing = false;
@@ -1480,7 +1455,6 @@
     renderAll();
     refreshBatteryAndGPS(false);
     pollCloudState();
-    // Écoute ultra-rapide toutes les 1.5s pour les notifications et vibrations en direct
     setInterval(pollCloudState, 1500);
   </script>
 </body>
