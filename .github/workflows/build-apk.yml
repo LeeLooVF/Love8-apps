@@ -49,7 +49,7 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: 🔒 Injection Service Temps Réel (WakeLock CPU + WifiLock Internet en Veille)
+      - name: 🔒 Injection Service Temps Réel (WakeLock CPU + WifiLock + Sortie de Veille)
         run: |
           node -e '
             const fs = require("fs");
@@ -134,7 +134,6 @@ jobs:
                   super.onCreate();
                   createChannels();
 
-                  // 1. Maintient le processeur actif écran éteint
                   PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
                   if (pm != null) {
                       cpuWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "love8:cpuKeepAlive");
@@ -142,7 +141,6 @@ jobs:
                       cpuWakeLock.acquire();
                   }
 
-                  // 2. Interdit à Android / Xiaomi de couper le Wi-Fi en veille
                   WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                   if (wm != null) {
                       int lockType = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
@@ -389,7 +387,6 @@ jobs:
                           } catch (Exception ignored) {}
                       }
 
-                      // Sur Android 12+, vérifie l'autorisation de superposition plein écran (SYSTEM_ALERT_WINDOW)
                       if (!Settings.canDrawOverlays(this)) {
                           try {
                               Intent ov = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
