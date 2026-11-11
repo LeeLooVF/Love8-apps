@@ -17,7 +17,6 @@
     .gradient-card {
       background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
     }
-    /* NOUVELLES COULEURS D'ARRIÈRE-PLAN DES 8 BOUTONS DE VIBRATION */
     .vib-btn-env {
       background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
       box-shadow: 0 6px 15px -3px rgba(37, 99, 235, 0.4);
@@ -49,6 +48,15 @@
     .vib-btn-rose {
       background: linear-gradient(135deg, #d946ef 0%, #86198f 100%);
       box-shadow: 0 6px 15px -3px rgba(134, 25, 143, 0.4);
+    }
+    .sos-siren-btn {
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 50%, #e11d48 100%);
+      box-shadow: 0 0 20px rgba(220, 38, 38, 0.55);
+      animation: sosPulse 1.4s infinite alternate;
+    }
+    @keyframes sosPulse {
+      from { transform: scale(1); box-shadow: 0 0 12px rgba(220, 38, 38, 0.45); }
+      to { transform: scale(1.015); box-shadow: 0 0 24px rgba(220, 38, 38, 0.85); }
     }
     .cat-bounce {
       animation: floatCat 2.8s ease-in-out infinite;
@@ -117,7 +125,7 @@
 </head>
 <body class="min-h-screen pb-24 text-slate-800">
 
-  <!-- INPUTS FICHIERS CACHÉS (SANS IMPORT PHOTO DOUGLASSE) -->
+  <!-- INPUTS FICHIERS CACHÉS -->
   <input id="fileInputAvatar" type="file" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)" />
   <input id="fileInputCanvas" type="file" accept="image/*" class="hidden" onchange="handleCanvasImageUpload(event)" />
   <input id="fileInputCapsule" type="file" accept="image/*" class="hidden" onchange="handleCapsulePhotoUpload(event)" />
@@ -130,13 +138,11 @@
         <button onclick="closeMoodLocModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold text-xs">✕</button>
       </div>
 
-      <!-- LISTE 1 : HUMEURS -->
       <div class="space-y-2">
         <label class="text-xs font-extrabold uppercase tracking-wider text-pink-600">1. Mon Humeur actuelle</label>
         <div id="moodPresetList" class="grid grid-cols-2 gap-2 text-xs font-bold"></div>
       </div>
 
-      <!-- LISTE 2 : LIEUX -->
       <div class="space-y-2 pt-1">
         <label class="text-xs font-extrabold uppercase tracking-wider text-purple-600">2. Ma Localisation</label>
         <div id="locPresetList" class="grid grid-cols-2 gap-2 text-xs font-bold"></div>
@@ -155,7 +161,7 @@
     </p>
   </div>
 
-  <!-- ==================== ÉCRAN DE VERROUILLAGE (SANS DOUGLASSE, EXTINCTION AUTO 15S) ==================== -->
+  <!-- ==================== ÉCRAN DE VERROUILLAGE (UNIQUEMENT POUR DESSIN / MANUEL, JAMAIS APRÈS VIBRATION) ==================== -->
   <div id="lockscreenOverlay" class="fixed inset-0 z-50 hidden bg-[#060609] text-white flex flex-col justify-between p-4 overflow-hidden">
 
     <div class="mt-2">
@@ -228,7 +234,7 @@
           <h1 class="font-extrabold text-base text-purple-900 leading-none">Love8</h1>
           <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block" title="Synchronisé"></span>
         </div>
-        <p class="text-[10px] font-extrabold text-amber-600">🪙 <span id="headerCoins">150</span> pièces</p>
+        <p class="text-[10px] font-extrabold text-amber-600">🪙 <span id="headerCoins">180</span> pièces</p>
       </div>
     </div>
 
@@ -304,7 +310,6 @@
           </div>
         </div>
 
-        <!-- BOUTON UNIQUE PLEINE LARGEUR : OUVRE LES 2 LISTES (HUMEURS & LIEUX) -->
         <div class="mt-4 pt-3 border-t border-slate-100">
           <button onclick="openMoodLocModal()" class="w-full bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 hover:from-purple-100 hover:to-pink-100 text-purple-900 text-xs font-extrabold py-3 rounded-2xl border border-pink-200 shadow-sm transition active:scale-[0.99] flex items-center justify-center gap-2">
             <span>😊 Choisir mon Humeur & mon Lieu dans la liste</span>
@@ -313,14 +318,13 @@
         </div>
       </div>
 
-      <!-- ==================== CARTE VIBRATION D'AMOUR : NOUVELLES COULEURS & SONS SUR MESURE ==================== -->
+      <!-- ==================== CARTE VIBRATION D'AMOUR + BOUTON S.O.S FLASH & SIRÈNE ==================== -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-xs font-extrabold tracking-wider uppercase text-slate-500">⚡ VIBRATIONS SUR FOND NOIR (+5 🪙)</span>
           <span class="bg-pink-50 text-pink-600 text-xs font-bold px-3 py-1 rounded-full"><span id="pingCounter">41</span> Pings 💕</span>
         </div>
 
-        <!-- RANGÉE 1 : BLEU AZUR, ORANGE PÊCHE, ÉMERAUDE CONCOMBRE, ROUGE PIMENT -->
         <div class="grid grid-cols-4 gap-2.5 pt-1">
           <button onclick="sendSpecialVibration('env', 'Tu me manques ! 💌', '💌', [140, 60, 280], 'env')" class="vib-btn-env aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
             <span class="text-3xl">💌</span>
@@ -343,7 +347,6 @@
           </button>
         </div>
 
-        <!-- RANGÉE 2 : ROSE FRAISE, INDIGO DÉMON, RUBIS BAISER, FUCHSIA ROSE -->
         <div class="grid grid-cols-4 gap-2.5">
           <button onclick="sendSpecialVibration('straw', 'Gourmandise à deux 🍓', '🍓', [120, 60, 120, 60, 240], 'straw')" class="vib-btn-straw aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
             <span class="text-3xl">🍓</span>
@@ -366,7 +369,6 @@
           </button>
         </div>
 
-        <!-- RANGÉE 3 : LES 4 BOUTONS TEXTE COLORÉS -->
         <div class="grid grid-cols-4 gap-2 text-xs font-extrabold pt-1">
           <button onclick="sendLovePing('Je t\'aime ❤️', '❤️', [100, 60, 100, 60, 260], 'love')" class="bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300 py-2.5 rounded-xl transition active:scale-95">
             ❤️ Je t'aime
@@ -379,6 +381,15 @@
           </button>
           <button onclick="sendLovePing('Ce soir ? 🔥', '🔥', [160, 60, 160, 60, 320], 'fire')" class="bg-orange-100 hover:bg-orange-200 text-orange-900 border border-orange-300 py-2.5 rounded-xl transition active:scale-95">
             🔥 Ce soir ?
+          </button>
+        </div>
+
+        <!-- NOUVEAU BOUTON D'URGENCE : S.O.S FLASH LUMINEUX LED + SIRÈNE D'AMOUR -->
+        <div class="pt-1">
+          <button onclick="sendSosFlashSiren()" class="sos-siren-btn w-full py-3.5 px-4 rounded-2xl text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 active:scale-95 transition">
+            <span class="text-lg">🚨</span>
+            <span>S.O.S Amour : « Réponds-moi vite ! » (Flash LED + Sirène)</span>
+            <span class="text-lg">🔦</span>
           </button>
         </div>
       </div>
@@ -492,12 +503,12 @@
       </div>
     </section>
 
-    <!-- ==================== ONGLET 3 : DOUGLASSE (SANS IMPORT PHOTO + 16 ACCESSOIRES PRESTIGE) ==================== -->
+    <!-- ==================== ONGLET 3 : DOUGLASSE ==================== -->
     <section id="tab-douglasse" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 text-center space-y-3">
         <div class="flex items-center justify-between">
           <span class="bg-amber-100 text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full">🐾 Niv. <span id="catLevel">4</span> (<span id="catXp">40</span>/100 XP)</span>
-          <span class="bg-yellow-100 text-yellow-800 text-xs font-extrabold px-3 py-1 rounded-full">🪙 <span id="catCoinsLabel">150</span> pièces</span>
+          <span class="bg-yellow-100 text-yellow-800 text-xs font-extrabold px-3 py-1 rounded-full">🪙 <span id="catCoinsLabel">180</span> pièces</span>
         </div>
 
         <div>
@@ -509,7 +520,6 @@
           « Miaou ! Touche-moi pour m'entendre ronronner 🐾 »
         </div>
 
-        <!-- PORTRAIT FIXE DE DOUGLASSE (SANS BOUTON D'IMPORT DEPUIS LE TÉLÉPHONE) -->
         <div class="py-2 flex flex-col items-center justify-center">
           <div id="catVisualContainer" onclick="interactCat('caresser')" class="relative w-52 h-52 rounded-3xl flex items-center justify-center cursor-pointer cat-bounce overflow-visible border-4 border-slate-200 shadow-lg bg-slate-100">
 
@@ -543,13 +553,9 @@
               <line x1="154" y1="100" x2="122" y2="101" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
             </svg>
 
-            <!-- 1. CALQUE TÊTE -->
             <div id="accSlotHat" class="pointer-events-none absolute -top-4 left-1/2 transform -translate-x-1/2 text-5xl drop-shadow-lg z-20"></div>
-            <!-- 2. CALQUE YEUX -->
             <div id="accSlotEyes" class="pointer-events-none absolute top-[28%] left-1/2 transform -translate-x-1/2 text-5xl drop-shadow-md z-20"></div>
-            <!-- 3. CALQUE COU -->
             <div id="accSlotNeck" class="pointer-events-none absolute top-[54%] left-1/2 transform -translate-x-1/2 text-4xl drop-shadow-md z-20"></div>
-            <!-- 4. CALQUE AURA FLOTTANTE -->
             <div id="accSlotAura" class="pointer-events-none absolute inset-0 z-30 hidden">
               <span id="auraItem1" class="orbit-item-1 absolute -top-3 -left-3 text-3xl drop-shadow">✨</span>
               <span id="auraItem2" class="orbit-item-2 absolute -top-3 -right-3 text-3xl drop-shadow">💖</span>
@@ -605,7 +611,6 @@
         </div>
       </div>
 
-      <!-- BOUTIQUE PRESTIGE DE DOUGLASSE (16 ACCESSOIRES : OBJECTIF 1 SEMAINE PAR ACCESSOIRE) -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <div>
@@ -623,8 +628,59 @@
       </div>
     </section>
 
-    <!-- ==================== ONGLET 4 : JEUX & BONS D'AMOUR ==================== -->
+    <!-- ==================== ONGLET 4 : JEUX & BONS D'AMOUR (AVEC ACTION OU VÉRITÉ 3 NIVEAUX) ==================== -->
     <section id="tab-jeux" class="hidden space-y-4">
+
+      <!-- ==================== NOUVEAU JEU : ACTION OU VÉRITÉ SPÉCIAL COUPLE (3 NIVEAUX) ==================== -->
+      <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="bg-rose-100 text-rose-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">🎲 ACTION OU VÉRITÉ COUPLE</span>
+          </div>
+          <span id="todTurnBadge" class="bg-purple-600 text-white text-[11px] font-extrabold px-3 py-1 rounded-full shadow-sm">
+            Tour de Jordan 👦🏻
+          </span>
+        </div>
+
+        <!-- SÉLECTEUR DES 3 NIVEAUX D'INTENSITÉ -->
+        <div class="grid grid-cols-3 gap-2 pt-1 text-xs font-extrabold">
+          <button id="btnTodDoux" onclick="setTodLevel('doux')" class="py-2 rounded-xl border transition">
+            💕 Doux
+          </button>
+          <button id="btnTodFun" onclick="setTodLevel('fun')" class="py-2 rounded-xl border transition">
+            😂 Fun
+          </button>
+          <button id="btnTodCaliente" onclick="setTodLevel('caliente')" class="py-2 rounded-xl border transition">
+            🔥 Caliente
+          </button>
+        </div>
+
+        <!-- CARTE TIRÉE -->
+        <div class="gradient-card text-white rounded-2xl p-4 text-center shadow-md space-y-2 min-h-[120px] flex flex-col justify-center">
+          <p id="todCardHeader" class="text-[10px] uppercase tracking-widest font-extrabold text-pink-100">
+            TIRE UNE CARTE POUR COMMENCER LA SOIRÉE
+          </p>
+          <p id="todCardText" class="text-sm font-extrabold leading-snug">
+            Choisis « Action » ou « Vérité » ci-dessous !
+          </p>
+        </div>
+
+        <!-- BOUTONS TIRER ACTION / TIRER VÉRITÉ / DÉFI RELEVÉ -->
+        <div class="grid grid-cols-2 gap-2.5 text-xs font-extrabold">
+          <button onclick="drawTruthOrDare('Vérité')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 py-3 rounded-2xl active:scale-95 transition">
+            🤔 Tirer une VÉRITÉ
+          </button>
+          <button onclick="drawTruthOrDare('Action')" class="bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 py-3 rounded-2xl active:scale-95 transition">
+            🔥 Tirer une ACTION
+          </button>
+        </div>
+
+        <button onclick="completeTruthOrDareTurn()" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-extrabold py-2.5 rounded-2xl active:scale-95 transition">
+          ✔️ Défi relevé (+20 🪙 & Passer au tour suivant)
+        </button>
+      </div>
+
+      <!-- QUIZ COUPLE -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <span class="bg-purple-100 text-purple-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">🎯 QUIZ : TU ME CONNAIS PAR CŒUR ?</span>
@@ -636,6 +692,7 @@
         <div id="quizStatusBox" class="bg-pink-50/70 border border-pink-200 rounded-2xl p-3 text-xs font-bold text-pink-900 text-center"></div>
       </div>
 
+      <!-- CARNET DE BONS D'AMOUR -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div>
           <h3 class="font-extrabold text-sm">🎟️ Carnet de « Bons d'Amour »</h3>
@@ -727,7 +784,7 @@
       <span>Douglasse</span>
     </button>
     <button id="nav-jeux" onclick="showTab('jeux')" class="flex flex-col items-center gap-0.5">
-      <span class="text-lg">🎟️</span>
+      <span class="text-lg">🎲</span>
       <span>Jeux & Bons</span>
     </button>
     <button id="nav-souvenirs" onclick="showTab('souvenirs')" class="flex flex-col items-center gap-0.5">
@@ -747,7 +804,6 @@
     let sleep15sTimer = null;
     let sleepCountdownInterval = null;
 
-    // LISTE 1 : HUMEURS PRÉDÉFINIES
     const moodPresets = [
       { emoji: '😍', text: 'Pense à toi ❤️' },
       { emoji: '💕', text: 'Hâte de te voir 💕' },
@@ -761,7 +817,6 @@
       { emoji: '🎉', text: 'En pleine forme 🎉' }
     ];
 
-    // LISTE 2 : LIEUX PRÉDÉFINIS
     const locationPresets = [
       '📍 À la maison',
       '📍 Au travail',
@@ -775,7 +830,6 @@
       '📍 Sous la couette 🛌'
     ];
 
-    // BOUTIQUE DE DOUGLASSE : 16 ACCESSOIRES PRESTIGE (1 000 à 5 000 PIÈCES = ~1 SEMAINE D'ÉCONOMIE)
     const catAccessoriesCatalog = [
       { id: 'sunglasses', name: 'Lunettes Star',   emoji: '🕶️', slot: 'eyes', price: 1000 },
       { id: 'nerdglass',  name: 'Lunettes Geek',   emoji: '🤓', slot: 'eyes', price: 1200 },
@@ -797,6 +851,64 @@
       { id: 'party',      name: 'Bitmojis Fête',   emoji: '🥳', slot: 'aura', price: 2900 },
       { id: 'king_aura',  name: 'Aura Légendaire', emoji: '🔥', slot: 'aura', price: 5000 }
     ];
+
+    // BANQUE DE CARTES « ACTION OU VÉRITÉ » SPÉCIAL COUPLE (3 NIVEAUX D'INTENSITÉ)
+    const truthOrDareDeck = {
+      doux: {
+        Vérité: [
+          "Quel est le tout premier détail qui t'a fait craquer chez moi ?",
+          "Quel est le souvenir avec moi qui te fait sourire à chaque fois ?",
+          "Quelle est la chose que je fais au quotidien et que tu adores en secret ?",
+          "Si on pouvait revivre une seule journée de notre histoire, laquelle choisirais-tu ?",
+          "Quelle chanson te fait immédiatement penser à nous deux ?",
+          "Quel est ton rêve le plus cher pour notre couple dans les 5 prochaines années ?"
+        ],
+        Action: [
+          "Fais-moi un câlin en me serrant fort pendant 30 secondes sans parler 🤗",
+          "Regarde-moi dans les yeux et dis-moi 3 choses que tu aimes chez moi ❤️",
+          "Fais-moi un massage des épaules ou de la nuque pendant 2 minutes 💆‍♂️",
+          "Embrasse-moi tendrement sur le front, les deux joues et les lèvres 😘",
+          "Envoie-moi un dessin surprise en moins de 30 secondes sur l'onglet Dessin 🎨",
+          "Danse un slow avec moi tout de suite, même sans musique 💃🕺"
+        ]
+      },
+      fun: {
+        Vérité: [
+          "Quelle est la petite habitude la plus bizarre ou drôle que tu as remarquée chez moi ?",
+          "Quel est le pire cadeau ou la pire surprise qu'on ait vécu ensemble ?",
+          "Si on échangeait nos corps pendant 24h, quelle est la première chose que tu ferais ?",
+          "Quelle est la chose la plus embarrassante que tu aies faite au début de notre relation ?",
+          "Si Douglasse pouvait parler, que raconterait-il sur nous deux ? 🐱",
+          "Quel plat que je cuisine (ou commande) te fait le moins rêver en vrai ?"
+        ],
+        Action: [
+          "Imite ma façon de parler ou ma tête quand je me réveille le matin 😂",
+          "Fais-moi rire en moins de 30 secondes sans me chatouiller !",
+          "Chante le refrain d'une chanson d'amour en me regardant très sérieusement 🎤",
+          "Prends un selfie grimace de nous deux tout de suite 🤳",
+          "Parle avec un accent (italien, anglais ou ch'ti) jusqu'à ton prochain tour !",
+          "Laisse-moi te coiffer ou choisir ta pose pour une photo souvenir 🤪"
+        ]
+      },
+      caliente: {
+        Vérité: [
+          "Quel est ton endroit préféré sur mon corps où tu adores que je t'embrasse ? 🔥",
+          "Quel est le fantasme ou l'envie coquine que tu n'as encore jamais osé m'avouer ?",
+          "Quel est notre moment le plus torride dont tu te souviens encore parfaitement ? 😈",
+          "Quelle tenue (ou absence de tenue) te fait perdre tous tes moyens quand je la porte ?",
+          "Si tu avais carte blanche sur moi pendant 15 minutes ce soir, que ferais-tu en premier ?",
+          "Quel endroit insolite de la maison te tente le plus pour un moment rien qu'à deux ? 🌶️"
+        ],
+        Action: [
+          "Embrasse-moi lentement dans le cou pendant 20 secondes les yeux fermés 💋",
+          "Murmure-moi à l'oreille ce que tu as envie qu'on fasse tout à l'heure sous la couette 🔥",
+          "Retire un vêtement de ton choix (ou laisse-moi choisir lequel) 😈",
+          "Fais-moi un baiser passionné de cinéma d'au moins 15 secondes sans t'arrêter ❤️‍🔥",
+          "Passe un glaçon (ou le bout de tes doigts) doucement le long de mon dos ou de mon ventre 🍓",
+          "Assieds-toi sur mes genoux pour les 2 prochains tours du jeu 🍑"
+        ]
+      }
+    };
 
     const coupleQuizPool = [
       {
@@ -846,6 +958,12 @@
         { id: 1, title: '💆‍♂️ Bon pour un massage de 15 min', from: 'Jordan', to: 'Lydie', used: false },
         { id: 2, title: '🎬 Bon pour choisir le film ce soir', from: 'Lydie', to: 'Jordan', used: false }
       ],
+      truthOrDare: {
+        level: 'doux',
+        turn: 'Jordan',
+        lastType: 'Vérité',
+        cardText: 'Choisis un niveau (Doux, Fun ou Caliente) et tire une carte !'
+      },
       quiz: {
         qIndex: 0,
         targetUser: 'Jordan',
@@ -864,6 +982,14 @@
     if (!state.cat.ownedAcc) state.cat.ownedAcc = [];
     if (!state.cat.equippedSlots) state.cat.equippedSlots = { hat: '', eyes: '', neck: '', aura: '' };
     if (!state.coupons) state.coupons = [];
+    if (!state.truthOrDare) {
+      state.truthOrDare = {
+        level: 'doux',
+        turn: 'Jordan',
+        lastType: 'Vérité',
+        cardText: 'Choisis un niveau (Doux, Fun ou Caliente) et tire une carte !'
+      };
+    }
     if (!state.quiz) state.quiz = { qIndex: 0, targetUser: 'Jordan', secretChoice: null, statusText: 'Choisis une réponse !' };
     if (!state.capsules) state.capsules = [];
 
@@ -878,7 +1004,7 @@
       }
     }
 
-    // ==================== MOTEUR AUDIO ENRICHI : SONS RÉALISTES SUR MESURE ====================
+    // ==================== MOTEUR AUDIO ENRICHI (AVEC SIRÈNE S.O.S D'AMOUR) ====================
     let audioCtx = null;
     function getAudioContext() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -891,7 +1017,25 @@
         const ctx = getAudioContext();
         const now = ctx.currentTime;
 
-        // 1. BISOUS (Double Smack réaliste avec résonance labiale)
+        // 0. SIRÈNE D'AMOUR S.O.S ("Réponds-moi vite !")
+        if (type === 'siren') {
+          [0, 0.42, 0.84].forEach(cycle => {
+            const osc = ctx.createOscillator();
+            const g = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(520, now + cycle);
+            osc.frequency.linearRampToValueAtTime(980, now + cycle + 0.2);
+            osc.frequency.linearRampToValueAtTime(520, now + cycle + 0.4);
+            g.gain.setValueAtTime(0.35, now + cycle);
+            g.gain.exponentialRampToValueAtTime(0.01, now + cycle + 0.41);
+            osc.connect(g);
+            g.connect(ctx.destination);
+            osc.start(now + cycle);
+            osc.stop(now + cycle + 0.42);
+          });
+          return;
+        }
+
         if (type === 'kiss' || type === 'lips') {
           [0, 0.22].forEach(delay => {
             const osc = ctx.createOscillator();
@@ -910,7 +1054,6 @@
           return;
         }
 
-        // 2. ENVELOPPE (Swoosh d'envoi aérien + petit carillon)
         if (type === 'env') {
           const bufferSize = Math.floor(ctx.sampleRate * 0.35);
           const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -945,7 +1088,6 @@
           return;
         }
 
-        // 3. FLAMME / FEU (Rugissement de flamme + crépitements chauds)
         if (type === 'fire') {
           const dur = 0.65;
           const bufferSize = Math.floor(ctx.sampleRate * dur);
@@ -972,7 +1114,6 @@
           return;
         }
 
-        // 4. PIMENT (Sizzle piquant haute fréquence + montée brulante)
         if (type === 'chili') {
           const dur = 0.45;
           const bufferSize = Math.floor(ctx.sampleRate * dur);
@@ -1006,7 +1147,6 @@
           return;
         }
 
-        // 5. PÊCHE (Boing pulpeux rebondissant)
         if (type === 'peach') {
           [0, 0.18].forEach((d, idx) => {
             const osc = ctx.createOscillator();
@@ -1025,7 +1165,6 @@
           return;
         }
 
-        // 6. CONCOMBRE / CROQUETTES (Crunch croquant triple)
         if (type === 'cuc' || type === 'crunch') {
           [0, 0.14, 0.28].forEach(d => {
             const bufSz = Math.floor(ctx.sampleRate * 0.09);
@@ -1048,7 +1187,6 @@
           return;
         }
 
-        // 7. FRAISE & CHAMPAGNE (Bulles pétillantes rapides)
         if (type === 'straw') {
           [523, 659, 784, 987, 1174, 1318, 1567].forEach((freq, i) => {
             const osc = ctx.createOscillator();
@@ -1067,7 +1205,6 @@
           return;
         }
 
-        // 8. DÉMON COQUIN (Petit rire malicieux "Hihihi")
         if (type === 'devil') {
           [440, 392, 349, 311, 261].forEach((freq, i) => {
             const osc = ctx.createOscillator();
@@ -1085,7 +1222,6 @@
           return;
         }
 
-        // 9. ROSE ROMANTIQUE (Arpège de harpe féérique)
         if (type === 'rose') {
           [392, 493, 587, 784, 987, 1174].forEach((freq, i) => {
             const osc = ctx.createOscillator();
@@ -1103,7 +1239,6 @@
           return;
         }
 
-        // 10. MIAULEMENT RÉALISTE DE DOUGLASSE ("Miaou !")
         if (type === 'cat' || type === 'meow') {
           const osc = ctx.createOscillator();
           const g = ctx.createGain();
@@ -1121,7 +1256,6 @@
           return;
         }
 
-        // 11. RONRONNEMENT SOURD DE DOUGLASSE ("Rrrrrrr...")
         if (type === 'purr') {
           const osc = ctx.createOscillator();
           const lfo = ctx.createOscillator();
@@ -1144,7 +1278,6 @@
           return;
         }
 
-        // 12. BATTEMENT DE COEUR SOURD (Je t'aime / Cœur central)
         if (type === 'heart' || type === 'love') {
           [0, 0.22].forEach(delay => {
             const osc = ctx.createOscillator();
@@ -1162,7 +1295,6 @@
           return;
         }
 
-        // 13. CÂLIN DOUX / FUSION
         const notes = type === 'hug'
           ? [[349, 0.22], [440, 0.22], [523, 0.38]]
           : [[523, 0.15], [659, 0.15], [784, 0.15], [1046, 0.35]];
@@ -1193,36 +1325,85 @@
       } catch (e) {}
     }
 
+    function triggerHardwareFlashStrobe(pulses = 10) {
+      try {
+        if (window.AndroidNative && window.AndroidNative.flashTorchStrobe) {
+          window.AndroidNative.flashTorchStrobe(pulses);
+        }
+      } catch (e) {}
+    }
+
     function requestPhoneSleepNow() {
       if (window.AndroidNative && window.AndroidNative.turnOffScreenAndSleep) {
         window.AndroidNative.turnOffScreenAndSleep();
       }
     }
 
-    // ==================== PLUIE SUR FOND 100% NOIR + MISE EN VEILLE 1 SECONDE APRÈS L'ANIMATION ====================
+    // ==================== BOUTON D'URGENCE : S.O.S FLASH LUMINEUX LED + SIRÈNE D'AMOUR ====================
+    function sendSosFlashSiren() {
+      state.pingsToday += 1;
+      state.coins = (state.coins || 0) + 5;
+      const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
+      const eventId = Date.now();
+      lastEventId = eventId;
+      localStorage.setItem('love8_last_event', String(eventId));
+
+      const sosPattern = [350, 90, 350, 90, 350, 90, 500];
+      state.lastEvent = {
+        id: eventId,
+        sender: currentUser,
+        type: 'vibration',
+        title: `🚨 S.O.S AMOUR DE ${currentUser.toUpperCase()} !`,
+        message: `🚨 ${currentUser} → ${partner} : RÉPONDS-MOI VITE ! ❤️`,
+        emoji: '🚨',
+        sound: 'siren',
+        pattern: sosPattern
+      };
+
+      triggerHardwareFlashStrobe(8);
+      triggerBlackScreenRain('🚨', `🚨 S.O.S envoyé à ${partner} : Réponds-moi vite !`, 'siren', sosPattern, false);
+      saveState();
+    }
+
+    // ==================== PLUIE SUR FOND 100% NOIR + EXTINCTION STRICTE 1S APRÈS L'ANIMATION ====================
     function triggerBlackScreenRain(emoji, labelText, soundType = 'love', pattern = [200, 80, 300], shouldSleepAfter = false) {
+      if (sleep15sTimer) clearTimeout(sleep15sTimer);
+      if (sleepCountdownInterval) clearInterval(sleepCountdownInterval);
+      document.getElementById('lockscreenOverlay').classList.add('hidden');
+      document.getElementById('lockSleepCountdown').classList.add('hidden');
+
       const blackOverlay = document.getElementById('pureBlackRainOverlay');
       document.getElementById('blackRainSubtitle').innerText = labelText || '';
       blackOverlay.classList.remove('hidden');
 
+      if (soundType === 'siren') {
+        triggerHardwareFlashStrobe(12);
+      }
+
       playLoveSound(soundType);
       triggerDeviceVibration(pattern);
 
-      const animDurationMs = 2600;
+      const animDurationMs = 2500;
       spawnParticles(emoji, pattern, animDurationMs);
 
       if (blackRainTimer) clearTimeout(blackRainTimer);
+
       blackRainTimer = setTimeout(() => {
-        blackOverlay.classList.add('hidden');
-        if (shouldSleepAfter) {
+        const isLockedNow = window.AndroidNative && window.AndroidNative.isDeviceLocked && window.AndroidNative.isDeviceLocked();
+        if (shouldSleepAfter || isLockedNow) {
           requestPhoneSleepNow();
         }
+        setTimeout(() => {
+          blackOverlay.classList.add('hidden');
+          document.getElementById('lockscreenOverlay').classList.add('hidden');
+        }, 250);
       }, animDurationMs + 1000);
     }
 
     function closeBlackRainNow() {
       if (blackRainTimer) clearTimeout(blackRainTimer);
       document.getElementById('pureBlackRainOverlay').classList.add('hidden');
+      document.getElementById('lockscreenOverlay').classList.add('hidden');
     }
 
     function toggleLockscreen(show, autoSleep15s = false) {
@@ -1263,7 +1444,7 @@
       }
 
       if (!evType || evType === 'vibration') {
-        toggleLockscreen(false);
+        document.getElementById('lockscreenOverlay').classList.add('hidden');
         triggerBlackScreenRain(
           emoji || state.lastEvent?.emoji || '❤️',
           message || state.lastEvent?.message || '',
@@ -1319,12 +1500,13 @@
             if (evType === 'cat' && isLocked) return;
 
             if (evType === 'vibration') {
+              document.getElementById('lockscreenOverlay').classList.add('hidden');
               triggerBlackScreenRain(
                 remote.lastEvent.emoji || '❤️',
                 remote.lastEvent.message || '',
                 remote.lastEvent.sound || 'love',
                 remote.lastEvent.pattern || [200, 80, 300],
-                isLocked
+                true
               );
             } else if (evType === 'other') {
               playLoveSound(remote.lastEvent.sound || 'rose');
@@ -1336,9 +1518,8 @@
       } catch (e) {}
     }
 
-    // ==================== SURVEILLANCE 100% AUTOMATIQUE BATTERIE & GPS (SANS BOUTON) ====================
+    // ==================== SURVEILLANCE 100% AUTOMATIQUE BATTERIE & GPS ====================
     async function initAutoBatteryAndGpsListeners() {
-      // 1. Écouteur temps réel du niveau de batterie
       if (navigator.getBattery) {
         try {
           const bat = await navigator.getBattery();
@@ -1356,7 +1537,6 @@
         } catch (e) {}
       }
 
-      // 2. Écouteur GPS continu (watchPosition)
       if (navigator.geolocation) {
         try {
           navigator.geolocation.watchPosition(pos => {
@@ -1370,7 +1550,6 @@
       }
     }
 
-    // Actualisation périodique silencieuse toutes les 60 secondes en tâche de fond
     setInterval(async () => {
       const key = currentUser.toLowerCase();
       if (navigator.getBattery) {
@@ -1606,14 +1785,14 @@
       if (tab === 'dessin') loadCloudArchives();
     }
 
-    function spawnParticles(emoji, pattern = [150, 70, 250], maxDurationMs = 2600) {
+    function spawnParticles(emoji, pattern = [150, 70, 250], maxDurationMs = 2500) {
       triggerDeviceVibration(pattern);
       for (let i = 0; i < 42; i++) {
         const el = document.createElement('div');
         el.className = 'heart-particle text-4xl';
         el.innerText = emoji;
         el.style.left = (Math.random() * 92 + 2) + 'vw';
-        const dur = (1.4 + Math.random() * 1.0);
+        const dur = (1.3 + Math.random() * 0.9);
         const delay = (Math.random() * 0.25);
         el.style.animationDuration = dur + 's';
         el.style.animationDelay = delay + 's';
@@ -1680,7 +1859,6 @@
       saveState();
     }
 
-    // ==================== DOUGLASSE AVEC SONS DISTINCTS (CRUNCH, RONRONNEMENT, MIAOU) ====================
     function interactCat(action) {
       const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
       const box = document.getElementById('catVisualContainer');
@@ -1757,7 +1935,44 @@
       saveState();
     }
 
-    // ==================== CARNET DE BONS D'AMOUR ====================
+    // ==================== FONCTIONS DU JEU « ACTION OU VÉRITÉ » SPÉCIAL COUPLE ====================
+    function setTodLevel(lvl) {
+      state.truthOrDare.level = lvl;
+      playLoveSound(lvl === 'caliente' ? 'fire' : (lvl === 'fun' ? 'straw' : 'rose'));
+      saveState();
+    }
+
+    function drawTruthOrDare(choiceType) {
+      const lvl = state.truthOrDare.level || 'doux';
+      const pool = truthOrDareDeck[lvl][choiceType] || truthOrDareDeck.doux.Vérité;
+      const randomCard = pool[Math.floor(Math.random() * pool.length)];
+
+      state.truthOrDare.lastType = choiceType;
+      state.truthOrDare.cardText = randomCard;
+
+      const soundMap = { doux: 'rose', fun: 'straw', caliente: 'fire' };
+      playLoveSound(soundMap[lvl] || 'rose');
+      triggerDeviceVibration([120, 60, 200]);
+      saveState();
+    }
+
+    function completeTruthOrDareTurn() {
+      const prevTurn = state.truthOrDare.turn || 'Jordan';
+      const nextTurn = prevTurn === 'Jordan' ? 'Lydie' : 'Jordan';
+      state.truthOrDare.turn = nextTurn;
+      state.truthOrDare.cardText = `Bravo ${prevTurn} ! C'est maintenant au tour de ${nextTurn} de tirer une carte Action ou Vérité !`;
+      state.coins = (state.coins || 0) + 20;
+      state.cat.xp = (state.cat.xp || 0) + 20;
+      if (state.cat.xp >= 100) {
+        state.cat.level += 1;
+        state.cat.xp -= 100;
+      }
+      playLoveSound('kiss');
+      spawnParticles('🎲', [120, 60, 220], 2000);
+      triggerBanner('🎉 DÉFI RELEVÉ (+20 🪙)', `Au tour de ${nextTurn} de jouer !`, '🎲');
+      saveState();
+    }
+
     function createCoupon(title) {
       const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
       state.coupons.unshift({
@@ -1804,7 +2019,7 @@
       state.lastEvent = {
         id: eventId,
         sender: currentUser,
-        type: 'other',
+        type: 'vibration',
         title: '🎟️ BON D\'AMOUR ACTIVÉ !',
         message: `${currentUser} utilise le bon : ${c.title} !`,
         emoji: '🔥',
@@ -1815,7 +2030,6 @@
       saveState();
     }
 
-    // ==================== QUIZ COUPLE ====================
     function nextQuizQuestion() {
       state.quiz.qIndex = (state.quiz.qIndex + 1) % coupleQuizPool.length;
       state.quiz.targetUser = currentUser;
@@ -1852,7 +2066,6 @@
       saveState();
     }
 
-    // ==================== CAPSULES TEMPORELLES ====================
     function handleCapsulePhotoUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -1885,7 +2098,6 @@
       saveState();
     }
 
-    // ==================== DESSIN LIVE + TOUCHER HAPTIQUE + CLOUD R2 ====================
     const canvas = document.getElementById('drawCanvas');
     const ctx = canvas.getContext('2d');
     let drawing = false;
@@ -2233,7 +2445,6 @@
       document.getElementById('jordanMoodBadge').innerText = state.jordan.mood || '😍';
       document.getElementById('lydieMoodBadge').innerText = state.lydie.mood || '😍';
 
-      // Accessoires positionnés sur Douglasse (Tête, Yeux, Cou, Aura flottante)
       const slots = state.cat.equippedSlots || { hat: '', eyes: '', neck: '', aura: '' };
       document.getElementById('accSlotHat').innerText = slots.hat || '';
       document.getElementById('accSlotEyes').innerText = slots.eyes || '';
@@ -2328,6 +2539,22 @@
           <span class="text-slate-400 font-semibold">${j.time}</span>
         </div>
       `).join('');
+
+      // Rendu du jeu Action ou Vérité Spécial Couple
+      const tod = state.truthOrDare || { level: 'doux', turn: 'Jordan', lastType: 'Vérité', cardText: '' };
+      document.getElementById('todTurnBadge').innerText = `Tour de ${tod.turn} ${tod.turn === 'Jordan' ? '👦🏻' : '👩🏻'}`;
+      document.getElementById('todCardHeader').innerText = `${tod.lastType || 'DÉFI'} (${tod.level.toUpperCase()}) • POUR ${tod.turn.toUpperCase()}`;
+      document.getElementById('todCardText').innerText = tod.cardText || 'Tire une carte Action ou Vérité !';
+
+      const lvlStyles = {
+        doux:     { id: 'btnTodDoux',     active: 'bg-pink-500 text-white border-pink-600 shadow',   idle: 'bg-pink-50 text-pink-700 border-pink-200' },
+        fun:      { id: 'btnTodFun',      active: 'bg-amber-500 text-white border-amber-600 shadow', idle: 'bg-amber-50 text-amber-800 border-amber-200' },
+        caliente: { id: 'btnTodCaliente', active: 'bg-rose-600 text-white border-rose-700 shadow',   idle: 'bg-rose-50 text-rose-700 border-rose-200' }
+      };
+      Object.keys(lvlStyles).forEach(k => {
+        const el = document.getElementById(lvlStyles[k].id);
+        if (el) el.className = `py-2 rounded-xl border transition ${tod.level === k ? lvlStyles[k].active : lvlStyles[k].idle}`;
+      });
 
       const qObj = coupleQuizPool[state.quiz.qIndex || 0];
       document.getElementById('quizQuestionTitle').innerText = `Pour ${state.quiz.targetUser} : « ${qObj.q} »`;
