@@ -46,20 +46,18 @@ jobs:
           }
           EOF
 
-          # Supprime l'ancien dossier android pour éviter le conflit "android platform already exists"
           rm -rf android
           npx cap add android
           npx cap sync android
 
-      - name: 🔒 Injection Propre AndroidManifest & Services (Python)
+      - name: 🔒 Injection Propre AndroidManifest & Services (Node.js)
         run: |
-          python3 -c '
-          import re
-          manifest_path = "android/app/src/main/AndroidManifest.xml"
-          with open(manifest_path, "r") as f:
-              content = f.read()
+          node -e '
+            const fs = require("fs");
+            const path = "android/app/src/main/AndroidManifest.xml";
+            let xml = fs.readFileSync(path, "utf8");
 
-          perms = """
+            const perms = `
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
               <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -75,30 +73,31 @@ jobs:
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
               <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
-          """
+            `;
 
-          service_tag = """
-              <service
-                  android:name=\".Love8Service\"
-                  android:enabled=\"true\"
-                  android:exported=\"false\"
-                  android:foregroundServiceType=\"specialUse\" />
-          """
+            if (!xml.includes("INTERNET")) {
+              xml = xml.replace("<application", perms + "\n    <application");
+            }
 
-          if "<manifest" in content and "INTERNET" not in content:
-              content = re.sub(r"(<manifest[^>]*>)", r"\1\n" + perms, content, count=1)
-
-          content = content.replace(
-              "android:name=\".MainActivity\"",
+            xml = xml.replace(
+              /android:name="\.MainActivity"/g,
               "android:name=\".MainActivity\" android:showWhenLocked=\"true\" android:turnScreenOn=\"true\" android:launchMode=\"singleTask\""
-          )
+            );
 
-          if "Love8Service" not in content and "</application>" in content:
-              content = content.replace("</application>", service_tag + "\n    </application>")
+            const serviceTag = `
+              <service
+                  android:name=".Love8Service"
+                  android:enabled="true"
+                  android:exported="false"
+                  android:foregroundServiceType="specialUse" />
+            </application>`;
 
-          with open(manifest_path, "w") as f:
-              f.write(content)
-          print("Manifest mis à jour proprement.")
+            if (!xml.includes("Love8Service")) {
+              xml = xml.replace("</application>", serviceTag);
+            }
+
+            fs.writeFileSync(path, xml, "utf8");
+            console.log("Manifest mis à jour par Node.js avec succès.");
           '
 
       - name: 💻 Création des services Java (Love8Service & MainActivity)
@@ -135,8 +134,8 @@ jobs:
           import java.net.URL;
 
           public class Love8Service extends Service {
-              private static final String CHANNEL_BG = "love8_bg_service_v7";
-              private static final String CHANNEL_ALERTS = "love8_alerts_v7";
+              private static final String CHANNEL_BG = "love8_bg_v8";
+              private static final String CHANNEL_ALERTS = "love8_alerts_v8";
               private Handler handler = new Handler(Looper.getMainLooper());
               private Runnable poller;
               private PowerManager.WakeLock cpuWakeLock;
@@ -489,10 +488,10 @@ jobs:
                       NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
                       Notification.Builder b;
                       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                          NotificationChannel ch = new NotificationChannel("love8_alerts_v7", "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
+                          NotificationChannel ch = new NotificationChannel("love8_alerts_v8", "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
                           ch.enableVibration(true);
                           nm.createNotificationChannel(ch);
-                          b = new Notification.Builder(ctx, "love8_alerts_v7");
+                          b = new Notification.Builder(ctx, "love8_alerts_v8");
                       } else {
                           b = new Notification.Builder(ctx);
                       }
