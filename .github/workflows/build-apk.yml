@@ -90,7 +90,7 @@ jobs:
             xml = xml.replace("</application>", serviceTag);
             fs.writeFileSync(manifestPath, xml, "utf8");
 
-            // Love8Service.java épuré et ultra-robuste
+            // Love8Service.java
             const serviceCode = `
             package com.love8.app;
             import android.app.Notification;
@@ -120,8 +120,8 @@ jobs:
             import java.net.URL;
 
             public class Love8Service extends Service {
-                private static final String CHANNEL_BG = "love8_bg_v6";
-                private static final String CHANNEL_ALERTS = "love8_alerts_v6";
+                private static final String CHANNEL_BG = "love8_bg_v7";
+                private static final String CHANNEL_ALERTS = "love8_alerts_v7";
                 private Handler handler = new Handler(Looper.getMainLooper());
                 private Runnable poller;
                 private PowerManager.WakeLock cpuWakeLock;
@@ -254,7 +254,7 @@ jobs:
             `;
             fs.writeFileSync("android/app/src/main/java/com/love8/app/Love8Service.java", serviceCode);
 
-            // MainActivity.java propre
+            // MainActivity.java
             const mainCode = `
             package com.love8.app;
             import android.Manifest;
@@ -355,7 +355,7 @@ jobs:
                     }
                     @JavascriptInterface public void showSystemNotification(String title, String message) {
                         NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
-                        Notification.Builder b = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? new Notification.Builder(ctx, "love8_alerts_v6") : new Notification.Builder(ctx);
+                        Notification.Builder b = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? new Notification.Builder(ctx, "love8_alerts_v7") : new Notification.Builder(ctx);
                         b.setSmallIcon(android.R.drawable.ic_dialog_email).setContentTitle(title).setContentText(message).setAutoCancel(true);
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) b.setVisibility(Notification.VISIBILITY_PUBLIC);
                         nm.notify((int) (System.currentTimeMillis() % 10000), b.build());
