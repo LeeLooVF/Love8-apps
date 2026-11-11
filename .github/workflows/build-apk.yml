@@ -51,7 +51,7 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: 🔒 Injection Service Temps Réel (WakeLock CPU + WifiLock + Bouton MAJ APK)
+      - name: 🔒 Injection Service Temps Réel (WakeLock CPU + WifiLock Internet + MAJ Directe)
         run: |
           node -e '
             const fs = require("fs");
@@ -124,8 +124,8 @@ jobs:
           import java.net.URL;
 
           public class Love8Service extends Service {
-              private static final String CHANNEL_BG = "love8_bg_service_v4";
-              private static final String CHANNEL_ALERTS = "love8_alerts_v4";
+              private static final String CHANNEL_BG = "love8_bg_service_v5";
+              private static final String CHANNEL_ALERTS = "love8_alerts_v5";
               private Handler handler = new Handler(Looper.getMainLooper());
               private Runnable poller;
               private PowerManager.WakeLock cpuWakeLock;
@@ -487,10 +487,10 @@ jobs:
                       NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
                       Notification.Builder b;
                       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                          NotificationChannel ch = new NotificationChannel("love8_alerts_v4", "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
+                          NotificationChannel ch = new NotificationChannel("love8_alerts_v5", "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
                           ch.enableVibration(true);
                           nm.createNotificationChannel(ch);
-                          b = new Notification.Builder(ctx, "love8_alerts_v4");
+                          b = new Notification.Builder(ctx, "love8_alerts_v5");
                       } else {
                           b = new Notification.Builder(ctx);
                       }
