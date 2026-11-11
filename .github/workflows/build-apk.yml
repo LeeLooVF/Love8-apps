@@ -49,7 +49,7 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: 🔒 Injection Propre AndroidManifest & Services (Python)
+      - name: 🔒 Injection Propre AndroidManifest & Services (Python Robuste)
         run: |
           python3 -c '
           manifest_path = "android/app/src/main/AndroidManifest.xml"
@@ -82,23 +82,28 @@ jobs:
                   android:foregroundServiceType="specialUse" />
           """
 
-          # Insère les permissions avant <application>
-          if "<application" in content and "FOREGROUND_SERVICE" not in content:
-              content = content.replace("<application", perms + "\n    <application")
+          # Nettoie d anciennes injections si présentes
+          if "<uses-permission" in content:
+              import re
+              content = re.sub(r"\s*<uses-permission[^>]+/>", "", content)
 
-          # Active showWhenLocked sur MainActivity
+          # Insère les permissions juste après <manifest ...>
+          if "<manifest" in content:
+              content = re.sub(r"(<manifest[^>]*>)", r"\1\n" + perms, content, count=1)
+
+          # Active showWhenLocked et turnScreenOn sur MainActivity
           content = content.replace(
               "android:name=\".MainActivity\"",
               "android:name=\".MainActivity\" android:showWhenLocked=\"true\" android:turnScreenOn=\"true\" android:launchMode=\"singleTask\""
           )
 
           # Insère le service avant </application>
-          if "Love8Service" not in content:
+          if "Love8Service" not in content and "</application>" in content:
               content = content.replace("</application>", service_tag + "\n    </application>")
 
           with open(manifest_path, "w") as f:
               f.write(content)
-          print("Manifest mis à jour avec succès.")
+          print("Manifest XML nettoyé et mis à jour avec succès.")
           '
 
           cat << 'EOF' > android/app/src/main/java/com/love8/app/Love8Service.java
