@@ -62,7 +62,7 @@ jobs:
             done
           fi
 
-      - name: 🔒 Écriture du AndroidManifest.xml et des classes Java (Gestion Veille 1s / 15s & Sans Douglasse en veille)
+      - name: 🔒 Écriture du AndroidManifest.xml et des classes Java (Extinction stricte 1s après pluie & 15s après dessin)
         run: |
           cat << 'EOF' > android/app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
@@ -186,7 +186,6 @@ jobs:
           cat << 'EOF' > android/app/src/main/java/com/love8/app/Love8Service.java
           package com.love8.app;
 
-          import android.app.KeyguardManager;
           import android.app.Notification;
           import android.app.NotificationChannel;
           import android.app.NotificationManager;
@@ -214,8 +213,8 @@ jobs:
           import java.net.URL;
 
           public class Love8Service extends Service {
-              private static final String CHANNEL_BG = "love8_bg_service_v6";
-              private static final String CHANNEL_ALERTS = "love8_alerts_v6";
+              private static final String CHANNEL_BG = "love8_bg_service_v7";
+              private static final String CHANNEL_ALERTS = "love8_alerts_v7";
               private Handler handler = new Handler(Looper.getMainLooper());
               private Runnable poller;
               private PowerManager.WakeLock cpuWakeLock;
@@ -337,7 +336,6 @@ jobs:
                       if (evId > lastSeen) {
                           prefs.edit().putLong("last_event_id", evId).apply();
 
-                          // BLOQUE TOTALEMENT LES NOTIFICATIONS DE DOUGLASSE QUAND LE TÉLÉPHONE EST VERROUILLÉ / EN VEILLE
                           if (evType.equalsIgnoreCase("cat") || title.toLowerCase().contains("douglasse")) {
                               return;
                           }
@@ -354,8 +352,8 @@ jobs:
                       @Override
                       public void run() {
                           try {
-                              // Durée exacte du WakeLock écran : 3.6s pour une vibration (pluie + 1s), 15s pour les autres sorties de veille
-                              long wakeDurationMs = "vibration".equalsIgnoreCase(evType) ? 3800 : 15000;
+                              // 2500ms d'animation de pluie + 1000ms = 3500ms pile avant extinction
+                              long wakeDurationMs = "vibration".equalsIgnoreCase(evType) ? 3500 : 15000;
 
                               PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
                               if (pm != null) {
@@ -564,7 +562,15 @@ jobs:
 
               private void handleWakeIntent(Intent intent) {
                   if (intent != null && intent.getBooleanExtra("lock_alert", false)) {
-                      getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                      WindowManager.LayoutParams params = getWindow().getAttributes();
+                      params.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE;
+                      getWindow().setAttributes(params);
+
+                      getWindow().addFlags(
+                          WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                          WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
+                          WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                      );
                       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                           setShowWhenLocked(true);
                           setTurnScreenOn(true);
@@ -607,23 +613,33 @@ jobs:
                       prefs.edit().putString("current_user", user).apply();
                   }
 
-                  // Remet le téléphone en veille automatiquement (après 1s pour une pluie, ou 15s pour un dessin)
+                  // Coupe l'affichage par-dessus le verrouillage et replonge immédiatement le téléphone en veille
                   @JavascriptInterface
                   public void turnOffScreenAndSleep() {
                       runOnUiThread(new Runnable() {
                           @Override
                           public void run() {
                               try {
+                                  WindowManager.LayoutParams params = getWindow().getAttributes();
+                                  params.screenBrightness = 0.01f;
+                                  getWindow().setAttributes(params);
+
                                   getWindow().clearFlags(
                                       WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
                                       WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
-                                      WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                                      WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                                      WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
                                   );
                                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                                       setTurnScreenOn(false);
                                       setShowWhenLocked(false);
                                   }
                                   moveTaskToBack(true);
+                                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                      finishAndRemoveTask();
+                                  } else {
+                                      finish();
+                                  }
                               } catch (Exception ignored) {}
                           }
                       });
@@ -692,10 +708,10 @@ jobs:
                       NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
                       Notification.Builder b;
                       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                          NotificationChannel ch = new NotificationChannel("love8_alerts_v6", "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
+                          NotificationChannel ch = new NotificationChannel("love8_alerts_v7", "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
                           ch.enableVibration(true);
                           nm.createNotificationChannel(ch);
-                          b = new Notification.Builder(ctx, "love8_alerts_v6");
+                          b = new Notification.Builder(ctx, "love8_alerts_v7");
                       } else {
                           b = new Notification.Builder(ctx);
                       }
