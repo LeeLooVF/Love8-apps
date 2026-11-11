@@ -35,7 +35,7 @@
       0%, 100% { transform: translateY(0px) scale(1); }
       50% { transform: translateY(-14px) scale(1.06); }
     }
-    /* PLUIE CORRIGÉE : DÉPART TOUT EN HAUT DE L'ÉCRAN (-60px) JUSQU'À TOUT EN BAS (115vh) */
+    /* PLUIE CORRIGÉE : DÉPART TOUT EN HAUT DE L'ÉCRAN (-60px) JUSQU'À TOUT EN BAS (112vh) */
     .heart-particle {
       position: fixed;
       top: -60px;
@@ -174,40 +174,34 @@
     <button onclick="hideBanner()" class="text-xs font-bold text-slate-400 px-2 py-1">OK</button>
   </div>
 
-  <!-- HEADER FIXE AVEC BOUTON MAJ APK & BOUTON ÉCRAN -->
-  <header class="sticky top-0 z-30 bg-pink-50/85 backdrop-blur-md px-3.5 py-3 flex items-center justify-between border-b border-pink-100/60">
-    <div class="flex items-center gap-2">
-      <div class="w-9 h-9 rounded-full gradient-card flex items-center justify-center shadow-md pulse-ring">
-        <span class="text-white text-base">🤍</span>
+  <!-- HEADER FIXE -->
+  <header class="sticky top-0 z-30 bg-pink-50/85 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-pink-100/60">
+    <div class="flex items-center gap-2.5">
+      <div class="w-10 h-10 rounded-full gradient-card flex items-center justify-center shadow-md pulse-ring">
+        <span class="text-white text-lg">🤍</span>
       </div>
       <div>
         <div class="flex items-center gap-1.5">
-          <h1 class="font-extrabold text-base text-purple-900 leading-none">Love8</h1>
-          <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block" title="Synchronisé"></span>
+          <h1 class="font-extrabold text-lg text-purple-900 leading-none">Love8</h1>
+          <span id="syncDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" title="Synchronisé"></span>
         </div>
-        <p id="syncStatusText" class="text-[10px] text-slate-500 font-medium">Direct 1.5s ⚡</p>
+        <p id="syncStatusText" class="text-[11px] text-slate-500 font-medium">Direct Temps Réel ⚡</p>
       </div>
     </div>
 
     <!-- SÉLECTEUR PROFIL JORDAN / LYDIE -->
-    <div class="bg-white p-1 rounded-full shadow-inner border border-pink-100 flex items-center text-[11px] font-bold">
-      <button id="btnJordan" onclick="switchUser('Jordan')" class="px-2.5 py-1.5 rounded-full gradient-card text-white shadow transition-all flex items-center gap-1">
+    <div class="bg-white p-1 rounded-full shadow-inner border border-pink-100 flex items-center text-xs font-bold">
+      <button id="btnJordan" onclick="switchUser('Jordan')" class="px-3 py-1.5 rounded-full gradient-card text-white shadow transition-all flex items-center gap-1">
         👦🏻 Jordan
       </button>
-      <button id="btnLydie" onclick="switchUser('Lydie')" class="px-2.5 py-1.5 rounded-full text-slate-600 transition-all flex items-center gap-1">
+      <button id="btnLydie" onclick="switchUser('Lydie')" class="px-3 py-1.5 rounded-full text-slate-600 transition-all flex items-center gap-1">
         👩🏻 Lydie
       </button>
     </div>
 
-    <!-- BOUTONS MAJ APK & ÉCRAN DE VERROUILLAGE -->
-    <div class="flex items-center gap-1">
-      <button onclick="downloadLatestApk()" title="Télécharger la dernière mise à jour APK" class="px-2 py-1.5 rounded-full bg-emerald-100 border border-emerald-300 text-[10px] font-extrabold text-emerald-800 active:scale-95 transition">
-        🔄 MAJ
-      </button>
-      <button onclick="toggleLockscreen(true)" class="px-2 py-1.5 rounded-full bg-purple-100 border border-purple-200 text-[10px] font-extrabold text-purple-800 active:scale-95 transition">
-        🔒 Écran
-      </button>
-    </div>
+    <button onclick="toggleLockscreen(true)" class="px-2.5 py-1.5 rounded-full bg-purple-100 border border-purple-200 text-[10px] font-extrabold text-purple-800">
+      🔒 Écran
+    </button>
   </header>
 
   <!-- CONTENEUR PRINCIPAL -->
@@ -657,17 +651,6 @@
       "Si on avait une soirée rien que tous les deux ce week-end, quel serait ton programme idéal ?"
     ];
 
-    // BOUTON MISE À JOUR DIRECTE DE L'APK DEPUIS GITHUB RELEASES
-    function downloadLatestApk() {
-      const apkUrl = "https://github.com/LeeLooVF/Love8-apps/releases/download/latest/app-debug.apk?t=" + Date.now();
-      triggerBanner("MISE À JOUR APK", "Téléchargement de la nouvelle version en cours...", "🔄");
-      if (window.AndroidNative && window.AndroidNative.openExternalUrl) {
-        window.AndroidNative.openExternalUrl(apkUrl);
-      } else {
-        window.open(apkUrl, "_blank");
-      }
-    }
-
     let audioCtx = null;
     function playLoveSound(type = 'love') {
       try {
@@ -744,6 +727,7 @@
       }, 2400);
     }
 
+    // Appelé immédiatement par Android quand le téléphone sort de veille
     window.onNativeWakeAlert = function(emoji, title, message) {
       toggleLockscreen(true);
       triggerLockscreenBurst(
@@ -768,12 +752,13 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(state)
         });
-        document.getElementById('syncDot').className = 'w-2 h-2 rounded-full bg-emerald-500 inline-block';
+        document.getElementById('syncDot').className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block';
       } catch (e) {
-        document.getElementById('syncDot').className = 'w-2 h-2 rounded-full bg-amber-500 inline-block';
+        document.getElementById('syncDot').className = 'w-2.5 h-2.5 rounded-full bg-amber-500 inline-block';
       }
     }
 
+    // ÉCOUTE EN TEMPS RÉEL RAPIDE (1,5 SECONDE) POUR TOUTES LES NOTIFICATIONS & VIBRATIONS
     async function pollCloudState() {
       try {
         const res = await fetch(API_ENDPOINT + '?t=' + Date.now(), { cache: 'no-store' });
@@ -978,6 +963,7 @@
       else el.classList.add('hidden');
     }
 
+    // PLUIE D'EMOJIS DEPUIS TOUT EN HAUT DE L'ÉCRAN JUSQU'À TOUT EN BAS
     function spawnParticles(emoji, pattern = [150, 70, 250]) {
       triggerDeviceVibration(pattern);
       for (let i = 0; i < 36; i++) {
@@ -1145,6 +1131,7 @@
       document.getElementById('statHours').innerText = hours;
     }
 
+    // SEULS LA POSITION GPS ET LA BATTERIE SONT ACTUALISÉS TOUTES LES 5 MINUTES (SANS SPAMMER DE NOTIF)
     async function refreshBatteryAndGPS(isManual = false) {
       const key = currentUser.toLowerCase();
       if (navigator.getBattery) {
@@ -1172,7 +1159,7 @@
       }
     }
 
-    // Seuls le GPS et la batterie sont actualisés toutes les 5 minutes
+    // Actualisation silencieuse GPS + Batterie toutes les 5 minutes (300 000 ms)
     setInterval(() => {
       refreshBatteryAndGPS(false);
     }, 300000);
@@ -1189,6 +1176,7 @@
       saveState();
     }
 
+    // Canvas
     const canvas = document.getElementById('drawCanvas');
     const ctx = canvas.getContext('2d');
     let drawing = false;
@@ -1370,11 +1358,11 @@
       const isJordan = currentUser === 'Jordan';
       const partner = isJordan ? 'Lydie' : 'Jordan';
       document.getElementById('btnJordan').className = isJordan
-        ? 'px-2.5 py-1.5 rounded-full gradient-card text-white shadow transition-all flex items-center gap-1'
-        : 'px-2.5 py-1.5 rounded-full text-slate-600 transition-all flex items-center gap-1';
+        ? 'px-3 py-1.5 rounded-full gradient-card text-white shadow transition-all flex items-center gap-1'
+        : 'px-3 py-1.5 rounded-full text-slate-600 transition-all flex items-center gap-1';
       document.getElementById('btnLydie').className = !isJordan
-        ? 'px-2.5 py-1.5 rounded-full gradient-card text-white shadow transition-all flex items-center gap-1'
-        : 'px-2.5 py-1.5 rounded-full text-slate-600 transition-all flex items-center gap-1';
+        ? 'px-3 py-1.5 rounded-full gradient-card text-white shadow transition-all flex items-center gap-1'
+        : 'px-3 py-1.5 rounded-full text-slate-600 transition-all flex items-center gap-1';
 
       document.getElementById('sendTargetName').innerText = partner;
       document.getElementById('pingCounter').innerText = state.pingsToday;
@@ -1492,6 +1480,7 @@
     renderAll();
     refreshBatteryAndGPS(false);
     pollCloudState();
+    // Écoute ultra-rapide toutes les 1.5s pour les notifications et vibrations en direct
     setInterval(pollCloudState, 1500);
   </script>
 </body>
