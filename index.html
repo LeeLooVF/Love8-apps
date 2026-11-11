@@ -44,17 +44,9 @@
       animation: fallFullHeight linear forwards;
     }
     @keyframes fallFullHeight {
-      0% {
-        transform: translate3d(0, 0vh, 0) scale(0.75) rotate(0deg);
-        opacity: 1;
-      }
-      85% {
-        opacity: 1;
-      }
-      100% {
-        transform: translate3d(0, 115vh, 0) scale(1.25) rotate(360deg);
-        opacity: 0;
-      }
+      0% { transform: translate3d(0, 0vh, 0) scale(0.75) rotate(0deg); opacity: 1; }
+      85% { opacity: 1; }
+      100% { transform: translate3d(0, 115vh, 0) scale(1.25) rotate(360deg); opacity: 0; }
     }
     .lock-center-anim {
       animation: popLockBurst 1.8s cubic-bezier(0.17, 0.89, 0.32, 1.28) forwards;
@@ -73,13 +65,23 @@
       70% { box-shadow: 0 0 0 14px rgba(236, 72, 153, 0); }
       100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0); }
     }
+    .fusion-glow {
+      animation: fusionPulse 0.7s ease-in-out infinite alternate;
+      box-shadow: 0 0 35px 12px rgba(236, 72, 153, 0.85), inset 0 0 25px rgba(168, 85, 247, 0.7);
+    }
+    @keyframes fusionPulse {
+      from { transform: scale(0.95); opacity: 0.85; }
+      to { transform: scale(1.18); opacity: 1; }
+    }
   </style>
 </head>
 <body class="min-h-screen pb-24 text-slate-800">
 
+  <!-- INPUTS FICHIERS CACHÉS -->
   <input id="fileInputAvatar" type="file" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)" />
   <input id="fileInputCat" type="file" accept="image/*" class="hidden" onchange="handleCatPhotoUpload(event)" />
   <input id="fileInputCanvas" type="file" accept="image/*" class="hidden" onchange="handleCanvasImageUpload(event)" />
+  <input id="fileInputCapsule" type="file" accept="image/*" class="hidden" onchange="handleCapsulePhotoUpload(event)" />
 
   <!-- ==================== ÉCRAN DE VERROUILLAGE INTERACTIF ==================== -->
   <div id="lockscreenOverlay" class="fixed inset-0 z-50 hidden bg-[#0c0d14] text-white flex flex-col justify-between p-4 overflow-hidden">
@@ -135,6 +137,7 @@
         <div onclick="triggerCatPhotoUpload()" class="relative w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center overflow-hidden shrink-0 cat-bounce cursor-pointer">
           <img id="lockCatPhoto" src="" class="w-full h-full object-cover hidden" />
           <span id="lockCatEmoji" class="text-3xl">🐱</span>
+          <span id="lockCatAccBadge" class="absolute -top-1 -right-1 text-base"></span>
         </div>
         <div class="flex-1">
           <div class="flex items-center justify-between">
@@ -156,6 +159,7 @@
     </div>
   </div>
 
+  <!-- BANNIÈRE DE NOTIFICATION FLOTTANTE -->
   <div id="liveBanner" class="fixed top-3 left-4 right-4 z-50 hidden transform transition-all duration-300 bg-white/95 backdrop-blur-md border border-pink-200 rounded-2xl p-3.5 shadow-xl flex items-center justify-between">
     <div class="flex items-center gap-3">
       <div id="bannerIcon" class="w-10 h-10 rounded-full gradient-card flex items-center justify-center text-white text-xl">❤️</div>
@@ -167,8 +171,8 @@
     <button onclick="hideBanner()" class="text-xs font-bold text-slate-400 px-2 py-1">OK</button>
   </div>
 
-  <!-- HEADER FIXE AVEC BOUTON MAJ APK & BOUTON ÉCRAN -->
-  <header class="sticky top-0 z-30 bg-pink-50/85 backdrop-blur-md px-3 py-3 flex items-center justify-between border-b border-pink-100/60">
+  <!-- HEADER FIXE AVEC PIÈCES D'AMOUR, BOUTON MAJ APK & BOUTON ÉCRAN -->
+  <header class="sticky top-0 z-30 bg-pink-50/85 backdrop-blur-md px-3 py-2.5 flex items-center justify-between border-b border-pink-100/60">
     <div class="flex items-center gap-2">
       <div class="w-9 h-9 rounded-full gradient-card flex items-center justify-center shadow-md pulse-ring">
         <span class="text-white text-base">🤍</span>
@@ -176,9 +180,9 @@
       <div>
         <div class="flex items-center gap-1">
           <h1 class="font-extrabold text-base text-purple-900 leading-none">Love8</h1>
-          <span id="syncDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" title="Synchronisé"></span>
+          <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block" title="Synchronisé"></span>
         </div>
-        <p id="syncStatusText" class="text-[10px] text-slate-500 font-medium">Direct Temps Réel ⚡</p>
+        <p class="text-[10px] font-extrabold text-amber-600">🪙 <span id="headerCoins">150</span> pièces</p>
       </div>
     </div>
 
@@ -192,10 +196,10 @@
     </div>
 
     <div class="flex items-center gap-1">
-      <button onclick="downloadLatestApk()" title="Récupérer le dernier APK généré sur GitHub" class="px-2.5 py-1.5 rounded-full bg-emerald-100 border border-emerald-300 text-[10px] font-extrabold text-emerald-800 active:scale-95 transition">
+      <button onclick="downloadLatestApk()" title="Récupérer le dernier APK généré sur GitHub" class="px-2 py-1.5 rounded-full bg-emerald-100 border border-emerald-300 text-[10px] font-extrabold text-emerald-800 active:scale-95 transition">
         🔄 MAJ
       </button>
-      <button onclick="toggleLockscreen(true)" class="px-2.5 py-1.5 rounded-full bg-purple-100 border border-purple-200 text-[10px] font-extrabold text-purple-800 active:scale-95 transition">
+      <button onclick="toggleLockscreen(true)" class="px-2 py-1.5 rounded-full bg-purple-100 border border-purple-200 text-[10px] font-extrabold text-purple-800 active:scale-95 transition">
         🔒 Écran
       </button>
     </div>
@@ -203,6 +207,7 @@
 
   <main class="max-w-md mx-auto px-4 pt-3 space-y-4">
 
+    <!-- ==================== ONGLET 1 : NOUS ==================== -->
     <section id="tab-nous" class="space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80">
         <div class="flex justify-between items-center mb-3">
@@ -265,8 +270,8 @@
 
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-extrabold tracking-wider uppercase text-slate-500">⚡ VIBRATION D'AMOUR</span>
-          <span class="bg-pink-50 text-pink-600 text-xs font-bold px-3 py-1 rounded-full"><span id="pingCounter">41</span> Pings aujourd'hui 💕</span>
+          <span class="text-xs font-extrabold tracking-wider uppercase text-slate-500">⚡ VIBRATION D'AMOUR (+5 🪙)</span>
+          <span class="bg-pink-50 text-pink-600 text-xs font-bold px-3 py-1 rounded-full"><span id="pingCounter">41</span> Pings 💕</span>
         </div>
 
         <div class="grid grid-cols-4 gap-2.5 pt-1">
@@ -309,9 +314,10 @@
 
       <div onclick="showTab('douglasse')" class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 flex items-center justify-between cursor-pointer active:scale-[0.99] transition">
         <div class="flex items-center gap-3">
-          <div class="w-12 h-12 rounded-2xl bg-amber-100/80 flex items-center justify-center text-2xl overflow-hidden">
+          <div class="relative w-12 h-12 rounded-2xl bg-amber-100/80 flex items-center justify-center text-2xl overflow-hidden">
             <img id="miniCatPhoto" src="" class="w-full h-full object-cover hidden" />
             <span id="miniCatEmoji">🐱</span>
+            <span id="miniCatAcc" class="absolute -top-1 -right-1 text-sm"></span>
           </div>
           <div>
             <div class="flex items-center gap-2">
@@ -327,24 +333,43 @@
       </div>
     </section>
 
+    <!-- ==================== ONGLET 2 : DESSIN LIVE À DEUX & TOUCHER HAPTIQUE ==================== -->
     <section id="tab-dessin" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="font-extrabold text-base flex items-center gap-1.5">🎨 Dessin, Photo & Texte</h2>
-            <p class="text-xs text-slate-400">Importe une photo, dessine ou écris (max 6 lignes)</p>
+            <h2 class="font-extrabold text-base flex items-center gap-1.5">🎨 Dessin Live & Magie Haptique</h2>
+            <p class="text-[11px] text-slate-400">Touchez au même endroit ensemble pour fusionner ✨</p>
           </div>
           <div class="flex gap-1.5">
+            <button id="btnLiveDraw" onclick="toggleLiveDrawMode()" class="px-2.5 h-9 rounded-full bg-rose-50 border border-rose-200 text-rose-600 font-extrabold flex items-center gap-1 text-[11px]">
+              🔴 Live ON
+            </button>
             <button onclick="document.getElementById('fileInputCanvas').click()" class="px-2.5 h-9 rounded-full bg-purple-50 border border-purple-200 text-purple-700 font-bold flex items-center gap-1 text-xs">
-              🖼️ Photo
+              🖼️
             </button>
             <button onclick="undoCanvas()" class="w-9 h-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-sm">↩️</button>
             <button onclick="clearCanvas()" class="w-9 h-9 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-sm">🗑️</button>
           </div>
         </div>
 
-        <div class="border-2 border-purple-200 rounded-2xl overflow-hidden bg-white shadow-inner">
+        <!-- ZONE DE DESSIN AVEC CURSEUR PARTENAIRE EN DIRECT & HALO DE FUSION HAPTIQUE -->
+        <div class="relative border-2 border-purple-200 rounded-2xl overflow-hidden bg-white shadow-inner">
           <canvas id="drawCanvas" width="360" height="360" class="w-full touch-none bg-white cursor-crosshair"></canvas>
+
+          <!-- Curseur en direct du partenaire -->
+          <div id="partnerLiveCursor" class="pointer-events-none absolute hidden transform -translate-x-1/2 -translate-y-1/2 z-20 transition-all duration-150">
+            <div class="w-6 h-6 rounded-full bg-pink-500/40 border-2 border-pink-600 flex items-center justify-center shadow-lg">
+              <span class="text-xs">❤️</span>
+            </div>
+            <span id="partnerCursorLabel" class="bg-pink-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full shadow whitespace-nowrap">Lydie</span>
+          </div>
+
+          <!-- Halo lumineux de Fusion Haptique quand les 2 doigts se touchent -->
+          <div id="hapticFusionOrb" class="pointer-events-none absolute hidden w-28 h-28 rounded-full bg-gradient-to-r from-pink-500/60 via-purple-500/60 to-amber-400/60 transform -translate-x-1/2 -translate-y-1/2 z-30 flex flex-col items-center justify-center fusion-glow">
+            <span class="text-3xl">✨💖✨</span>
+            <span class="text-[9px] font-extrabold text-white uppercase bg-black/50 px-2 py-0.5 rounded-full">Fusion !</span>
+          </div>
         </div>
 
         <div class="space-y-1">
@@ -386,32 +411,38 @@
         <input id="sweetNoteInput" type="text" placeholder="Légende sous le dessin (ex: Bon courage mon amour ❤️)..." class="w-full text-xs bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-3 focus:outline-none focus:border-pink-400" />
 
         <button onclick="sendDrawingToPartner()" class="w-full gradient-card text-white font-extrabold text-sm py-3.5 rounded-2xl shadow-md active:scale-[0.99] transition">
-          🚀 Envoyer sur l'écran de verrouillage de <span id="sendTargetName">Lydie</span>
+          🚀 Envoyer sur l'écran & Archiver dans le Cloud R2
         </button>
       </div>
 
+      <!-- GALERIE CLOUD R2 ILLIMITÉE -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
-        <h3 class="font-extrabold text-sm flex items-center gap-1.5">🖼️ Galerie de nos mots doux</h3>
-        <div id="drawingsGallery" class="grid grid-cols-2 gap-2.5"></div>
+        <div class="flex items-center justify-between">
+          <h3 class="font-extrabold text-sm flex items-center gap-1.5">☁️ Album Cloud R2 (<span id="archiveCountBadge">0</span> souvenirs)</h3>
+          <button onclick="loadCloudArchives()" class="text-[11px] font-bold text-purple-600">🔄 Actualiser</button>
+        </div>
+        <div id="drawingsGallery" class="grid grid-cols-2 gap-2.5 max-h-96 overflow-y-auto pr-1"></div>
       </div>
     </section>
 
+    <!-- ==================== ONGLET 3 : DOUGLASSE + BOUTIQUE D'ACCESSOIRES ==================== -->
     <section id="tab-douglasse" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 text-center space-y-3">
         <div class="flex items-center justify-between">
-          <span class="bg-amber-100 text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full">🐾 Niveau <span id="catLevel">4</span> (<span id="catXp">40</span>/100 XP)</span>
-          <span id="catMoodPill" class="bg-pink-100 text-pink-700 text-xs font-extrabold px-3 py-1 rounded-full">Ronronne de bonheur 💕</span>
+          <span class="bg-amber-100 text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full">🐾 Niv. <span id="catLevel">4</span> (<span id="catXp">40</span>/100 XP)</span>
+          <span class="bg-yellow-100 text-yellow-800 text-xs font-extrabold px-3 py-1 rounded-full">🪙 <span id="catCoinsLabel">150</span> pièces</span>
         </div>
 
         <div>
           <h2 class="text-xl font-extrabold">Douglasse</h2>
-          <p class="text-xs text-slate-400">Notre petit compagnon à câliner tous les deux</p>
+          <p id="catMoodPill" class="text-xs text-pink-600 font-bold">Ronronne de bonheur 💕</p>
         </div>
 
         <div id="catSpeechBubble" class="inline-block bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold px-3.5 py-1.5 rounded-full shadow-sm">
           « Miaou ! Touche-moi pour me caresser 🐾 »
         </div>
 
+        <!-- AVATAR DE DOUGLASSE AVEC ACCESSOIRES SUPERPOSÉS -->
         <div class="py-2 flex flex-col items-center justify-center gap-2">
           <div id="catVisualContainer" onclick="interactCat('caresser')" class="relative w-44 h-44 rounded-3xl flex items-center justify-center cursor-pointer cat-bounce overflow-hidden border-4 border-amber-200 shadow-md bg-amber-50/40">
             <img id="mainCatPhoto" src="" class="w-full h-full object-cover hidden" />
@@ -431,6 +462,8 @@
               <path d="M68 112 Q100 124 132 112" stroke="#ec4899" stroke-width="7" fill="none" stroke-linecap="round" />
               <circle cx="100" cy="120" r="6" fill="#f43f5e" />
             </svg>
+            <!-- Accessoire équipé sur Douglasse -->
+            <div id="catEquippedOverlay" class="pointer-events-none absolute top-2 left-1/2 transform -translate-x-1/2 text-5xl drop-shadow-md"></div>
           </div>
           <button onclick="triggerCatPhotoUpload()" class="text-[11px] font-bold text-amber-800 bg-amber-100/80 px-3 py-1 rounded-full border border-amber-200">
             📷 Choisir la photo de Douglasse
@@ -447,7 +480,6 @@
               <div id="barHunger" class="h-full bg-amber-500 rounded-full transition-all duration-500" style="width: 100%"></div>
             </div>
           </div>
-
           <div>
             <div class="flex justify-between text-xs font-bold mb-1">
               <span>💖 Bonheur & Câlins</span>
@@ -457,7 +489,6 @@
               <div id="barLove" class="h-full bg-pink-500 rounded-full transition-all duration-500" style="width: 100%"></div>
             </div>
           </div>
-
           <div>
             <div class="flex justify-between text-xs font-bold mb-1">
               <span>⚡ Énergie</span>
@@ -472,22 +503,26 @@
         <div class="grid grid-cols-3 gap-2.5 pt-2">
           <button onclick="interactCat('nourrir')" class="bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition">
             <span class="text-2xl">🐟</span>
-            <span class="text-xs font-extrabold text-amber-900">Nourrir</span>
+            <span class="text-xs font-extrabold text-amber-900">Nourrir (+10🪙)</span>
           </button>
           <button onclick="interactCat('caresser')" class="bg-pink-50 hover:bg-pink-100 border border-pink-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition">
             <span class="text-2xl">🤚💖</span>
-            <span class="text-xs font-extrabold text-pink-900">Caresser</span>
+            <span class="text-xs font-extrabold text-pink-900">Câliner (+10🪙)</span>
           </button>
           <button onclick="interactCat('jouer')" class="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition">
             <span class="text-2xl">🧶</span>
-            <span class="text-xs font-extrabold text-indigo-900">Jouer</span>
+            <span class="text-xs font-extrabold text-indigo-900">Jouer (+10🪙)</span>
           </button>
         </div>
+      </div>
 
-        <div class="pt-2 border-t border-slate-100 flex justify-between gap-2 text-[11px] font-bold">
-          <button onclick="triggerCatNeed('faim')" class="flex-1 py-2 rounded-xl bg-amber-50/70 text-amber-800 border border-amber-200/60">🔔 Alerte « J'ai faim »</button>
-          <button onclick="triggerCatNeed('jouer')" class="flex-1 py-2 rounded-xl bg-indigo-50/70 text-indigo-800 border border-indigo-200/60">🔔 Alerte « Je veux jouer »</button>
+      <!-- BOUTIQUE D'ACCESSOIRES & DÉGUISEMENTS DE DOUGLASSE -->
+      <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="font-extrabold text-sm">👑 Boutique & Déguisements de Douglasse</h3>
+          <button onclick="equipAccessory('')" class="text-[11px] font-bold text-slate-400">Retirer</button>
         </div>
+        <div id="catShopGrid" class="grid grid-cols-3 gap-2.5 text-center"></div>
       </div>
 
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-2.5">
@@ -496,6 +531,50 @@
       </div>
     </section>
 
+    <!-- ==================== ONGLET 4 : JEUX & BONS D'AMOUR (QUIZ + COUPONS) ==================== -->
+    <section id="tab-jeux" class="hidden space-y-4">
+
+      <!-- QUIZ « TU ME CONNAIS PAR COEUR ? » -->
+      <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="bg-purple-100 text-purple-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">🎯 QUIZ : TU ME CONNAIS PAR CŒUR ?</span>
+          <button onclick="nextQuizQuestion()" class="text-xs font-bold text-pink-600">🔀 Autre question</button>
+        </div>
+
+        <p id="quizQuestionTitle" class="font-extrabold text-sm text-slate-800"></p>
+        <p id="quizModeSubtitle" class="text-xs text-slate-500"></p>
+
+        <div id="quizOptionsGrid" class="grid grid-cols-2 gap-2 text-xs font-bold"></div>
+
+        <div id="quizStatusBox" class="bg-pink-50/70 border border-pink-200 rounded-2xl p-3 text-xs font-bold text-pink-900 text-center"></div>
+      </div>
+
+      <!-- CARNET DE « BONS D'AMOUR » (COUPONS CADEAUX) -->
+      <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="font-extrabold text-sm">🎟️ Carnet de « Bons d'Amour »</h3>
+            <p class="text-[11px] text-slate-400">Envoie un ticket cadeau ou valide un bon reçu</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+          <button onclick="createCoupon('💆‍♂️ Bon pour un massage de 15 min')" class="bg-pink-50 hover:bg-pink-100 text-pink-800 border border-pink-200 p-2.5 rounded-2xl text-left">➕ 💆‍♂️ Massage 15 min</button>
+          <button onclick="createCoupon('🎬 Bon pour choisir le film ce soir')" class="bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 p-2.5 rounded-2xl text-left">➕ 🎬 Choix du film</button>
+          <button onclick="createCoupon('🥐 Bon pour un petit-déj au lit')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 p-2.5 rounded-2xl text-left">➕ 🥐 Petit-déj au lit</button>
+          <button onclick="createCoupon('🔥 Bon pour un joker coquin ce soir')" class="bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 p-2.5 rounded-2xl text-left">➕ 🔥 Joker coquin</button>
+        </div>
+
+        <div class="flex gap-2">
+          <input id="customCouponInput" type="text" placeholder="Créer un bon personnalisé..." class="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2.5" />
+          <button onclick="addCustomCoupon()" class="gradient-card text-white text-xs font-extrabold px-4 rounded-2xl shadow">Offrir</button>
+        </div>
+
+        <div id="couponsListContainer" class="space-y-2.5 pt-1"></div>
+      </div>
+    </section>
+
+    <!-- ==================== ONGLET 5 : SOUVENIRS & CAPSULE TEMPORELLE ==================== -->
     <section id="tab-souvenirs" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
@@ -525,31 +604,27 @@
         </div>
       </div>
 
+      <!-- CAPSULE TEMPORELLE VERROUILLÉE PAR DATE -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
-        <div class="flex items-center justify-between">
-          <span class="bg-pink-50 text-pink-600 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">💬 QUESTION COUPLE DU JOUR</span>
-          <button onclick="nextCoupleQuestion()" class="text-xs font-bold text-purple-600">🔀 Autre question</button>
+        <div>
+          <h3 class="font-extrabold text-sm flex items-center gap-1.5">🔐 Capsules Temporelles</h3>
+          <p class="text-[11px] text-slate-400">Écris un message ou dépose une photo qui ne s'ouvrira qu'à la date choisie</p>
         </div>
 
-        <p id="dailyQuestionText" class="font-extrabold text-sm text-slate-800">
-          Quel est ton souvenir préféré de nous deux cette année ?
-        </p>
+        <textarea id="capsuleTextInput" rows="2" placeholder="Message secret pour le futur..." class="w-full text-xs bg-slate-50 border border-slate-200 rounded-2xl p-3 focus:outline-none focus:border-purple-400"></textarea>
 
-        <div class="space-y-2 text-xs">
-          <div class="bg-purple-50/60 border border-purple-100 rounded-2xl p-3">
-            <p class="font-bold text-purple-900">👦🏻 Réponse de Jordan :</p>
-            <p id="ansJordan" class="italic text-slate-600 mt-0.5">Notre week-end improvisé en amoureux !</p>
-          </div>
-          <div class="bg-pink-50/60 border border-pink-100 rounded-2xl p-3">
-            <p class="font-bold text-pink-900">👩🏻 Réponse de Lydie :</p>
-            <p id="ansLydie" class="italic text-slate-600 mt-0.5">Nos fous rires le soir sur le canapé ❤️</p>
-          </div>
+        <div class="flex items-center gap-2">
+          <input id="capsuleDateInput" type="datetime-local" class="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
+          <button onclick="document.getElementById('fileInputCapsule').click()" id="btnCapsulePhoto" class="px-3 py-2 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 text-xs font-bold">
+            📷 Photo
+          </button>
         </div>
 
-        <div class="flex gap-2">
-          <input id="questionInput" type="text" placeholder="Écrire ma réponse..." class="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2.5" />
-          <button onclick="saveDailyAnswer()" class="gradient-card text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow">Répondre</button>
-        </div>
+        <button onclick="createTimeCapsule()" class="w-full gradient-card text-white text-xs font-extrabold py-3 rounded-2xl shadow">
+          🔒 Sceller la Capsule Temporelle
+        </button>
+
+        <div id="capsulesListContainer" class="space-y-2.5 pt-1"></div>
       </div>
 
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
@@ -564,21 +639,26 @@
 
   </main>
 
-  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-pink-100 px-6 py-2 flex justify-around items-center text-[11px] font-bold text-slate-400">
+  <!-- BARRE DE NAVIGATION BASSE (5 ONGLETS) -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-pink-100 px-3 py-2 flex justify-around items-center text-[10px] font-bold text-slate-400">
     <button id="nav-nous" onclick="showTab('nous')" class="flex flex-col items-center gap-0.5 text-pink-600">
       <span class="text-lg">💞</span>
       <span>Nous</span>
     </button>
     <button id="nav-dessin" onclick="showTab('dessin')" class="flex flex-col items-center gap-0.5">
       <span class="text-lg">🖌️</span>
-      <span>Dessin</span>
+      <span>Dessin Live</span>
     </button>
     <button id="nav-douglasse" onclick="showTab('douglasse')" class="flex flex-col items-center gap-0.5">
       <span class="text-lg">🐱</span>
       <span>Douglasse</span>
     </button>
+    <button id="nav-jeux" onclick="showTab('jeux')" class="flex flex-col items-center gap-0.5">
+      <span class="text-lg">🎟️</span>
+      <span>Jeux & Bons</span>
+    </button>
     <button id="nav-souvenirs" onclick="showTab('souvenirs')" class="flex flex-col items-center gap-0.5">
-      <span class="text-lg">⏳</span>
+      <span class="text-lg">🔐</span>
       <span>Souvenirs</span>
     </button>
   </nav>
@@ -588,10 +668,43 @@
     let currentUser = localStorage.getItem('love8_user') || 'Jordan';
     let lastEventId = Number(localStorage.getItem('love8_last_event') || 0);
     let avatarUploadTarget = 'jordan';
+    let activeTab = 'nous';
+    let pendingCapsulePhoto = '';
+
+    // Catalogue de la boutique d'accessoires de Douglasse
+    const catAccessoriesCatalog = [
+      { id: 'sunglasses', name: 'Lunettes Cool', emoji: '🕶️', price: 40 },
+      { id: 'crown', name: 'Couronne Roi', emoji: '👑', price: 80 },
+      { id: 'xmas', name: 'Bonnet Noël', emoji: '🎅', price: 60 },
+      { id: 'bowtie', name: 'Nœud Papillon', emoji: '🎀', price: 50 },
+      { id: 'halo', name: 'Petit Ange', emoji: '😇', price: 70 },
+      { id: 'party', name: 'Fête Love', emoji: '🥳', price: 55 }
+    ];
+
+    // Questions du Quiz "Tu me connais par cœur ?"
+    const coupleQuizPool = [
+      {
+        q: "Quel est mon plat réconfort préféré ?",
+        options: ["🍣 Japonais / Sushi", "🍕 Pizza & Burger", "🧀 Raclette / Fondue", "🍝 Pâtes maison"]
+      },
+      {
+        q: "Qu'est-ce qui me fait fondre immédiatement chez toi ?",
+        options: ["👀 Ton regard", "😂 Nos fous rires", "🤗 Tes câlins", "💋 Tes bisous dans le cou"]
+      },
+      {
+        q: "Ma soirée idéale avec toi ce week-end ?",
+        options: ["🎬 Film sous le plaid", "🕯️ Resto en amoureux", "🚗 Escapade surprise", "🔥 Soirée coquine à deux"]
+      },
+      {
+        q: "Mon moment préféré de la journée avec toi ?",
+        options: ["☀️ Le réveil ensemble", "💬 Nos messages la journée", "🛋️ Les retrouvailles le soir", "🌙 Se blottir au lit"]
+      }
+    ];
 
     let state = JSON.parse(localStorage.getItem('love8_state')) || {
       updatedAt: Date.now(),
       pingsToday: 41,
+      coins: 150,
       vibCounts: { env: 12, peach: 9, cuc: 8, chili: 12 },
       separationStart: null,
       lastDistanceMeters: 0,
@@ -605,39 +718,53 @@
         love: 100,
         energy: 100,
         photo: '',
+        equipped: '👑',
+        ownedAcc: ['crown'],
         lastDecay: Date.now(),
         journal: [
-          { text: 'Jordan a donné des croquettes à Douglasse 🐟', time: '19:47' },
-          { text: 'Jordan a joué avec Douglasse 🧶', time: '19:47' }
+          { text: 'Jordan a donné des croquettes à Douglasse 🐟', time: '19:47' }
         ]
       },
       latestDrawing: { dataUrl: '', caption: '« Mot doux pour toi ❤️ »', author: 'Jordan', time: '21:22' },
       gallery: [],
-      questionIndex: 0,
-      answers: {
-        Jordan: 'Notre week-end improvisé en amoureux !',
-        Lydie: 'Nos fous rires le soir sur le canapé ❤️'
+      coupons: [
+        { id: 1, title: '💆‍♂️ Bon pour un massage de 15 min', from: 'Jordan', to: 'Lydie', used: false },
+        { id: 2, title: '🎬 Bon pour choisir le film ce soir', from: 'Lydie', to: 'Jordan', used: false }
+      ],
+      quiz: {
+        qIndex: 0,
+        targetUser: 'Jordan',
+        secretChoice: null,
+        guessedByPartner: false,
+        statusText: 'Jordan : Choisis ta réponse secrète pour que Lydie devine !'
       },
+      capsules: [
+        {
+          id: 101,
+          author: 'Jordan',
+          text: 'Je t\'aime chaque jour un peu plus mon amour ❤️',
+          photo: '',
+          unlockAt: Date.now() - 60000
+        }
+      ],
       wishes: [
         { text: 'Soirée resto en amoureux aux chandelles 🕯️', done: false },
         { text: 'Week-end détente & spa tous les deux 💆‍♀️', done: false }
       ]
     };
 
+    // Migrations douces si ancien state en cache
+    if (typeof state.coins !== 'number') state.coins = 150;
     if (!state.vibCounts) state.vibCounts = { env: 12, peach: 9, cuc: 8, chili: 12 };
+    if (!state.cat.ownedAcc) state.cat.ownedAcc = ['crown'];
+    if (!state.coupons) state.coupons = [];
+    if (!state.quiz) state.quiz = { qIndex: 0, targetUser: 'Jordan', secretChoice: null, statusText: 'Choisis une réponse !' };
+    if (!state.capsules) state.capsules = [];
     if (!state.lastDistanceMeters || state.lastDistanceMeters <= 300) {
       state.separationStart = null;
       state.lastDistanceMeters = 0;
     }
 
-    const questionsPool = [
-      "Quel est ton souvenir préféré de nous deux cette année ?",
-      "Quelle destination rêves-tu qu'on visite ensemble prochainement ?",
-      "Quel est le petit geste du quotidien qui te fait le plus craquer chez moi ?",
-      "Si on avait une soirée rien que tous les deux ce week-end, quel serait ton programme idéal ?"
-    ];
-
-    // BOUTON MISE À JOUR APK : RÉCUPÈRE LE DERNIER APK GÉNÉRÉ SUR GITHUB
     function downloadLatestApk() {
       const apkUrl = "https://github.com/LeeLooVF/Love8-apps/releases/download/latest/Love8.apk?t=" + Date.now();
       triggerBanner("MISE À JOUR APK", "Téléchargement de Love8.apk lancé dans tes notifications !", "🔄");
@@ -649,7 +776,6 @@
       }
     }
 
-    // BOUTON VÉRIFICATION DE TOUTES LES AUTORISATIONS ANDROID + GPS
     function requestAllSystemPermissions() {
       if (window.AndroidNative && window.AndroidNative.checkAllPermissions) {
         window.AndroidNative.checkAllPermissions();
@@ -665,16 +791,17 @@
         const now = audioCtx.currentTime;
 
         const melodies = {
-          heart: [[523, 0.12], [659, 0.12], [784, 0.25]],
-          env:   [[440, 0.1], [554, 0.1], [659, 0.22]],
-          peach: [[392, 0.12], [523, 0.12], [659, 0.15], [784, 0.25]],
-          cuc:   [[330, 0.12], [440, 0.12], [554, 0.22]],
-          chili: [[587, 0.08], [659, 0.08], [784, 0.08], [880, 0.25]],
-          love:  [[523, 0.14], [659, 0.14], [784, 0.14], [1046, 0.3]],
-          kiss:  [[659, 0.1], [880, 0.22]],
-          hug:   [[349, 0.2], [440, 0.2], [523, 0.3]],
-          fire:  [[440, 0.09], [587, 0.09], [784, 0.25]],
-          cat:   [[700, 0.12], [950, 0.18], [620, 0.22]]
+          heart:  [[523, 0.12], [659, 0.12], [784, 0.25]],
+          env:    [[440, 0.1], [554, 0.1], [659, 0.22]],
+          peach:  [[392, 0.12], [523, 0.12], [659, 0.15], [784, 0.25]],
+          cuc:    [[330, 0.12], [440, 0.12], [554, 0.22]],
+          chili:  [[587, 0.08], [659, 0.08], [784, 0.08], [880, 0.25]],
+          love:   [[523, 0.14], [659, 0.14], [784, 0.14], [1046, 0.3]],
+          kiss:   [[659, 0.1], [880, 0.22]],
+          hug:    [[349, 0.2], [440, 0.2], [523, 0.3]],
+          fire:   [[440, 0.09], [587, 0.09], [784, 0.25]],
+          cat:    [[700, 0.12], [950, 0.18], [620, 0.22]],
+          fusion: [[523, 0.15], [659, 0.15], [784, 0.15], [987, 0.18], [1046, 0.35]]
         };
 
         const notes = melodies[type] || melodies.love;
@@ -757,9 +884,9 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(state)
         });
-        document.getElementById('syncDot').className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block';
+        document.getElementById('syncDot').className = 'w-2 h-2 rounded-full bg-emerald-500 inline-block';
       } catch (e) {
-        document.getElementById('syncDot').className = 'w-2.5 h-2.5 rounded-full bg-amber-500 inline-block';
+        document.getElementById('syncDot').className = 'w-2 h-2 rounded-full bg-amber-500 inline-block';
       }
     }
 
@@ -770,7 +897,6 @@
         const remote = await res.json();
         if (remote && remote.updatedAt && (!state.updatedAt || remote.updatedAt > state.updatedAt)) {
           state = remote;
-          if (!state.vibCounts) state.vibCounts = { env: 12, peach: 9, cuc: 8, chili: 12 };
           localStorage.setItem('love8_state', JSON.stringify(state));
           checkCatDecay();
           renderAll();
@@ -806,13 +932,11 @@
     function updateGpsSeparationState() {
       const j = state.jordan;
       const l = state.lydie;
-
       if (j.loc && l.loc && j.loc.trim().toLowerCase() === l.loc.trim().toLowerCase()) {
         state.lastDistanceMeters = 0;
         state.separationStart = null;
         return;
       }
-
       if (j.lat && j.lng && l.lat && l.lng) {
         const rawDist = calcDistanceMeters(j.lat, j.lng, l.lat, l.lng);
         if (rawDist <= 300) {
@@ -862,6 +986,7 @@
 
     function sendCenterHeartLockscreen() {
       state.pingsToday += 1;
+      state.coins = (state.coins || 0) + 5;
       const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
       const eventId = Date.now();
       lastEventId = eventId;
@@ -877,8 +1002,8 @@
         pattern: [120, 60, 120, 60, 280]
       };
 
-      triggerLockscreenBurst('❤️', `Cœur envoyé sur l'écran de ${partner} !`, 'heart', [120, 60, 120, 60, 280]);
-      triggerBanner('❤️ COEUR ENVOYÉ', `Cœur animé envoyé en direct à ${partner} !`, '❤️');
+      triggerLockscreenBurst('❤️', `Cœur envoyé sur l'écran de ${partner} (+5 🪙) !`, 'heart', [120, 60, 120, 60, 280]);
+      triggerBanner('❤️ COEUR ENVOYÉ (+5 🪙)', `Cœur animé envoyé en direct à ${partner} !`, '❤️');
       saveState();
     }
 
@@ -953,12 +1078,14 @@
     }
 
     function showTab(tab) {
-      ['nous', 'dessin', 'douglasse', 'souvenirs'].forEach(t => {
+      activeTab = tab;
+      ['nous', 'dessin', 'douglasse', 'jeux', 'souvenirs'].forEach(t => {
         document.getElementById('tab-' + t).classList.add('hidden');
         document.getElementById('nav-' + t).classList.remove('text-pink-600');
       });
       document.getElementById('tab-' + tab).classList.remove('hidden');
       document.getElementById('nav-' + tab).classList.add('text-pink-600');
+      if (tab === 'dessin') loadCloudArchives();
     }
 
     function toggleLockscreen(show) {
@@ -996,6 +1123,7 @@
 
     function sendSpecialVibration(key, label, emoji, pattern, soundType) {
       state.pingsToday += 1;
+      state.coins = (state.coins || 0) + 5;
       state.vibCounts[key] = (state.vibCounts[key] || 0) + 1;
       const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
       const eventId = Date.now();
@@ -1013,12 +1141,13 @@
       };
 
       triggerLockscreenBurst(emoji, `${currentUser} → ${partner} : ${label}`, soundType, pattern);
-      triggerBanner('⚡ VIBRATION D\'AMOUR', `${currentUser} → ${partner} : ${label}`, emoji);
+      triggerBanner('⚡ VIBRATION (+5 🪙)', `${currentUser} → ${partner} : ${label}`, emoji);
       saveState();
     }
 
     function sendLovePing(label, emoji, pattern, soundType) {
       state.pingsToday += 1;
+      state.coins = (state.coins || 0) + 5;
       const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
       const eventId = Date.now();
       lastEventId = eventId;
@@ -1033,10 +1162,11 @@
         pattern
       };
       triggerLockscreenBurst(emoji, `${currentUser} → ${partner} : ${label}`, soundType, pattern);
-      triggerBanner('⚡ VIBRATION D\'AMOUR', `${currentUser} → ${partner} : ${label}`, emoji);
+      triggerBanner('⚡ VIBRATION (+5 🪙)', `${currentUser} → ${partner} : ${label}`, emoji);
       saveState();
     }
 
+    // ==================== DOUGLASSE & BOUTIQUE D'ACCESSOIRES ====================
     function interactCat(action) {
       const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
       const box = document.getElementById('catVisualContainer');
@@ -1061,6 +1191,7 @@
         emoji = '🧶';
       }
 
+      state.coins = (state.coins || 0) + 10;
       state.cat.xp = (state.cat.xp || 0) + 15;
       if (state.cat.xp >= 100) {
         state.cat.level += 1;
@@ -1087,35 +1218,456 @@
       saveState();
     }
 
-    function triggerCatNeed(type) {
+    function buyOrEquipAccessory(accId) {
+      const item = catAccessoriesCatalog.find(a => a.id === accId);
+      if (!item) return;
+      if (!state.cat.ownedAcc) state.cat.ownedAcc = [];
+
+      if (state.cat.ownedAcc.includes(accId)) {
+        state.cat.equipped = state.cat.equipped === item.emoji ? '' : item.emoji;
+        triggerBanner('👑 DOUGLASSE', `Accessoire ${item.emoji} équipé !`, item.emoji);
+        saveState();
+      } else {
+        if ((state.coins || 0) < item.price) {
+          triggerBanner('🪙 PIÈCES INSUFFISANTES', `Il te faut ${item.price} pièces pour débloquer ${item.name} !`, '⚠️');
+          return;
+        }
+        state.coins -= item.price;
+        state.cat.ownedAcc.push(accId);
+        state.cat.equipped = item.emoji;
+        spawnParticles(item.emoji, [150, 80, 250]);
+        triggerBanner('🎉 ACCESSOIRE DÉBLOQUÉ !', `Douglasse porte maintenant ${item.name} ${item.emoji} !`, item.emoji);
+        saveState();
+      }
+    }
+
+    function equipAccessory(emoji) {
+      state.cat.equipped = emoji;
+      saveState();
+    }
+
+    // ==================== CARNET DE BONS D'AMOUR (COUPONS) ====================
+    function createCoupon(title) {
+      const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
+      state.coupons.unshift({
+        id: Date.now(),
+        title,
+        from: currentUser,
+        to: partner,
+        used: false,
+        time: new Date().toLocaleDateString('fr-FR')
+      });
       const eventId = Date.now();
       lastEventId = eventId;
-      if (type === 'faim') {
-        state.cat.hunger = 25;
-        state.lastEvent = {
-          id: eventId,
-          sender: currentUser,
-          title: '🐱 Douglasse a faim !',
-          message: '« Miaou ! Mon ventre gargouille, donne-moi des croquettes 🐟 »',
-          emoji: '🐟',
-          sound: 'cat',
-          pattern: [200, 100, 200]
-        };
-      } else {
-        state.cat.love = 30;
-        state.lastEvent = {
-          id: eventId,
-          sender: currentUser,
-          title: '🐱 Douglasse veut jouer !',
-          message: '« Je m\'ennuie... Qui lance la pelote de laine ? 🧶 »',
-          emoji: '🧶',
-          sound: 'cat',
-          pattern: [150, 80, 150]
-        };
-      }
-      triggerLockscreenBurst(state.lastEvent.emoji, state.lastEvent.message, 'cat', state.lastEvent.pattern);
-      triggerBanner(state.lastEvent.title, state.lastEvent.message, state.lastEvent.emoji);
+      state.lastEvent = {
+        id: eventId,
+        sender: currentUser,
+        title: '🎟️ NOUVEAU BON D\'AMOUR !',
+        message: `${currentUser} t'offre : ${title}`,
+        emoji: '🎟️',
+        sound: 'love',
+        pattern: [180, 80, 280]
+      };
+      spawnParticles('🎟️', [180, 80, 280]);
+      triggerBanner('🎟️ BON ENVOYÉ', `Tu as offert « ${title} » à ${partner} !`, '🎁');
       saveState();
+    }
+
+    function addCustomCoupon() {
+      const inp = document.getElementById('customCouponInput');
+      const val = inp.value.trim();
+      if (!val) return;
+      createCoupon('🎁 ' + val);
+      inp.value = '';
+    }
+
+    function redeemCoupon(id) {
+      const c = state.coupons.find(x => x.id === id);
+      if (!c || c.used) return;
+      c.used = true;
+      state.coins = (state.coins || 0) + 15;
+      const eventId = Date.now();
+      lastEventId = eventId;
+      state.lastEvent = {
+        id: eventId,
+        sender: currentUser,
+        title: '🎟️ BON D\'AMOUR ACTIVÉ !',
+        message: `${currentUser} utilise le bon : ${c.title} !`,
+        emoji: '🔥',
+        sound: 'fire',
+        pattern: [200, 80, 200, 80, 400]
+      };
+      triggerLockscreenBurst('🎟️', `${currentUser} utilise : ${c.title} !`, 'fire', [200, 80, 350]);
+      saveState();
+    }
+
+    // ==================== QUIZ « TU ME CONNAIS PAR COEUR ? » ====================
+    function nextQuizQuestion() {
+      state.quiz.qIndex = (state.quiz.qIndex + 1) % coupleQuizPool.length;
+      state.quiz.targetUser = currentUser;
+      state.quiz.secretChoice = null;
+      state.quiz.statusText = `${currentUser} : Choisis ta réponse secrète pour que ton partenaire devine !`;
+      saveState();
+    }
+
+    function selectQuizOption(optIndex) {
+      const qObj = coupleQuizPool[state.quiz.qIndex || 0];
+      const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
+
+      // Étape 1 : La personne cible choisit sa réponse secrète
+      if (state.quiz.secretChoice === null || state.quiz.targetUser === currentUser) {
+        state.quiz.targetUser = currentUser;
+        state.quiz.secretChoice = optIndex;
+        state.quiz.statusText = `🔒 ${currentUser} a verrouillé sa réponse ! C'est au tour de ${partner} de deviner !`;
+        triggerBanner('🎯 RÉPONSE ENREGISTRÉE', `Maintenant ${partner} doit deviner ton choix !`, '🤫');
+        saveState();
+        return;
+      }
+
+      // Étape 2 : Le partenaire tente de deviner
+      if (optIndex === state.quiz.secretChoice) {
+        state.coins = (state.coins || 0) + 25;
+        state.cat.xp = (state.cat.xp || 0) + 30;
+        if (state.cat.xp >= 100) { state.cat.level += 1; state.cat.xp -= 100; }
+        state.quiz.statusText = `🎉 BRAVO ${currentUser} ! Tu connais ${state.quiz.targetUser} par cœur (« ${qObj.options[optIndex]} ») ! +25 🪙 & +30 XP !`;
+        state.quiz.secretChoice = null;
+        spawnParticles('🏆', [150, 70, 250, 70, 350]);
+        playLoveSound('fusion');
+      } else {
+        state.quiz.statusText = `😜 Raté ${currentUser} ! Ce n'était pas « ${qObj.options[optIndex]} », réessaie !`;
+        triggerDeviceVibration([100, 50, 100]);
+      }
+      saveState();
+    }
+
+    // ==================== CAPSULES TEMPORELLES ====================
+    function handleCapsulePhotoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      resizeImageToDataUrl(file, 360, (dataUrl) => {
+        pendingCapsulePhoto = dataUrl;
+        document.getElementById('btnCapsulePhoto').innerText = '✅ Photo prête';
+      });
+    }
+
+    function createTimeCapsule() {
+      const text = document.getElementById('capsuleTextInput').value.trim();
+      const dateVal = document.getElementById('capsuleDateInput').value;
+      if (!text && !pendingCapsulePhoto) {
+        triggerBanner('CAPSULE VIDE', 'Écris un message ou ajoute une photo !', '⚠️');
+        return;
+      }
+      const unlockAt = dateVal ? new Date(dateVal).getTime() : (Date.now() + 3600000);
+      state.capsules.unshift({
+        id: Date.now(),
+        author: currentUser,
+        text: text || 'Surprise en photo ❤️',
+        photo: pendingCapsulePhoto,
+        unlockAt
+      });
+      document.getElementById('capsuleTextInput').value = '';
+      pendingCapsulePhoto = '';
+      document.getElementById('btnCapsulePhoto').innerText = '📷 Photo';
+      spawnParticles('🔐', [150, 80, 250]);
+      triggerBanner('🔐 CAPSULE SCELLÉE', 'Votre capsule temporelle est verrouillée jusqu\'à la date choisie !', '⏳');
+      saveState();
+    }
+
+    // ==================== DESSIN LIVE À DEUX + TOUCHER SYNCHRONISÉ HAPTIQUE + CLOUD R2 ====================
+    const canvas = document.getElementById('drawCanvas');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+    let brushColor = '#ec4899';
+    let historyStack = [];
+    let currentTextLines = 0;
+    const MAX_TEXT_LINES = 6;
+    let liveDrawEnabled = true;
+    let myFingerPos = null;
+    let lastLiveBroadcast = 0;
+    let lastRemoteLiveStamp = 0;
+    let cloudArchivesList = [];
+
+    function toggleLiveDrawMode() {
+      liveDrawEnabled = !liveDrawEnabled;
+      const btn = document.getElementById('btnLiveDraw');
+      btn.innerText = liveDrawEnabled ? '🔴 Live ON' : '⚪ Live OFF';
+      btn.className = liveDrawEnabled
+        ? 'px-2.5 h-9 rounded-full bg-rose-50 border border-rose-200 text-rose-600 font-extrabold flex items-center gap-1 text-[11px]'
+        : 'px-2.5 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-500 font-bold flex items-center gap-1 text-[11px]';
+    }
+
+    function updateLinesBadge() {
+      document.getElementById('linesCounterBadge').innerText = `${currentTextLines} / ${MAX_TEXT_LINES} lignes`;
+    }
+
+    function saveCanvasHistory() {
+      historyStack.push({ dataUrl: canvas.toDataURL(), lines: currentTextLines });
+      if (historyStack.length > 10) historyStack.shift();
+    }
+
+    function handleCanvasImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      saveCanvasHistory();
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const ratio = Math.min(canvas.width / img.width, canvas.height / img.height);
+          const w = img.width * ratio;
+          const h = img.height * ratio;
+          const x = (canvas.width - w) / 2;
+          const y = (canvas.height - h) / 2;
+          ctx.drawImage(img, x, y, w, h);
+          broadcastLiveCanvas();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: Math.round((clientX - rect.left) * (canvas.width / rect.width)),
+        y: Math.round((clientY - rect.top) * (canvas.height / rect.height))
+      };
+    }
+
+    // Envoie le trait en direct + la position du doigt pour la Magie Haptique
+    async function broadcastLiveCanvas(force = false) {
+      if (!liveDrawEnabled) return;
+      const now = Date.now();
+      if (!force && now - lastLiveBroadcast < 280) return;
+      lastLiveBroadcast = now;
+      try {
+        await fetch(API_ENDPOINT + '?action=live', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sender: currentUser,
+            updatedAt: now,
+            touching: drawing,
+            x: myFingerPos ? myFingerPos.x : null,
+            y: myFingerPos ? myFingerPos.y : null,
+            dataUrl: canvas.toDataURL('image/png')
+          })
+        });
+      } catch (e) {}
+    }
+
+    // Réception en direct des traits de l'autre + Détection du Toucher Synchronisé Haptique
+    async function pollLiveCanvas() {
+      if (activeTab !== 'dessin' || !liveDrawEnabled) return;
+      try {
+        const res = await fetch(API_ENDPOINT + '?action=live&t=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) return;
+        const live = await res.json();
+        if (!live || !live.sender || live.sender === currentUser) return;
+
+        const cursor = document.getElementById('partnerLiveCursor');
+        const orb = document.getElementById('hapticFusionOrb');
+
+        // Affichage du curseur en direct du partenaire
+        if (live.touching && live.x !== null && live.y !== null && (Date.now() - live.updatedAt < 4000)) {
+          cursor.style.left = (live.x / canvas.width * 100) + '%';
+          cursor.style.top = (live.y / canvas.height * 100) + '%';
+          document.getElementById('partnerCursorLabel').innerText = live.sender;
+          cursor.classList.remove('hidden');
+
+          // MAGIE HAPTIQUE : Si nos 2 doigts touchent au même endroit (< 65px d'écart) en même temps !
+          if (drawing && myFingerPos) {
+            const dist = Math.hypot(live.x - myFingerPos.x, live.y - myFingerPos.y);
+            if (dist < 65) {
+              orb.style.left = ((live.x + myFingerPos.x) / 2 / canvas.width * 100) + '%';
+              orb.style.top = ((live.y + myFingerPos.y) / 2 / canvas.height * 100) + '%';
+              orb.classList.remove('hidden');
+              triggerDeviceVibration([300, 40, 300]);
+              playLoveSound('fusion');
+              state.coins = (state.coins || 0) + 2;
+              document.getElementById('headerCoins').innerText = state.coins;
+            } else {
+              orb.classList.add('hidden');
+            }
+          } else {
+            orb.classList.add('hidden');
+          }
+        } else {
+          cursor.classList.add('hidden');
+          orb.classList.add('hidden');
+        }
+
+        // Met à jour les traits du canvas sous tes yeux
+        if (live.updatedAt > lastRemoteLiveStamp && live.dataUrl && !drawing) {
+          lastRemoteLiveStamp = live.updatedAt;
+          const img = new Image();
+          img.onload = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+          };
+          img.src = live.dataUrl;
+        }
+      } catch (e) {}
+    }
+
+    setInterval(pollLiveCanvas, 450);
+
+    canvas.addEventListener('pointerdown', (e) => {
+      saveCanvasHistory();
+      drawing = true;
+      const p = getPos(e);
+      myFingerPos = p;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      broadcastLiveCanvas(true);
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!drawing) return;
+      const p = getPos(e);
+      myFingerPos = p;
+      ctx.lineWidth = document.getElementById('brushSize').value;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = brushColor;
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      broadcastLiveCanvas(false);
+    });
+
+    window.addEventListener('pointerup', () => {
+      if (drawing) {
+        drawing = false;
+        myFingerPos = null;
+        document.getElementById('hapticFusionOrb').classList.add('hidden');
+        broadcastLiveCanvas(true);
+      }
+    });
+
+    function setBrushColor(c) { brushColor = c; }
+
+    function clearCanvas() {
+      saveCanvasHistory();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      currentTextLines = 0;
+      updateLinesBadge();
+      broadcastLiveCanvas(true);
+    }
+
+    function undoCanvas() {
+      if (!historyStack.length) return;
+      const last = historyStack.pop();
+      currentTextLines = last.lines;
+      updateLinesBadge();
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        broadcastLiveCanvas(true);
+      };
+      img.src = last.dataUrl;
+    }
+
+    function placeStamp(emoji) {
+      saveCanvasHistory();
+      ctx.font = '42px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(emoji, 60 + Math.random() * 240, 60 + Math.random() * 240);
+      broadcastLiveCanvas(true);
+    }
+
+    function writeKeyboardTextOnCanvas() {
+      const input = document.getElementById('canvasKeyboardInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      if (currentTextLines >= MAX_TEXT_LINES) {
+        triggerBanner('LIMITE ATTEINTE', 'Maximum 6 lignes de texte par dessin !', '⚠️');
+        triggerDeviceVibration([80, 50, 80]);
+        return;
+      }
+
+      saveCanvasHistory();
+      currentTextLines += 1;
+      updateLinesBadge();
+
+      const yPos = 45 + (currentTextLines - 1) * 52;
+      ctx.font = 'bold 24px "Plus Jakarta Sans", sans-serif';
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.strokeText(text, canvas.width / 2, yPos);
+      ctx.fillStyle = brushColor === '#ffffff' ? '#ec4899' : brushColor;
+      ctx.fillText(text, canvas.width / 2, yPos);
+
+      input.value = '';
+      broadcastLiveCanvas(true);
+    }
+
+    // Envoie le dessin + Archive dans le Cloud R2 illimité
+    async function sendDrawingToPartner() {
+      const dataUrl = canvas.toDataURL('image/png');
+      const note = document.getElementById('sweetNoteInput').value.trim() || 'Mot doux pour toi ❤️';
+      const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      const dateStr = new Date().toLocaleDateString('fr-FR');
+      const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
+
+      const drawingObj = { dataUrl, caption: `« ${note} »`, author: currentUser, time: `${dateStr} à ${now}` };
+      state.latestDrawing = drawingObj;
+      state.gallery.unshift(drawingObj);
+      state.gallery = state.gallery.slice(0, 6);
+      state.coins = (state.coins || 0) + 15;
+
+      // Archivage Cloud R2 illimité
+      try {
+        await fetch(API_ENDPOINT + '?action=archive', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(drawingObj)
+        });
+      } catch (e) {}
+
+      const eventId = Date.now();
+      lastEventId = eventId;
+      state.lastEvent = {
+        id: eventId,
+        sender: currentUser,
+        title: `🖌️ Nouveau dessin de ${currentUser}`,
+        message: note,
+        emoji: '🎨',
+        sound: 'love',
+        pattern: [150, 70, 250]
+      };
+
+      document.getElementById('sweetNoteInput').value = '';
+      triggerLockscreenBurst('🎨', `Dessin envoyé à ${partner} & archivé dans R2 (+15 🪙) !`, 'love', [150, 70, 250]);
+      saveState();
+      loadCloudArchives();
+      showTab('nous');
+    }
+
+    async function loadCloudArchives() {
+      try {
+        const res = await fetch(API_ENDPOINT + '?action=archive&t=' + Date.now());
+        if (res.ok) {
+          cloudArchivesList = await res.json();
+          renderArchivesGallery();
+        }
+      } catch (e) {}
+    }
+
+    function renderArchivesGallery() {
+      const items = cloudArchivesList.length ? cloudArchivesList : state.gallery;
+      document.getElementById('archiveCountBadge').innerText = items.length;
+      const gal = document.getElementById('drawingsGallery');
+      gal.innerHTML = items.map(item => `
+        <div class="border border-pink-100 rounded-2xl p-2 bg-pink-50/20 text-center shadow-sm">
+          <img src="${item.dataUrl}" class="h-28 mx-auto object-contain bg-white rounded-xl p-1" />
+          <p class="text-[10px] font-extrabold text-purple-800 mt-1 truncate">${item.caption}</p>
+          <p class="text-[9px] text-slate-400">${item.author || ''} • ${item.time || ''}</p>
+        </div>
+      `).join('');
     }
 
     function updateCoupleTimer() {
@@ -1161,9 +1713,7 @@
       }
     }
 
-    setInterval(() => {
-      refreshBatteryAndGPS(false);
-    }, 300000);
+    setInterval(() => { refreshBatteryAndGPS(false); }, 300000);
 
     function promptMoodChange() {
       const key = currentUser.toLowerCase();
@@ -1174,170 +1724,6 @@
         state[key].loc = newLoc.startsWith('📍') ? newLoc : '📍 ' + newLoc;
         updateGpsSeparationState();
       }
-      saveState();
-    }
-
-    const canvas = document.getElementById('drawCanvas');
-    const ctx = canvas.getContext('2d');
-    let drawing = false;
-    let brushColor = '#ec4899';
-    let historyStack = [];
-    let currentTextLines = 0;
-    const MAX_TEXT_LINES = 6;
-
-    function updateLinesBadge() {
-      document.getElementById('linesCounterBadge').innerText = `${currentTextLines} / ${MAX_TEXT_LINES} lignes`;
-    }
-
-    function saveCanvasHistory() {
-      historyStack.push({ dataUrl: canvas.toDataURL(), lines: currentTextLines });
-      if (historyStack.length > 10) historyStack.shift();
-    }
-
-    function handleCanvasImageUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      saveCanvasHistory();
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          const ratio = Math.min(canvas.width / img.width, canvas.height / img.height);
-          const w = img.width * ratio;
-          const h = img.height * ratio;
-          const x = (canvas.width - w) / 2;
-          const y = (canvas.height - h) / 2;
-          ctx.drawImage(img, x, y, w, h);
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function getPos(e) {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      return {
-        x: (clientX - rect.left) * (canvas.width / rect.width),
-        y: (clientY - rect.top) * (canvas.height / rect.height)
-      };
-    }
-
-    canvas.addEventListener('pointerdown', (e) => {
-      saveCanvasHistory();
-      drawing = true;
-      const p = getPos(e);
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y);
-    });
-
-    canvas.addEventListener('pointermove', (e) => {
-      if (!drawing) return;
-      const p = getPos(e);
-      ctx.lineWidth = document.getElementById('brushSize').value;
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = brushColor;
-      ctx.lineTo(p.x, p.y);
-      ctx.stroke();
-    });
-
-    window.addEventListener('pointerup', () => { drawing = false; });
-
-    function setBrushColor(c) { brushColor = c; }
-
-    function clearCanvas() {
-      saveCanvasHistory();
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      currentTextLines = 0;
-      updateLinesBadge();
-    }
-
-    function undoCanvas() {
-      if (!historyStack.length) return;
-      const last = historyStack.pop();
-      currentTextLines = last.lines;
-      updateLinesBadge();
-      const img = new Image();
-      img.onload = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-      };
-      img.src = last.dataUrl;
-    }
-
-    function placeStamp(emoji) {
-      saveCanvasHistory();
-      ctx.font = '42px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(emoji, 60 + Math.random() * 240, 60 + Math.random() * 240);
-    }
-
-    function writeKeyboardTextOnCanvas() {
-      const input = document.getElementById('canvasKeyboardInput');
-      const text = input.value.trim();
-      if (!text) return;
-
-      if (currentTextLines >= MAX_TEXT_LINES) {
-        triggerBanner('LIMITE ATTEINTE', 'Maximum 6 lignes de texte par dessin !', '⚠️');
-        triggerDeviceVibration([80, 50, 80]);
-        return;
-      }
-
-      saveCanvasHistory();
-      currentTextLines += 1;
-      updateLinesBadge();
-
-      const yPos = 45 + (currentTextLines - 1) * 52;
-      ctx.font = 'bold 24px "Plus Jakarta Sans", sans-serif';
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.strokeText(text, canvas.width / 2, yPos);
-      ctx.fillStyle = brushColor === '#ffffff' ? '#ec4899' : brushColor;
-      ctx.fillText(text, canvas.width / 2, yPos);
-
-      input.value = '';
-    }
-
-    function sendDrawingToPartner() {
-      const dataUrl = canvas.toDataURL('image/png');
-      const note = document.getElementById('sweetNoteInput').value.trim() || 'Mot doux pour toi ❤️';
-      const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-      const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
-      state.latestDrawing = { dataUrl, caption: `« ${note} »`, author: currentUser, time: now };
-      state.gallery.unshift(state.latestDrawing);
-      state.gallery = state.gallery.slice(0, 6);
-
-      const eventId = Date.now();
-      lastEventId = eventId;
-      state.lastEvent = {
-        id: eventId,
-        sender: currentUser,
-        title: `🖌️ Nouveau dessin de ${currentUser}`,
-        message: note,
-        emoji: '🎨',
-        sound: 'love',
-        pattern: [150, 70, 250]
-      };
-
-      document.getElementById('sweetNoteInput').value = '';
-      triggerLockscreenBurst('🎨', `Dessin envoyé sur l'écran de ${partner} !`, 'love', [150, 70, 250]);
-      saveState();
-      showTab('nous');
-    }
-
-    function nextCoupleQuestion() {
-      state.questionIndex = (state.questionIndex + 1) % questionsPool.length;
-      saveState();
-    }
-
-    function saveDailyAnswer() {
-      const val = document.getElementById('questionInput').value.trim();
-      if (!val) return;
-      state.answers[currentUser] = val;
-      document.getElementById('questionInput').value = '';
-      spawnParticles('💬');
       saveState();
     }
 
@@ -1356,7 +1742,6 @@
 
     function renderAll() {
       const isJordan = currentUser === 'Jordan';
-      const partner = isJordan ? 'Lydie' : 'Jordan';
       document.getElementById('btnJordan').className = isJordan
         ? 'px-2.5 py-1 rounded-full gradient-card text-white shadow transition-all flex items-center gap-1'
         : 'px-2.5 py-1 rounded-full text-slate-600 transition-all flex items-center gap-1';
@@ -1364,8 +1749,9 @@
         ? 'px-2.5 py-1 rounded-full gradient-card text-white shadow transition-all flex items-center gap-1'
         : 'px-2.5 py-1 rounded-full text-slate-600 transition-all flex items-center gap-1';
 
-      document.getElementById('sendTargetName').innerText = partner;
       document.getElementById('pingCounter').innerText = state.pingsToday;
+      document.getElementById('headerCoins').innerText = state.coins || 0;
+      document.getElementById('catCoinsLabel').innerText = state.coins || 0;
 
       if (state.jordan.avatar) {
         document.getElementById('jordanAvatarImg').src = state.jordan.avatar;
@@ -1388,6 +1774,28 @@
           if (el) el.classList.add('hidden');
         });
       }
+
+      // Accessoire équipé sur Douglasse
+      const eq = state.cat.equipped || '';
+      document.getElementById('catEquippedOverlay').innerText = eq;
+      document.getElementById('miniCatAcc').innerText = eq;
+      document.getElementById('lockCatAccBadge').innerText = eq;
+
+      // Rendu de la boutique d'accessoires
+      const owned = state.cat.ownedAcc || [];
+      document.getElementById('catShopGrid').innerHTML = catAccessoriesCatalog.map(item => {
+        const isOwned = owned.includes(item.id);
+        const isEq = state.cat.equipped === item.emoji;
+        return `
+          <button onclick="buyOrEquipAccessory('${item.id}')" class="p-2.5 rounded-2xl border ${isEq ? 'border-pink-500 bg-pink-50' : 'border-slate-200 bg-slate-50'} flex flex-col items-center gap-1 active:scale-95 transition">
+            <span class="text-2xl">${item.emoji}</span>
+            <span class="text-[10px] font-extrabold text-slate-700">${item.name}</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isOwned ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+              ${isEq ? '✔️ Porté' : (isOwned ? 'Équiper' : '🪙 ' + item.price)}
+            </span>
+          </button>
+        `;
+      }).join('');
 
       const vc = state.vibCounts || { env: 0, peach: 0, cuc: 0, chili: 0 };
       document.getElementById('badgeVibEnv').innerText = vc.env || 0;
@@ -1415,34 +1823,22 @@
       document.getElementById('lockDrawingCaption').innerText = state.latestDrawing.caption;
       document.getElementById('lockDrawingMeta').innerText = `Dessiné par ${state.latestDrawing.author} • À ${state.latestDrawing.time}`;
 
-      const gal = document.getElementById('drawingsGallery');
-      gal.innerHTML = state.gallery.map(item => `
-        <div class="border border-pink-100 rounded-2xl p-2 bg-pink-50/20 text-center">
-          <img src="${item.dataUrl}" class="h-24 mx-auto object-contain" />
-          <p class="text-[10px] font-bold text-slate-500 mt-1 truncate">${item.caption}</p>
-        </div>
-      `).join('');
+      renderArchivesGallery();
 
       let speech = '« Rrrrr... Je ronronne de bonheur 💕 »';
       let badge = 'Ronronne 🐾';
-      let mouthPath = 'M93 95 Q100 101 107 95';
-
       if (state.cat.hunger <= 40) {
         speech = '« Miaou ! J\'ai faim, donne-moi des croquettes 🐟 »';
         badge = 'J\'ai faim 🐟';
-        mouthPath = 'M93 99 Q100 92 107 99';
       } else if (state.cat.love <= 40) {
         speech = '« Je veux jouer ! Lance-moi la pelote 🧶 »';
         badge = 'Veut jouer 🧶';
-        mouthPath = 'M93 99 Q100 92 107 99';
       }
 
       document.getElementById('catSpeechBubble').innerText = speech;
       document.getElementById('lockCatSpeech').innerText = speech;
       document.getElementById('miniCatBadge').innerText = badge;
       document.getElementById('catMoodPill').innerText = badge;
-      const mouthEl = document.getElementById('catMouth');
-      if (mouthEl) mouthEl.setAttribute('d', mouthPath);
 
       document.getElementById('catLevel').innerText = state.cat.level || 4;
       document.getElementById('catXp').innerText = state.cat.xp || 40;
@@ -1463,9 +1859,64 @@
         </div>
       `).join('');
 
-      document.getElementById('dailyQuestionText').innerText = questionsPool[state.questionIndex];
-      document.getElementById('ansJordan').innerText = state.answers.Jordan;
-      document.getElementById('ansLydie').innerText = state.answers.Lydie;
+      // Rendu du Quiz Couple
+      const qObj = coupleQuizPool[state.quiz.qIndex || 0];
+      document.getElementById('quizQuestionTitle').innerText = `Pour ${state.quiz.targetUser} : « ${qObj.q} »`;
+      document.getElementById('quizModeSubtitle').innerText = state.quiz.secretChoice === null
+        ? `👉 ${state.quiz.targetUser} doit choisir sa réponse secrète ci-dessous :`
+        : `👉 Réponse verrouillée ! Au partenaire de deviner :`;
+      document.getElementById('quizOptionsGrid').innerHTML = qObj.options.map((opt, idx) => `
+        <button onclick="selectQuizOption(${idx})" class="bg-slate-50 hover:bg-purple-50 border border-slate-200 p-3 rounded-2xl text-left active:scale-95 transition">
+          ${opt}
+        </button>
+      `).join('');
+      document.getElementById('quizStatusBox').innerText = state.quiz.statusText || '';
+
+      // Rendu des Bons d'Amour (Coupons)
+      document.getElementById('couponsListContainer').innerHTML = (state.coupons || []).map(c => `
+        <div class="flex items-center justify-between p-3 rounded-2xl border ${c.used ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200'}">
+          <div>
+            <p class="text-xs font-extrabold ${c.used ? 'line-through text-slate-400' : 'text-purple-900'}">${c.title}</p>
+            <p class="text-[10px] text-slate-500">Offert par ${c.from} pour ${c.to}</p>
+          </div>
+          ${c.used
+            ? `<span class="text-[10px] font-bold bg-slate-200 text-slate-600 px-2.5 py-1 rounded-full">Utilisé ✔️</span>`
+            : `<button onclick="redeemCoupon(${c.id})" class="gradient-card text-white text-[11px] font-extrabold px-3 py-1.5 rounded-full shadow active:scale-95">Utiliser ✨</button>`
+          }
+        </div>
+      `).join('');
+
+      // Rendu des Capsules Temporelles
+      const now = Date.now();
+      document.getElementById('capsulesListContainer').innerHTML = (state.capsules || []).map(cap => {
+        const unlocked = now >= cap.unlockAt;
+        const unlockDateStr = new Date(cap.unlockAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+        if (!unlocked) {
+          const diffH = Math.ceil((cap.unlockAt - now) / 3600000);
+          return `
+            <div class="bg-slate-900 text-white p-3.5 rounded-2xl border border-purple-500/30 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">🔒</span>
+                <div>
+                  <p class="text-xs font-extrabold text-pink-300">Capsule de ${cap.author} (Verrouillée)</p>
+                  <p class="text-[10px] text-slate-300">Ouverture le ${unlockDateStr} (dans ~${diffH}h)</p>
+                </div>
+              </div>
+              <span class="text-[10px] bg-white/10 px-2.5 py-1 rounded-full font-bold">⏳ Patiente</span>
+            </div>
+          `;
+        }
+        return `
+          <div class="bg-amber-50/70 border border-amber-200 p-3.5 rounded-2xl space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-extrabold uppercase text-amber-800">🔓 Capsule de ${cap.author} ouverte !</span>
+              <span class="text-[10px] text-slate-400">${unlockDateStr}</span>
+            </div>
+            <p class="text-xs font-bold text-slate-800 italic">« ${cap.text} »</p>
+            ${cap.photo ? `<img src="${cap.photo}" class="max-h-40 rounded-xl mx-auto object-contain border border-amber-200" />` : ''}
+          </div>
+        `;
+      }).join('');
 
       document.getElementById('wishListContainer').innerHTML = state.wishes.map((w, i) => `
         <div onclick="toggleWish(${i})" class="flex items-center gap-2.5 bg-slate-50 p-3 rounded-2xl border border-slate-100 cursor-pointer">
