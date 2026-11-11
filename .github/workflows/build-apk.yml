@@ -49,7 +49,7 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: 🔒 Injection Service Temps Réel (WakeLock CPU + Sortie de Veille Xiaomi)
+      - name: 🔒 Injection Service Temps Réel (WakeLock CPU + WifiLock Internet en Veille)
         run: |
           node -e '
             const fs = require("fs");
@@ -58,6 +58,9 @@ jobs:
 
             const perms = `
               <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+              <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+              <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
               <uses-permission android:name="android.permission.VIBRATE" />
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
               <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -104,6 +107,7 @@ jobs:
           import android.media.AudioAttributes;
           import android.media.RingtoneManager;
           import android.net.Uri;
+          import android.net.wifi.WifiManager;
           import android.os.Build;
           import android.os.Handler;
           import android.os.IBinder;
@@ -118,23 +122,35 @@ jobs:
           import java.net.URL;
 
           public class Love8Service extends Service {
-              private static final String CHANNEL_BG = "love8_bg_service_v3";
-              private static final String CHANNEL_ALERTS = "love8_alerts_v3";
+              private static final String CHANNEL_BG = "love8_bg_service_v4";
+              private static final String CHANNEL_ALERTS = "love8_alerts_v4";
               private Handler handler = new Handler(Looper.getMainLooper());
               private Runnable poller;
               private PowerManager.WakeLock cpuWakeLock;
+              private WifiManager.WifiLock wifiLock;
 
               @Override
               public void onCreate() {
                   super.onCreate();
                   createChannels();
 
-                  // Maintient le CPU éveillé en permanence même écran éteint sur Xiaomi
+                  // 1. Maintient le processeur actif écran éteint
                   PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
                   if (pm != null) {
                       cpuWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "love8:cpuKeepAlive");
                       cpuWakeLock.setReferenceCounted(false);
                       cpuWakeLock.acquire();
+                  }
+
+                  // 2. Interdit à Android / Xiaomi de couper le Wi-Fi en veille
+                  WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                  if (wm != null) {
+                      int lockType = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+                          ? WifiManager.WIFI_MODE_FULL_LOW_LATENCY
+                          : WifiManager.WIFI_MODE_FULL_HIGH_PERF;
+                      wifiLock = wm.createWifiLock(lockType, "love8:wifiKeepAlive");
+                      wifiLock.setReferenceCounted(false);
+                      wifiLock.acquire();
                   }
 
                   Notification.Builder builder = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
@@ -143,7 +159,7 @@ jobs:
 
                   Notification bgNotif = builder
                       .setContentTitle("Love8 Temps Réel Actif ⚡")
-                      .setContentText("Écoute instantanée Jordan & Lydie (Veille OK)")
+                      .setContentText("Connexion Internet maintenue en veille")
                       .setSmallIcon(android.R.drawable.ic_dialog_info)
                       .setOngoing(true)
                       .build();
@@ -187,7 +203,6 @@ jobs:
                                   checkCloudState();
                               }
                           }).start();
-                          // Vérification toutes les 2 secondes en direct
                           handler.postDelayed(this, 2000);
                       }
                   };
@@ -308,9 +323,8 @@ jobs:
 
               @Override
               public void onDestroy() {
-                  if (cpuWakeLock != null && cpuWakeLock.isHeld()) {
-                      cpuWakeLock.release();
-                  }
+                  if (cpuWakeLock != null && cpuWakeLock.isHeld()) cpuWakeLock.release();
+                  if (wifiLock != null && wifiLock.isHeld()) wifiLock.release();
                   super.onDestroy();
               }
 
@@ -366,13 +380,20 @@ jobs:
                           Manifest.permission.ACCESS_COARSE_LOCATION
                       }, 101);
 
-                      // Demande automatiquement à Xiaomi de ne jamais mettre Love8 en veille
                       PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
                       if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
                           try {
                               Intent ig = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
                               ig.setData(Uri.parse("package:" + getPackageName()));
                               startActivity(ig);
+                          } catch (Exception ignored) {}
+                      }
+
+                      // Sur Android 12+, vérifie l'autorisation de superposition plein écran (SYSTEM_ALERT_WINDOW)
+                      if (!Settings.canDrawOverlays(this)) {
+                          try {
+                              Intent ov = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+                              startActivity(ov);
                           } catch (Exception ignored) {}
                       }
                   }
@@ -458,10 +479,10 @@ jobs:
                       NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
                       Notification.Builder b;
                       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                          NotificationChannel ch = new NotificationChannel("love8_alerts_v3", "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
+                          NotificationChannel ch = new NotificationChannel("love8_alerts_v4", "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
                           ch.enableVibration(true);
                           nm.createNotificationChannel(ch);
-                          b = new Notification.Builder(ctx, "love8_alerts_v3");
+                          b = new Notification.Builder(ctx, "love8_alerts_v4");
                       } else {
                           b = new Notification.Builder(ctx);
                       }
