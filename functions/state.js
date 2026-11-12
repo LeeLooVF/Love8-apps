@@ -4,7 +4,6 @@ let memoryMedia = {};
 async function sendFcmPush(env, recipientToken, title, body, sound) {
   if (!env.FCM_SERVER_KEY || !recipientToken) return;
   try {
-    // Envoi du message prioritaire FCM v1 pour réveiller le téléphone instantanément
     await fetch(`https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`, {
       method: 'POST',
       headers: {
@@ -14,15 +13,8 @@ async function sendFcmPush(env, recipientToken, title, body, sound) {
       body: JSON.stringify({
         message: {
           token: recipientToken,
-          data: {
-            title: title,
-            body: body,
-            sound: sound,
-            type: 'vibration'
-          },
-          android: {
-            priority: 'HIGH'
-          }
+          data: { title, body, sound, type: 'vibration' },
+          android: { priority: 'HIGH' }
         }
       })
     });
@@ -46,7 +38,6 @@ export async function onRequest(context) {
   }
 
   try {
-    // Enregistrement du token FCM unique de chaque appareil
     if (action === "register_fcm" && request.method === "POST") {
       const data = await request.json();
       if (data.user && data.token && env.LOVE8_COUPLE_KV) {
@@ -105,7 +96,6 @@ export async function onRequest(context) {
         await env.LOVE8_COUPLE_KV.put("state_jordan_lydie", JSON.stringify(memoryState));
       }
 
-      // Déclenchement du Push FCM vers le partenaire
       if (incoming.lastEvent && incoming.lastEvent.sender) {
         const recipient = incoming.lastEvent.sender === "Jordan" ? "Lydie" : "Jordan";
         if (env.LOVE8_COUPLE_KV) {
