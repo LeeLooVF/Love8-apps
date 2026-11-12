@@ -704,6 +704,22 @@
       lydieAvatarUrl: localStorage.getItem('love8_cached_lav_url') || ''
     };
 
+    // Fonction d'enregistrement du token FCM auprès de Cloudflare
+    async function registerFcmTokenToCloud() {
+      if (window.AndroidNative && window.AndroidNative.getFcmToken) {
+        const token = window.AndroidNative.getFcmToken();
+        if (token && typeof currentUser !== 'undefined') {
+          try {
+            await fetch(API_ENDPOINT + '?action=register_fcm', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ user: currentUser, token })
+            });
+          } catch (e) {}
+        }
+      }
+    }
+
     const moodPresets = [
       { emoji: '😍', text: 'Pense à toi ❤️' },
       { emoji: '💕', text: 'Hâte de te voir 💕' },
@@ -760,7 +776,7 @@
       },
       fun: {
         Vérité: [
-          "Quelle est la petite habitude la plus bizarre ou drôle que tu as remarquée chez moi ?",
+          "Quelle est la petite habitude la plus bizarre ou drôle que tu aies remarquée chez moi ?",
           "Quel est le pire cadeau ou la pire surprise qu'on ait vécu ensemble ?",
           "Si on échangeait nos corps pendant 24h, quelle est la première chose que tu ferais ?",
           "Quelle est la chose la plus embarrassante que tu aies faite au début de notre relation ?",
@@ -778,7 +794,7 @@
       },
       caliente: {
         Vérité: [
-          "Quel est ton endroit préféré sur mon corps où tu adores que je t'embrasse ? 🔥",
+          "Quel est ton endroit préféré sur moim corps où tu adores que je t'embrasse ? 🔥",
           "Quel est le fantasme ou l'envie coquine que tu n'as encore jamais osé m'avouer ?",
           "Quel est notre moment le plus torride dont tu te souviens encore parfaitement ? 😈",
           "Quelle tenue (ou absence de tenue) te fait perdre tous tes moyens quand je la porte ?",
@@ -2183,6 +2199,11 @@
     renderAll();
     pollCloudState();
     setInterval(pollCloudState, 2500);
+
+    // Lancement automatique de l'enregistrement du token FCM au démarrage
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(registerFcmTokenToCloud, 2000);
+    });
   </script>
 </body>
 </html>
