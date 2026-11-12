@@ -3,7 +3,6 @@ let memoryMedia = {};
 let cachedAccessToken = null;
 let tokenExpiration = 0;
 
-// Convertit une chaîne PEM (Clé privée RSA) en ArrayBuffer pour Web Crypto API
 function pemToArrayBuffer(pem) {
   const b64Lines = pem
     .replace(/-----BEGIN PRIVATE KEY-----/g, '')
@@ -33,22 +32,17 @@ function arrayBufferToBase64Url(buffer) {
   return base64UrlEncode(binary);
 }
 
-// Génère un vrai jeton OAuth2 Google à partir de la clé privée stockée dans env.FCM_ACCESS_TOKEN
 async function getGoogleAccessToken(env) {
   if (cachedAccessToken && Date.now() < tokenExpiration - 60000) {
     return cachedAccessToken;
   }
 
   const rawKey = env.FCM_ACCESS_TOKEN || env.FCM_PRIVATE_KEY || "";
-  if (!rawKey) {
-    console.error("Clé privée FCM_ACCESS_TOKEN introuvable dans les variables Cloudflare !");
-    return null;
-  }
+  if (!rawKey) return null;
 
   let privateKeyPem = rawKey;
   let clientEmail = env.FCM_CLIENT_EMAIL || "firebase-adminsdk-fbsvc@love8-mabite.iam.gserviceaccount.com";
 
-  // Si jamais tout le JSON du compte de service a été collé dans la variable
   if (rawKey.trim().startsWith('{')) {
     try {
       const parsed = JSON.parse(rawKey);
@@ -94,11 +88,7 @@ async function getGoogleAccessToken(env) {
     body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`
   });
 
-  if (!res.ok) {
-    const errTxt = await res.text();
-    console.error("Erreur OAuth2 Google :", res.status, errTxt);
-    return null;
-  }
+  if (!res.ok) return null;
 
   const data = await res.json();
   cachedAccessToken = data.access_token;
@@ -106,7 +96,6 @@ async function getGoogleAccessToken(env) {
   return cachedAccessToken;
 }
 
-// Envoie un push DATA-ONLY haute priorité pour déclencher Love8FirebaseMessagingService (WakeLock + Vibration)
 async function sendFcmPush(env, recipientToken, eventObj) {
   if (!recipientToken) return;
   try {
@@ -118,6 +107,7 @@ async function sendFcmPush(env, recipientToken, eventObj) {
       message: {
         token: recipientToken,
         data: {
+          eventId: String(eventObj.id || Date.now()),
           title: String(eventObj.title || "Love8 ❤️"),
           body: String(eventObj.message || "Nouvelle vibration reçue !"),
           sound: String(eventObj.sound || "love"),
@@ -132,7 +122,7 @@ async function sendFcmPush(env, recipientToken, eventObj) {
       }
     };
 
-    const res = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
+    await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -140,12 +130,7 @@ async function sendFcmPush(env, recipientToken, eventObj) {
       },
       body: JSON.stringify(payload)
     });
-
-    const resTxt = await res.text();
-    console.log("Résultat envoi FCM :", res.status, resTxt);
-  } catch (e) {
-    console.error("Exception sendFcmPush :", e.message);
-  }
+  } catch (e) {}
 }
 
 export async function onRequest(context) {
@@ -166,20 +151,54 @@ export async function onRequest(context) {
   }
 
   try {
-    // 1. Enregistrement du token FCM de Jordan ou Lydie
+    // Diagnostic complet de tous les services (Cloudflare, KV, Firebase OAuth2, Tokens Jordan & Lydie)
+    if (action === "status" && request.method === "GET") {
+      let kvOk = false;
+      let tokenJordan = false;
+      let tokenLydie = false;
+      let stateUpdatedAt = 0;
+
+      if (env.LOVE8_COUPLE_KV) {
+        kvOk = true;
+        const tj = await env.LOVE8_COUPLE_KV.get("fcm_token_Jordan");
+        const tl = await env.LOVE8_COUPLE_KV.get("fcm_token_Lydie");
+        const rawState = await env.LOVE8_COUPLE_KV.get("state_jordan_lydie");
+        tokenJordan = Boolean(tj && tj.length > 20);
+        tokenLydie = Boolean(tl && tl.length > 20);
+        if (rawState) {
+          try { stateUpdatedAt = JSON.parse(rawState).updatedAt || 0; } catch (e) {}
+        }
+      }
+
+      let fcmAuthOk = false;
+      try {
+        const tok = await getGoogleAccessToken(env);
+        fcmAuthOk = Boolean(tok);
+      } catch (e) {}
+
+      return new Response(JSON.stringify({
+        ok: true,
+        cloudflareWorker: true,
+        kvBound: kvOk,
+        fcmAuthOk,
+        tokenJordan,
+        tokenLydie,
+        stateUpdatedAt,
+        serverTime: Date.now()
+      }), { headers: corsHeaders });
+    }
+
     if (action === "register_fcm" && request.method === "POST") {
       const data = await request.json();
       if (data.user && data.token && env.LOVE8_COUPLE_KV) {
         await env.LOVE8_COUPLE_KV.put("fcm_token_" + data.user, data.token);
-        console.log("Token FCM enregistré pour :", data.user);
       }
       return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
     }
 
-    // 2. Accusé de réception (✓✓) SANS écraser l'état principal !
     if (action === "ack" && request.method === "POST") {
       const ackData = await request.json();
-      if (!memoryState && env.LOVE8_COUPLE_KV) {
+      if (env.LOVE8_COUPLE_KV) {
         const raw = await env.LOVE8_COUPLE_KV.get("state_jordan_lydie");
         if (raw) { try { memoryState = JSON.parse(raw); } catch (e) {} }
       }
@@ -192,10 +211,9 @@ export async function onRequest(context) {
           await env.LOVE8_COUPLE_KV.put("state_jordan_lydie", JSON.stringify(memoryState));
         }
       }
-      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+      return new Response(JSON.stringify({ ok: true, updatedAt: memoryState?.updatedAt || Date.now() }), { headers: corsHeaders });
     }
 
-    // 3. Gestion des médias (Avatars & Dernier dessin)
     if (action === "media") {
       const key = url.searchParams.get("key") || "latest_drawing";
       if (request.method === "GET") {
@@ -217,7 +235,6 @@ export async function onRequest(context) {
       }
     }
 
-    // 4. Galerie Souvenirs (GET et POST)
     if (action === "archive") {
       if (request.method === "GET") {
         if (env.LOVE8_COUPLE_KV) {
@@ -243,9 +260,9 @@ export async function onRequest(context) {
       }
     }
 
-    // 5. Lecture de l'état (GET) avec auto-réparation si l'état a été corrompu par le bug ack
+    // Lecture directe dans KV à chaque GET pour éviter tout cache obsolète entre Workers Cloudflare
     if (request.method === "GET") {
-      if (!memoryState && env.LOVE8_COUPLE_KV) {
+      if (env.LOVE8_COUPLE_KV) {
         const raw = await env.LOVE8_COUPLE_KV.get("state_jordan_lydie");
         if (raw) {
           try {
@@ -259,16 +276,14 @@ export async function onRequest(context) {
       return new Response(memoryState ? JSON.stringify(memoryState) : "{}", { headers: corsHeaders });
     }
 
-    // 6. Sauvegarde de l'état (POST) + Déclenchement du Push FCM uniquement sur un NOUVEL événement
     if (request.method === "POST") {
       const incoming = await request.json();
 
-      // Sécurité anti-écrasement si une requête partielle arrive ici
       if (!incoming || !incoming.jordan || !incoming.lydie) {
         return new Response(JSON.stringify({ ok: false, ignored: true }), { headers: corsHeaders });
       }
 
-      if (!memoryState && env.LOVE8_COUPLE_KV) {
+      if (env.LOVE8_COUPLE_KV) {
         const raw = await env.LOVE8_COUPLE_KV.get("state_jordan_lydie");
         if (raw) { try { memoryState = JSON.parse(raw); } catch (e) {} }
       }
@@ -283,15 +298,13 @@ export async function onRequest(context) {
         await env.LOVE8_COUPLE_KV.put("state_jordan_lydie", JSON.stringify(memoryState));
       }
 
-      // On n'envoie le push FCM que si c'est un NOUVEL événement (vibration, coeur, dessin, bon d'amour)
-      if (newEventId > prevEventId && incoming.lastEvent && incoming.lastEvent.sender) {
+      // Envoie le push FCM uniquement pour les vibrations, coeurs, dessins et bons (pas pour les étapes silencieuses)
+      if (newEventId > prevEventId && incoming.lastEvent && incoming.lastEvent.sender && incoming.lastEvent.type !== "silent") {
         const recipient = incoming.lastEvent.sender === "Jordan" ? "Lydie" : "Jordan";
         if (env.LOVE8_COUPLE_KV) {
           const recipientToken = await env.LOVE8_COUPLE_KV.get("fcm_token_" + recipient);
           if (recipientToken) {
             await sendFcmPush(env, recipientToken, incoming.lastEvent);
-          } else {
-            console.log("Aucun token FCM trouvé pour :", recipient);
           }
         }
       }
@@ -301,7 +314,6 @@ export async function onRequest(context) {
 
     return new Response(JSON.stringify({ status: "Love8 FCM API Ready" }), { headers: corsHeaders });
   } catch (err) {
-    console.error("Erreur globale state.js :", err.message);
     return new Response(JSON.stringify({ error: err.message }), { status: 200, headers: corsHeaders });
   }
 }
