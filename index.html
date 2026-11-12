@@ -151,6 +151,85 @@
     </div>
   </div>
 
+  <!-- ==================== MODALE STATUT DES SERVICES & SYNCHRONISATION MANUELLE ==================== -->
+  <div id="serviceStatusModal" class="fixed inset-0 z-[99988] hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl p-5 space-y-4 shadow-2xl border border-pink-100 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="font-extrabold text-base text-purple-950 flex items-center gap-1.5">📡 État des Services Love8</h3>
+          <p class="text-[11px] text-slate-400">Diagnostic en direct & synchronisation</p>
+        </div>
+        <button onclick="closeServiceStatusModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold text-xs">✕</button>
+      </div>
+
+      <div class="space-y-2 text-xs">
+        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200">
+          <div class="flex items-center gap-2.5">
+            <span class="text-lg">☁️</span>
+            <div>
+              <p class="font-extrabold text-slate-800">Cloudflare Pages & API</p>
+              <p id="statusDescCloudflare" class="text-[10px] text-slate-500">Vérification...</p>
+            </div>
+          </div>
+          <span id="statusBadgeCloudflare" class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-200 text-slate-700">...</span>
+        </div>
+
+        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200">
+          <div class="flex items-center gap-2.5">
+            <span class="text-lg">🗄️</span>
+            <div>
+              <p class="font-extrabold text-slate-800">Base Cloudflare KV (Couple)</p>
+              <p id="statusDescKv" class="text-[10px] text-slate-500">Vérification...</p>
+            </div>
+          </div>
+          <span id="statusBadgeKv" class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-200 text-slate-700">...</span>
+        </div>
+
+        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200">
+          <div class="flex items-center gap-2.5">
+            <span class="text-lg">🔥</span>
+            <div>
+              <p class="font-extrabold text-slate-800">Firebase FCM (Notifications Push)</p>
+              <p id="statusDescFcm" class="text-[10px] text-slate-500">Vérification du jeton Android...</p>
+            </div>
+          </div>
+          <span id="statusBadgeFcm" class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-200 text-slate-700">...</span>
+        </div>
+
+        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200">
+          <div class="flex items-center gap-2.5">
+            <span class="text-lg">🤖</span>
+            <div>
+              <p class="font-extrabold text-slate-800">Pont Natif Android (Vibreur & Réveil)</p>
+              <p id="statusDescNative" class="text-[10px] text-slate-500">Vérification...</p>
+            </div>
+          </div>
+          <span id="statusBadgeNative" class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-200 text-slate-700">...</span>
+        </div>
+
+        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200">
+          <div class="flex items-center gap-2.5">
+            <span class="text-lg">🐙</span>
+            <div>
+              <p class="font-extrabold text-slate-800">GitHub Releases (Serveur APK)</p>
+              <p id="statusDescGithub" class="text-[10px] text-slate-500">Dépôt LeeLooVF/Love8-apps</p>
+            </div>
+          </div>
+          <span id="statusBadgeGithub" class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">En ligne ✓</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-2 pt-1">
+        <button onclick="manualSyncNow()" class="w-full py-3 rounded-2xl gradient-card text-white text-xs font-extrabold uppercase tracking-wider shadow-md active:scale-95 transition flex items-center justify-center gap-2">
+          🔄 Synchroniser maintenant (Cloud + FCM)
+        </button>
+        <button onclick="downloadLatestApk()" class="w-full py-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-extrabold active:scale-95 transition">
+          📥 Télécharger la dernière MAJ APK (GitHub)
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== MODALE DE SÉLECTION : HUMEUR + LIEU ==================== -->
   <div id="moodLocModal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-3xl p-5 space-y-4 shadow-2xl border border-pink-100 max-h-[88vh] overflow-y-auto">
@@ -190,7 +269,6 @@
         <img id="sexyModalImg" src="" class="max-h-[340px] w-auto object-contain rounded-xl" />
       </div>
 
-      <!-- Zone de vote (5 paliers) visible uniquement par le destinataire qui n'a pas encore noté -->
       <div id="sexyRewardVoteBox" class="space-y-2 pt-1">
         <p class="text-xs font-extrabold text-center text-amber-300 uppercase tracking-wider">
           👑 Choisis le palier de récompense à offrir :
@@ -317,10 +395,10 @@
     </div>
 
     <div class="flex items-center gap-1">
-      <button onclick="downloadLatestApk()" title="Mettre à jour directement" class="px-2 py-1.5 rounded-full bg-emerald-100 border border-emerald-300 text-[10px] font-extrabold text-emerald-800 active:scale-95 transition">
-        🔄 MAJ
+      <button onclick="openServiceStatusModal()" title="Statut des services & Sync" class="px-2.5 py-1.5 rounded-full bg-emerald-100 border border-emerald-300 text-[10px] font-extrabold text-emerald-800 active:scale-95 transition flex items-center gap-1">
+        📡 Statuts
       </button>
-      <button onclick="toggleLockscreen(true, false)" class="px-2 py-1.5 rounded-full bg-purple-100 border border-purple-200 text-[10px] font-extrabold text-purple-800 active:scale-95 transition">
+      <button onclick="toggleLockscreen(true, false, false)" class="px-2 py-1.5 rounded-full bg-purple-100 border border-purple-200 text-[10px] font-extrabold text-purple-800 active:scale-95 transition">
         🔒 Écran
       </button>
     </div>
@@ -454,7 +532,6 @@
         </div>
 
         <div class="grid grid-cols-2 gap-2.5 text-xs">
-          <!-- Statut Jordan -> Lydie -->
           <div class="bg-white/10 border border-white/10 rounded-2xl p-2.5 flex flex-col justify-between space-y-2">
             <div class="flex items-center justify-between">
               <span class="font-extrabold text-[11px] text-purple-200">👦🏻 Jordan → Lydie</span>
@@ -464,7 +541,6 @@
             <div id="sexyActionJordan"></div>
           </div>
 
-          <!-- Statut Lydie -> Jordan -->
           <div class="bg-white/10 border border-white/10 rounded-2xl p-2.5 flex flex-col justify-between space-y-2">
             <div class="flex items-center justify-between">
               <span class="font-extrabold text-[11px] text-pink-200">👩🏻 Lydie → Jordan</span>
@@ -720,7 +796,7 @@
         </button>
       </div>
 
-      <!-- QUIZ 100 QUESTIONS AVEC GESTION STRICTE DES RÔLES TOUR PAR TOUR -->
+      <!-- QUIZ 100 QUESTIONS AVEC SYNCHRONISATION INSTANTANÉE ENTRE LES 2 TÉLÉPHONES -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <span class="bg-purple-100 text-purple-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">
@@ -842,6 +918,10 @@
     let sleep15sTimer = null;
     let sleepCountdownInterval = null;
     let currentSexyViewSender = '';
+    let isSaving = false;
+    let lastSaveTimestamp = 0;
+    let lastCloudLatencyMs = 0;
+    let lastCloudOk = false;
 
     let cachedMedia = {
       latestDrawingId: localStorage.getItem('love8_cached_draw_id') || '',
@@ -892,6 +972,91 @@
           } catch (e) {}
         }
       }
+    }
+
+    // ==================== CENTRE DE STATUT DES SERVICES & SYNC MANUELLE ====================
+    function openServiceStatusModal() {
+      document.getElementById('serviceStatusModal').classList.remove('hidden');
+      refreshServiceStatusDiagnostics();
+    }
+
+    function closeServiceStatusModal() {
+      document.getElementById('serviceStatusModal').classList.add('hidden');
+    }
+
+    async function refreshServiceStatusDiagnostics() {
+      // 1. Pont Natif Android
+      const hasNative = Boolean(window.AndroidNative);
+      const nativeBadge = document.getElementById('statusBadgeNative');
+      const nativeDesc = document.getElementById('statusDescNative');
+      if (hasNative) {
+        nativeBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800';
+        nativeBadge.innerText = 'Actif ✓';
+        nativeDesc.innerText = `APK Android connecté (${currentUser || 'Profil non choisi'})`;
+      } else {
+        nativeBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800';
+        nativeBadge.innerText = 'Mode Web';
+        nativeDesc.innerText = 'Navigateur standard (hors APK)';
+      }
+
+      // 2. Firebase FCM
+      const fcmBadge = document.getElementById('statusBadgeFcm');
+      const fcmDesc = document.getElementById('statusDescFcm');
+      const fcmToken = (window.AndroidNative && window.AndroidNative.getFcmToken) ? window.AndroidNative.getFcmToken() : '';
+      if (fcmToken && fcmToken.length > 20) {
+        fcmBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800';
+        fcmBadge.innerText = 'Connecté ✓';
+        fcmDesc.innerText = `Token actif (${fcmToken.slice(0, 12)}...)`;
+      } else {
+        fcmBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800';
+        fcmBadge.innerText = 'Inactif';
+        fcmDesc.innerText = 'Aucun token FCM détecté sur cet appareil';
+      }
+
+      // 3. Test temps réel Cloudflare Pages + KV
+      const cfBadge = document.getElementById('statusBadgeCloudflare');
+      const cfDesc = document.getElementById('statusDescCloudflare');
+      const kvBadge = document.getElementById('statusBadgeKv');
+      const kvDesc = document.getElementById('statusDescKv');
+
+      const t0 = Date.now();
+      try {
+        const res = await fetch(API_ENDPOINT + '?t=' + t0, { cache: 'no-store' });
+        const latency = Date.now() - t0;
+        if (res.ok) {
+          const data = await res.json();
+          cfBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800';
+          cfBadge.innerText = `En ligne (${latency}ms)`;
+          cfDesc.innerText = 'Worker Functions /state opérationnel';
+
+          if (data && data.jordan && data.lydie) {
+            kvBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800';
+            kvBadge.innerText = 'Synchronisé ✓';
+            const syncTime = new Date(data.updatedAt || Date.now()).toLocaleTimeString('fr-FR');
+            kvDesc.innerText = `LOVE8_COUPLE_KV • Maj à ${syncTime}`;
+          } else {
+            kvBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800';
+            kvBadge.innerText = 'Initialisation';
+            kvDesc.innerText = 'En attente de premier enregistrement';
+          }
+        } else {
+          throw new Error('HTTP ' + res.status);
+        }
+      } catch (e) {
+        cfBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800';
+        cfBadge.innerText = 'Hors ligne';
+        cfDesc.innerText = 'Impossible de joindre Cloudflare';
+        kvBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800';
+        kvBadge.innerText = 'Erreur';
+      }
+    }
+
+    async function manualSyncNow() {
+      triggerDeviceVibration([80, 40, 120]);
+      await registerFcmTokenToCloud();
+      await pollCloudState(true);
+      await refreshServiceStatusDiagnostics();
+      triggerBanner('🔄 SYNCHRONISATION TERMINÉE', 'État Cloud, Quiz et Token FCM synchronisés !', '📡');
     }
 
     const moodPresets = [
@@ -958,7 +1123,7 @@
       },
       fun: {
         Vérité: [
-          "Quelle est la petite habitude la plus bizarre ou drôle que tu as remarquée chez moi ?",
+          "Quelle est la petite habitude la plus bizarre ou drôle que tu aies remarquée chez moi ?",
           "Quel est le pire cadeau ou la pire surprise qu'on ait vécu ensemble ?",
           "Si on échangeait nos corps pendant 24h, quelle est la première chose que tu ferais ?",
           "Quelle est la chose la plus embarrassante que tu aies faite au début de notre relation ?",
@@ -1145,7 +1310,7 @@
         targetUser: 'Jordan',
         secretChoice: null,
         scores: { Jordan: 0, Lydie: 0 },
-        statusText: 'Tour de Jordan : Choisis ta réponse secrète pour que Lydie devine !'
+        statusText: 'Étape 1 : Jordan doit choisir sa réponse secrète pour que Lydie devine !'
       },
       sexyChallenge: {
         jordanToLydie: { date: '', photoId: 0, time: '', rated: false, tier: 0, coinsAwarded: 0, streak: 0, lastSentDate: '' },
@@ -1177,6 +1342,7 @@
       if (!state.quiz) {
         state.quiz = { qIndex: 0, targetUser: 'Jordan', secretChoice: null, scores: { Jordan: 0, Lydie: 0 }, statusText: 'Choisis une réponse !' };
       }
+      if (state.quiz.secretChoice === undefined) state.quiz.secretChoice = null;
       if (!state.quiz.scores) state.quiz.scores = { Jordan: 0, Lydie: 0 };
       if (!state.quiz.targetUser) state.quiz.targetUser = 'Jordan';
       if (!state.sexyChallenge) {
@@ -1194,7 +1360,7 @@
         document.body.classList.add('app-hidden');
       } else {
         document.body.classList.remove('app-hidden');
-        pollCloudState();
+        pollCloudState(true);
       }
     });
 
@@ -1428,7 +1594,6 @@
       } catch (e) {}
     }
 
-    // Détection automatique de l'emoji exact même si le serveur ou l'intent ne l'a pas passé
     function resolveEventEmoji(explicitEmoji, messageText, soundType) {
       if (explicitEmoji && explicitEmoji !== '❤️') return explicitEmoji;
       const str = (messageText || '') + ' ';
@@ -1441,7 +1606,9 @@
       return explicitEmoji || '❤️';
     }
 
-    // Pluie sur fond 100% noir pur (sans fermer l'application si on était déjà dedans !)
+    // Pluie sur fond 100% noir pur :
+    // - Si shouldSleepAfter = true (réveillé alors que l'app était fermée/en veille) -> ferme l'application dès la fin de la pluie !
+    // - Si shouldSleepAfter = false (on était déjà dans l'app) -> retire juste le fond noir et laisse l'app ouverte !
     function triggerBlackScreenRain(emoji, labelText, soundType = 'love', pattern = [200, 80, 300], shouldSleepAfter = false) {
       if (sleep15sTimer) clearTimeout(sleep15sTimer);
       if (sleepCountdownInterval) clearInterval(sleepCountdownInterval);
@@ -1458,7 +1625,7 @@
       playLoveSound(soundType);
       triggerDeviceVibration(pattern);
 
-      const animDurationMs = 2800;
+      const animDurationMs = 2600;
       spawnParticles(realEmoji, pattern, animDurationMs);
 
       if (blackRainTimer) clearTimeout(blackRainTimer);
@@ -1469,12 +1636,12 @@
           setTimeout(() => {
             blackOverlay.classList.add('hidden');
             document.documentElement.classList.remove('wake-blackout');
-          }, 400);
+          }, 300);
         } else {
           blackOverlay.classList.add('hidden');
           document.documentElement.classList.remove('wake-blackout');
         }
-      }, animDurationMs + 700);
+      }, animDurationMs + 350);
     }
 
     function closeBlackRainNow() {
@@ -1520,14 +1687,22 @@
       }
     }
 
-    // Appelé par le service natif Android lors d'un réveil FCM
+    // Appelé par le service natif Android (soit en réveil écran fermé avec wasSleeping=true, soit en direct dans l'app avec wasSleeping=false)
     window.onNativeWakeAlert = async function(emoji, title, message, evType, soundType, wasSleeping = true) {
-      document.documentElement.classList.add('wake-blackout');
+      if (wasSleeping) {
+        document.documentElement.classList.add('wake-blackout');
+      }
 
       if (evType === 'cat' || (title && title.toLowerCase().includes('douglasse'))) {
         document.documentElement.classList.remove('wake-blackout');
         if (wasSleeping) requestPhoneSleepNow();
         return;
+      }
+
+      // Empêche le polling de rejouer une 2e fois la même vibration
+      if (state.lastEvent && state.lastEvent.id) {
+        lastEventId = state.lastEvent.id;
+        localStorage.setItem('love8_last_event', String(lastEventId));
       }
 
       const isDrawingEvent = (evType === 'drawing' || evType === 'other' || (title && title.includes('dessin')));
@@ -1541,12 +1716,12 @@
           [250, 100, 350],
           Boolean(wasSleeping)
         );
+        pollCloudState(true);
       } else {
-        // C'est un dessin : on affiche immédiatement l'écran de verrouillage Love8 et on charge le dernier dessin du serveur
         toggleLockscreen(true, true, Boolean(wasSleeping));
         playLoveSound(soundType || 'rose');
         triggerDeviceVibration([200, 80, 250]);
-        await pollCloudState();
+        await pollCloudState(true);
         await fetchMediaIfNeeded('latest_drawing', state.latestDrawing?.id || ('draw_' + Date.now()));
         renderAll();
       }
@@ -1559,7 +1734,9 @@
     }
 
     async function saveState() {
-      state.updatedAt = Date.now();
+      isSaving = true;
+      lastSaveTimestamp = Date.now();
+      state.updatedAt = lastSaveTimestamp;
       state.activeUser = currentUser;
 
       if (state.cat && state.cat.photo) delete state.cat.photo;
@@ -1577,12 +1754,19 @@
           body: JSON.stringify(state)
         });
         if (res.ok) {
+          const data = await res.json();
+          if (data && data.updatedAt) {
+            state.updatedAt = data.updatedAt;
+            localStorage.setItem('love8_state', JSON.stringify(state));
+          }
           document.getElementById('syncDot').className = 'w-2 h-2 rounded-full bg-emerald-500 inline-block';
         } else {
           document.getElementById('syncDot').className = 'w-2 h-2 rounded-full bg-amber-500 inline-block';
         }
       } catch (e) {
         document.getElementById('syncDot').className = 'w-2 h-2 rounded-full bg-amber-500 inline-block';
+      } finally {
+        isSaving = false;
       }
     }
 
@@ -1623,16 +1807,25 @@
       } catch (e) {}
     }
 
-    async function pollCloudState() {
-      if (document.hidden) return;
+    // Synchronisation temps réel sans blocage d'horloge entre les 2 téléphones !
+    async function pollCloudState(forceSync = false) {
+      if (document.hidden && !forceSync) return;
+      if (isSaving && !forceSync) return;
+      // Évite d'écraser un clic local qui vient d'avoir lieu il y a moins de 1,5 seconde
+      if (!forceSync && (Date.now() - lastSaveTimestamp < 1500)) return;
 
+      const t0 = Date.now();
       try {
-        const res = await fetch(API_ENDPOINT + '?t=' + Date.now(), { cache: 'no-store' });
+        const res = await fetch(API_ENDPOINT + '?t=' + t0, { cache: 'no-store' });
         if (!res.ok) return;
+        lastCloudLatencyMs = Date.now() - t0;
+        lastCloudOk = true;
+        document.getElementById('syncDot').className = 'w-2 h-2 rounded-full bg-emerald-500 inline-block';
+
         const remote = await res.json();
         if (remote && remote.updatedAt && remote.jordan && remote.lydie) {
-          const hasNewAck = remote.lastEvent && state.lastEvent && remote.lastEvent.ack && !state.lastEvent.ack;
-          if (!state.updatedAt || remote.updatedAt >= state.updatedAt || hasNewAck) {
+          // On accepte toute mise à jour différente de celle en mémoire (insensible au décalage d'horloge entre téléphones)
+          if (forceSync || remote.updatedAt !== state.updatedAt) {
             state = remote;
             sanitizeStateStructure();
             localStorage.setItem('love8_state', JSON.stringify(state));
@@ -1687,7 +1880,9 @@
             }
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        lastCloudOk = false;
+      }
     }
 
     function openMoodLocModal() {
@@ -1804,7 +1999,6 @@
         const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
         const slot = state.sexyChallenge[slotKey];
 
-        // Calcul de la série (streak) sur plusieurs jours
         let newStreak = slot.streak || 0;
         if (slot.lastSentDate !== today) {
           if (slot.lastSentDate === yesterday) {
@@ -1912,7 +2106,6 @@
       const slot = state.sexyChallenge[slotKey];
       if (!slot || slot.rated || currentUser === senderName) return;
 
-      // Calcul du bonus automatique de série (dès 2 jours consécutifs : +10 pièces par jour de série, max +100)
       const streakDays = slot.streak || 1;
       const streakBonus = streakDays > 1 ? Math.min(100, streakDays * 10) : 0;
       const totalAwarded = baseCoins + streakBonus;
@@ -2010,7 +2203,7 @@
       if (tab === 'dessin') loadCloudArchives();
     }
 
-    function spawnParticles(emoji, pattern = [150, 70, 250], maxDurationMs = 2800) {
+    function spawnParticles(emoji, pattern = [150, 70, 250], maxDurationMs = 2600) {
       if (document.hidden) return;
       triggerDeviceVibration(pattern);
       for (let i = 0; i < 36; i++) {
@@ -2238,34 +2431,36 @@
     }
 
     // ==================== GESTION DU QUIZ 100 QUESTIONS TOUR PAR TOUR ====================
-    function nextQuizQuestion() {
+    async function nextQuizQuestion() {
+      await pollCloudState(true);
       state.quiz.qIndex = ((state.quiz.qIndex || 0) + 1) % coupleQuizPool.length;
-      // Inverse automatiquement le rôle de celui qui pose la question
       state.quiz.targetUser = state.quiz.targetUser === 'Jordan' ? 'Lydie' : 'Jordan';
       const guesser = state.quiz.targetUser === 'Jordan' ? 'Lydie' : 'Jordan';
       state.quiz.secretChoice = null;
       state.quiz.statusText = `Étape 1 : ${state.quiz.targetUser} doit choisir sa réponse secrète (pour que ${guesser} devine ensuite) !`;
-      saveState();
+      await saveState();
     }
 
-    function selectQuizOption(optIndex) {
+    async function selectQuizOption(optIndex) {
       const idx = (state.quiz.qIndex || 0) % coupleQuizPool.length;
       const qObj = coupleQuizPool[idx];
       const target = state.quiz.targetUser || 'Jordan';
       const guesser = target === 'Jordan' ? 'Lydie' : 'Jordan';
 
+      const isSecretLocked = (state.quiz.secretChoice !== null && state.quiz.secretChoice !== undefined);
+
       // ÉTAPE 1 : La personne ciblée (targetUser) verrouille sa réponse secrète
-      if (state.quiz.secretChoice === null) {
+      if (!isSecretLocked) {
         if (currentUser !== target) {
           triggerBanner('⏳ ATTENDS TON TOUR', `C'est d'abord à ${target} de choisir sa réponse secrète !`, '🔒');
           triggerDeviceVibration([80, 50, 80]);
           return;
         }
-        state.quiz.secretChoice = optIndex;
+        state.quiz.secretChoice = Number(optIndex);
         state.quiz.statusText = `🔒 ${target} a verrouillé sa réponse secrète ! Étape 2 : C'est au tour de ${guesser} de deviner !`;
         playLoveSound('env');
         triggerBanner('🎯 RÉPONSE VERROUILLÉE', `Au tour de ${guesser} de deviner sur son téléphone !`, '🤫');
-        saveState();
+        await saveState();
         return;
       }
 
@@ -2276,16 +2471,15 @@
         return;
       }
 
-      if (optIndex === state.quiz.secretChoice) {
+      if (Number(optIndex) === Number(state.quiz.secretChoice)) {
         state.coins = (state.coins || 0) + 25;
         state.quiz.scores[guesser] = (state.quiz.scores[guesser] || 0) + 1;
         state.cat.xp = (state.cat.xp || 0) + 30;
         if (state.cat.xp >= 100) { state.cat.level += 1; state.cat.xp -= 100; }
 
-        // On passe automatiquement à la question suivante et on inverse les rôles !
         const nextIdx = (idx + 1) % coupleQuizPool.length;
         state.quiz.qIndex = nextIdx;
-        state.quiz.targetUser = guesser; // Celui qui vient de deviner pose la prochaine question !
+        state.quiz.targetUser = guesser;
         state.quiz.secretChoice = null;
         state.quiz.statusText = `🎉 BRAVO ${guesser} ! C'était bien « ${qObj.options[optIndex]} » (+25 🪙) ! Maintenant à ${guesser} de verrouiller sa réponse pour la question ${nextIdx + 1} !`;
 
@@ -2295,7 +2489,7 @@
         state.quiz.statusText = `😜 Raté ${guesser} ! Ce n'était pas « ${qObj.options[optIndex]} », essaie une autre réponse !`;
         triggerDeviceVibration([100, 50, 100]);
       }
-      saveState();
+      await saveState();
     }
 
     function handleCapsulePhotoUpload(event) {
@@ -2469,7 +2663,6 @@
       state.latestDrawing = { id: drawId, caption: `« ${note} »`, author: currentUser, time: `${dateStr} à ${now}` };
       state.coins = (state.coins || 0) + 15;
 
-      // On sauvegarde d'abord l'image du dessin sur le serveur AVANT d'envoyer la notification FCM
       try {
         await fetch(API_ENDPOINT + '?action=media', {
           method: 'POST',
@@ -2555,7 +2748,6 @@
       document.getElementById('lydieStreakCount').innerText = lSlot.streak || 0;
       document.getElementById('sexyStreakBadge').innerText = Math.max(jSlot.streak || 0, lSlot.streak || 0);
 
-      // Carte Jordan -> Lydie
       const jSentToday = jSlot.date === today && jSlot.photoId;
       const jStatusEl = document.getElementById('sexyStatusJordan');
       const jActionEl = document.getElementById('sexyActionJordan');
@@ -2575,7 +2767,6 @@
         }
       }
 
-      // Carte Lydie -> Jordan
       const lSentToday = lSlot.date === today && lSlot.photoId;
       const lStatusEl = document.getElementById('sexyStatusLydie');
       const lActionEl = document.getElementById('sexyActionLydie');
@@ -2753,7 +2944,7 @@
       const qObj = coupleQuizPool[qIdx];
       const targetUser = state.quiz.targetUser || 'Jordan';
       const guesserUser = targetUser === 'Jordan' ? 'Lydie' : 'Jordan';
-      const isSecretLocked = state.quiz.secretChoice !== null;
+      const isSecretLocked = (state.quiz.secretChoice !== null && state.quiz.secretChoice !== undefined);
 
       document.getElementById('quizNumberBadge').innerText = `${qIdx + 1}/${coupleQuizPool.length}`;
       document.getElementById('quizScorePill').innerText = `👦🏻 ${state.quiz.scores?.Jordan || 0} • 👩🏻 ${state.quiz.scores?.Lydie || 0}`;
@@ -2775,7 +2966,7 @@
 
       const canClickQuiz = (!isSecretLocked && currentUser === targetUser) || (isSecretLocked && currentUser === guesserUser);
       document.getElementById('quizOptionsGrid').innerHTML = qObj.options.map((opt, idx) => {
-        const isMySecret = isSecretLocked && currentUser === targetUser && state.quiz.secretChoice === idx;
+        const isMySecret = isSecretLocked && currentUser === targetUser && Number(state.quiz.secretChoice) === idx;
         return `
           <button onclick="selectQuizOption(${idx})" class="p-3 rounded-2xl text-left border transition ${isMySecret ? 'bg-purple-100 border-purple-500 text-purple-950' : (canClickQuiz ? 'bg-slate-50 hover:bg-pink-50 border-slate-200 active:scale-95' : 'bg-slate-100/70 border-slate-200 text-slate-400 opacity-75')}">
             ${opt} ${isMySecret ? '🔒' : ''}
@@ -2834,8 +3025,8 @@
     updateCoupleTimer();
     checkUserFirstLaunch();
     renderAll();
-    pollCloudState();
-    setInterval(pollCloudState, 2500);
+    pollCloudState(true);
+    setInterval(() => pollCloudState(false), 2000);
 
     window.addEventListener('DOMContentLoaded', () => {
       setTimeout(registerFcmTokenToCloud, 2000);
