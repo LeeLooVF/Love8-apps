@@ -212,6 +212,7 @@ jobs:
               public void onMessageReceived(RemoteMessage remoteMessage) {
                   super.onMessageReceived(remoteMessage);
                   if (remoteMessage.getData().size() > 0) {
+                      String eventId = remoteMessage.getData().get("eventId");
                       String title = remoteMessage.getData().get("title");
                       String body = remoteMessage.getData().get("body");
                       String sound = remoteMessage.getData().get("sound");
@@ -219,6 +220,7 @@ jobs:
                       String evType = remoteMessage.getData().get("evType");
                       if (evType == null) evType = remoteMessage.getData().get("type");
 
+                      if (eventId == null) eventId = String.valueOf(System.currentTimeMillis());
                       if (title == null) title = "Love8 ❤️";
                       if (body == null) body = "Nouvelle vibration !";
                       if (emoji == null) emoji = "❤️";
@@ -229,23 +231,23 @@ jobs:
                       KeyguardManager km = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
                       boolean isInteractive = pm != null && pm.isInteractive();
                       boolean isLocked = km != null && km.isKeyguardLocked();
-                      boolean wasInForeground = (isInteractive && !isLocked && MainActivity.isAppInForeground && MainActivity.currentInstance != null);
+                      boolean isScreenActiveAndUnlocked = (isInteractive && !isLocked);
 
-                      // CAS 1 : Tu es DÉJÀ dans l'application ouverte au premier plan !
-                      // On déclenche directement l'alerte dans la WebView SANS fermer l'application après (shouldCloseApp = false)
-                      if (wasInForeground) {
-                          MainActivity.currentInstance.triggerInAppAlertFromService(emoji, title, body, evType, sound);
+                      // CAS 1 : Tu es DÉJÀ dans l'application (écran allumé et app au premier plan)
+                      // -> On déclenche directement la pluie ou le dessin dans la WebView SANS fermer l'application ensuite !
+                      if (isScreenActiveAndUnlocked && MainActivity.isAppInForeground && MainActivity.activeInstance != null) {
+                          MainActivity.activeInstance.triggerInAppRealtimeEvent(eventId, emoji, title, body, evType, sound);
                           return;
                       }
 
-                      // CAS 2 : L'application était fermée, en arrière-plan ou écran verrouillé/éteint !
-                      // On réveille l'écran, on joue l'animation sur fond noir, puis l'application se fermera toute seule à la fin !
-                      if (pm != null) {
+                      // CAS 2 : L'application était FERMÉE ou le téléphone était en veille
+                      // -> On allume l'écran, on joue la pluie sur fond noir et on FERMERA complètement l'application juste après !
+                      if (pm != null && !isScreenActiveAndUnlocked) {
                           PowerManager.WakeLock screenLock = pm.newWakeLock(
                               PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
                               "love8:fcmWake"
                           );
-                          screenLock.acquire(5500);
+                          screenLock.acquire(4500);
                       }
 
                       Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -260,7 +262,8 @@ jobs:
                       Intent intent = new Intent(this, MainActivity.class);
                       intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NO_ANIMATION);
                       intent.putExtra("lock_alert", true);
-                      intent.putExtra("was_sleeping", true);
+                      intent.putExtra("should_close_after", true);
+                      intent.putExtra("eventId", eventId);
                       intent.putExtra("emoji", emoji);
                       intent.putExtra("title", title);
                       intent.putExtra("message", body);
@@ -293,7 +296,9 @@ jobs:
                             .setCategory(Notification.CATEGORY_ALARM);
                       }
 
-                      nm.notify(999, nb.build());
+                      if (nm != null) {
+                          nm.notify(999, nb.build());
+                      }
                       startActivity(intent);
                   }
               }
@@ -327,12 +332,12 @@ jobs:
 
           public class MainActivity extends BridgeActivity {
               public static boolean isAppInForeground = false;
-              public static MainActivity currentInstance = null;
+              public static MainActivity activeInstance = null;
 
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
-                  currentInstance = this;
+                  activeInstance = this;
 
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                       setShowWhenLocked(true);
@@ -357,8 +362,8 @@ jobs:
               @Override
               public void onResume() {
                   super.onResume();
-                  currentInstance = this;
                   isAppInForeground = true;
+                  activeInstance = this;
               }
 
               @Override
@@ -370,27 +375,26 @@ jobs:
               @Override
               public void onDestroy() {
                   super.onDestroy();
-                  if (currentInstance == this) {
-                      currentInstance = null;
+                  if (activeInstance == this) {
+                      activeInstance = null;
                   }
               }
 
-              public void triggerInAppAlertFromService(String emoji, String title, String msg, String evType, String sound) {
+              // Déclenché en direct quand l'utilisateur est DÉJÀ dans l'application (ne ferme jamais l'application)
+              public void triggerInAppRealtimeEvent(String eventId, String emoji, String title, String msg, String evType, String sound) {
+                  if (this.bridge == null || this.bridge.getWebView() == null) return;
+                  final String safeId = (eventId != null ? eventId : "0").replace("'", "\\'");
                   final String safeEmoji = (emoji != null ? emoji : "❤️").replace("'", "\\'");
                   final String safeTitle = (title != null ? title : "Love8").replace("'", "\\'");
-                  final String safeMsg = (msg != null ? msg : "Vibration !").replace("'", "\\'");
+                  final String safeMsg = (msg != null ? msg : "").replace("'", "\\'");
                   final String safeType = (evType != null ? evType : "vibration").replace("'", "\\'");
                   final String safeSound = (sound != null ? sound : "love").replace("'", "\\'");
 
+                  final String js = "if(window.onInAppFcmPush){window.onInAppFcmPush('" + safeId + "','" + safeEmoji + "','" + safeTitle + "','" + safeMsg + "','" + safeType + "','" + safeSound + "');}";
                   runOnUiThread(new Runnable() {
                       @Override
                       public void run() {
-                          if (MainActivity.this.bridge != null && MainActivity.this.bridge.getWebView() != null) {
-                              MainActivity.this.bridge.getWebView().evaluateJavascript(
-                                  "if(window.onNativeWakeAlert) window.onNativeWakeAlert('" + safeEmoji + "','" + safeTitle + "','" + safeMsg + "','" + safeType + "','" + safeSound + "', false);",
-                                  null
-                              );
-                          }
+                          MainActivity.this.bridge.getWebView().evaluateJavascript(js, null);
                       }
                   });
               }
@@ -466,28 +470,31 @@ jobs:
                           setTurnScreenOn(true);
                       }
 
-                      boolean wasSleeping = intent.getBooleanExtra("was_sleeping", true);
+                      boolean shouldCloseAfter = intent.getBooleanExtra("should_close_after", true);
+                      String eventId = intent.getStringExtra("eventId");
                       String emoji = intent.getStringExtra("emoji");
                       String title = intent.getStringExtra("title");
                       String msg = intent.getStringExtra("message");
                       String evType = intent.getStringExtra("evType");
                       String sound = intent.getStringExtra("sound");
+                      if (eventId == null) eventId = "0";
                       if (emoji == null) emoji = "❤️";
                       if (title == null) title = "Love8";
                       if (msg == null) msg = "Vibration reçue !";
                       if (evType == null) evType = "vibration";
                       if (sound == null) sound = "love";
 
+                      final String safeId = eventId.replace("'", "\\'");
                       final String safeEmoji = emoji.replace("'", "\\'");
                       final String safeTitle = title.replace("'", "\\'");
                       final String safeMsg = msg.replace("'", "\\'");
                       final String safeType = evType.replace("'", "\\'");
                       final String safeSound = sound.replace("'", "\\'");
-                      final String sleepFlag = wasSleeping ? "true" : "false";
+                      final String closeFlag = shouldCloseAfter ? "true" : "false";
 
                       final String jsCall = "document.documentElement.classList.add('wake-blackout');" +
-                          "if(window.onNativeWakeAlert){window.onNativeWakeAlert('" + safeEmoji + "','" + safeTitle + "','" + safeMsg + "','" + safeType + "','" + safeSound + "'," + sleepFlag + ");}" +
-                          "else{window.__pendingWakeAlert=['" + safeEmoji + "','" + safeTitle + "','" + safeMsg + "','" + safeType + "','" + safeSound + "'," + sleepFlag + "];}";
+                          "if(window.onNativeWakeAlert){window.onNativeWakeAlert('" + safeEmoji + "','" + safeTitle + "','" + safeMsg + "','" + safeType + "','" + safeSound + "'," + closeFlag + ",'" + safeId + "');}" +
+                          "else{window.__pendingWakeAlert=['" + safeEmoji + "','" + safeTitle + "','" + safeMsg + "','" + safeType + "','" + safeSound + "'," + closeFlag + ",'" + safeId + "'];}";
 
                       this.bridge.getWebView().post(new Runnable() {
                           @Override
@@ -514,6 +521,7 @@ jobs:
                       return prefs.getString("fcm_token", "");
                   }
 
+                  // Ferme complètement l'application et supprime la notification 999 lorsqu'elle a été ouverte uniquement par une vibration
                   @JavascriptInterface
                   public void turnOffScreenAndSleep() {
                       runOnUiThread(new Runnable() {
@@ -521,7 +529,9 @@ jobs:
                           public void run() {
                               try {
                                   NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
-                                  if (nm != null) nm.cancel(999);
+                                  if (nm != null) {
+                                      nm.cancel(999);
+                                  }
 
                                   WindowManager.LayoutParams params = getWindow().getAttributes();
                                   params.screenBrightness = 0.01f;
@@ -543,6 +553,7 @@ jobs:
                                   } else {
                                       finish();
                                   }
+                                  System.exit(0);
                               } catch (Exception ignored) {}
                           }
                       });
