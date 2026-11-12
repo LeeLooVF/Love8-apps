@@ -154,8 +154,6 @@ jobs:
                       android:label="@string/title_activity_main"
                       android:theme="@style/AppTheme.NoActionBarLaunch"
                       android:launchMode="singleTask"
-                      android:showWhenLocked="true"
-                      android:turnScreenOn="true"
                       android:exported="true">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
@@ -202,6 +200,17 @@ jobs:
           import com.google.firebase.messaging.RemoteMessage;
 
           public class Love8FirebaseMessagingService extends FirebaseMessagingService {
+              public static PowerManager.WakeLock currentWakeLock = null;
+
+              public static void releaseActiveWakeLock() {
+                  try {
+                      if (currentWakeLock != null && currentWakeLock.isHeld()) {
+                          currentWakeLock.release();
+                      }
+                  } catch (Exception ignored) {}
+                  currentWakeLock = null;
+              }
+
               @Override
               public void onNewToken(String token) {
                   super.onNewToken(token);
@@ -233,21 +242,22 @@ jobs:
                       boolean isLocked = km != null && km.isKeyguardLocked();
                       boolean isScreenActiveAndUnlocked = (isInteractive && !isLocked);
 
-                      // CAS 1 : Tu es DÉJÀ dans l'application (écran allumé et app au premier plan)
-                      // -> On déclenche directement la pluie ou le dessin dans la WebView SANS fermer l'application ensuite !
+                      // CAS 1 : L'utilisateur utilise déjà l'application (écran déverrouillé et app au premier plan)
                       if (isScreenActiveAndUnlocked && MainActivity.isAppInForeground && MainActivity.activeInstance != null) {
                           MainActivity.activeInstance.triggerInAppRealtimeEvent(eventId, emoji, title, body, evType, sound);
                           return;
                       }
 
-                      // CAS 2 : L'application était FERMÉE ou le téléphone était en veille
-                      // -> On allume l'écran, on joue la pluie sur fond noir et on FERMERA complètement l'application juste après !
+                      // CAS 2 : Téléphone en veille ou application fermée -> Réveil court contrôlé
                       if (pm != null && !isScreenActiveAndUnlocked) {
-                          PowerManager.WakeLock screenLock = pm.newWakeLock(
-                              PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                          releaseActiveWakeLock();
+                          currentWakeLock = pm.newWakeLock(
+                              PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE,
                               "love8:fcmWake"
                           );
-                          screenLock.acquire(4500);
+                          currentWakeLock.setReferenceCounted(false);
+                          boolean isDrawing = "drawing".equals(evType) || (title != null && title.contains("dessin"));
+                          currentWakeLock.acquire(isDrawing ? 15000 : 2800);
                       }
 
                       Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -321,6 +331,8 @@ jobs:
           import android.os.Build;
           import android.os.Bundle;
           import android.os.Environment;
+          import android.os.Handler;
+          import android.os.Looper;
           import android.os.PowerManager;
           import android.os.VibrationEffect;
           import android.os.Vibrator;
@@ -339,14 +351,6 @@ jobs:
                   super.onCreate(savedInstanceState);
                   activeInstance = this;
 
-                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                      setShowWhenLocked(true);
-                      setTurnScreenOn(true);
-                  }
-                  getWindow().addFlags(
-                      WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
-                      WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-                  );
                   getWindow().getDecorView().setBackgroundColor(Color.BLACK);
 
                   requestEssentialPermissions();
@@ -380,7 +384,6 @@ jobs:
                   }
               }
 
-              // Déclenché en direct quand l'utilisateur est DÉJÀ dans l'application (ne ferme jamais l'application)
               public void triggerInAppRealtimeEvent(String eventId, String emoji, String title, String msg, String evType, String sound) {
                   if (this.bridge == null || this.bridge.getWebView() == null) return;
                   final String safeId = (eventId != null ? eventId : "0").replace("'", "\\'");
@@ -521,39 +524,55 @@ jobs:
                       return prefs.getString("fcm_token", "");
                   }
 
-                  // Ferme complètement l'application et supprime la notification 999 lorsqu'elle a été ouverte uniquement par une vibration
+                  // Libère immédiatement le WakeLock, coupe les flags d'allumage, baisse la luminosité à 0
+                  // et ferme proprement la tâche pour que le téléphone retourne immédiatement en veille
                   @JavascriptInterface
                   public void turnOffScreenAndSleep() {
                       runOnUiThread(new Runnable() {
                           @Override
                           public void run() {
                               try {
+                                  Love8FirebaseMessagingService.releaseActiveWakeLock();
+
                                   NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
                                   if (nm != null) {
                                       nm.cancel(999);
                                   }
 
-                                  WindowManager.LayoutParams params = getWindow().getAttributes();
-                                  params.screenBrightness = 0.01f;
-                                  getWindow().setAttributes(params);
-
                                   getWindow().clearFlags(
                                       WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
                                       WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
                                       WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
-                                      WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+                                      WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
+                                      WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
                                   );
+
                                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                                       setTurnScreenOn(false);
                                       setShowWhenLocked(false);
                                   }
-                                  moveTaskToBack(true);
-                                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                      finishAndRemoveTask();
-                                  } else {
-                                      finish();
-                                  }
-                                  System.exit(0);
+
+                                  WindowManager.LayoutParams params = getWindow().getAttributes();
+                                  params.screenBrightness = 0.0f;
+                                  params.buttonBrightness = 0.0f;
+                                  getWindow().setAttributes(params);
+
+                                  // On laisse 180ms au WindowManager d'Android pour appliquer la suppression des flags et l'écran noir
+                                  // avant de détruire l'Activity, afin que l'écran de verrouillage s'éteigne aussitôt !
+                                  new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                                      @Override
+                                      public void run() {
+                                          try {
+                                              moveTaskToBack(true);
+                                              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                                  finishAndRemoveTask();
+                                              } else {
+                                                  finish();
+                                              }
+                                              overridePendingTransition(0, 0);
+                                          } catch (Exception ignored) {}
+                                      }
+                                  }, 180);
                               } catch (Exception ignored) {}
                           }
                       });
