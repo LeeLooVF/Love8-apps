@@ -1,25 +1,11 @@
-// Mémoire vive Edge pour éviter la saturation du quota de 1000 PUT/jour de Cloudflare KV
 let memoryState = null;
-let memoryLiveCanvas = "{}";
 let memoryMedia = {};
 let lastKvWriteTime = 0;
 
 function extractAndStripBase64(obj) {
   if (!obj || typeof obj !== "object") return;
   if (obj.cat && obj.cat.photo) delete obj.cat.photo;
-  if (obj.gallery && Array.isArray(obj.gallery)) {
-    obj.gallery = obj.gallery.slice(0, 4).map(item => {
-      if (item && item.dataUrl && item.id) {
-        memoryMedia["draw_" + item.id] = item.dataUrl;
-      }
-      return {
-        id: item.id || ("mem_" + Date.now()),
-        caption: item.caption || "",
-        author: item.author || "",
-        time: item.time || ""
-      };
-    });
-  }
+  if (obj.wishes) delete obj.wishes;
   if (obj.latestDrawing && obj.latestDrawing.dataUrl) {
     const drawId = obj.latestDrawing.id || ("mem_" + Date.now());
     obj.latestDrawing.id = drawId;
@@ -28,11 +14,17 @@ function extractAndStripBase64(obj) {
     delete obj.latestDrawing.dataUrl;
   }
   ["jordan", "lydie"].forEach(person => {
-    if (obj[person] && obj[person].avatar && obj[person].avatar.startsWith("data:")) {
-      const avId = obj[person].avatarId || Date.now();
-      obj[person].avatarId = avId;
-      memoryMedia["avatar_" + person] = obj[person].avatar;
-      delete obj[person].avatar;
+    if (obj[person]) {
+      delete obj[person].bat;
+      delete obj[person].lat;
+      delete obj[person].lng;
+      delete obj[person].loc;
+      if (obj[person].avatar && obj[person].avatar.startsWith("data:")) {
+        const avId = obj[person].avatarId || Date.now();
+        obj[person].avatarId = avId;
+        memoryMedia["avatar_" + person] = obj[person].avatar;
+        delete obj[person].avatar;
+      }
     }
   });
 }
@@ -81,7 +73,7 @@ export async function onRequest(context) {
 
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"
   };
@@ -91,7 +83,7 @@ export async function onRequest(context) {
   }
 
   try {
-    // 1. MICRO-ENDPOINT ULTRA-LÉGER (< 120 OCTETS) POUR LE SERVICE ANDROID EN VEILLE
+    // 1. MICRO-ENDPOINT (< 120 OCTETS) POUR LE SERVICE ANDROID EN VEILLE
     if (action === "ping") {
       if (!memoryState && env.LOVE8_COUPLE_KV) {
         const raw = await env.LOVE8_COUPLE_KV.get("state_jordan_lydie");
@@ -100,7 +92,7 @@ export async function onRequest(context) {
         }
       }
       const ev = (memoryState && memoryState.lastEvent) ? memoryState.lastEvent : {};
-      const miniPing = {
+      return new Response(JSON.stringify({
         id: ev.id || 0,
         s: ev.sender || "",
         t: ev.type || "vibration",
@@ -111,13 +103,12 @@ export async function onRequest(context) {
         ack: ev.ack || 0,
         ackBy: ev.ackBy || "",
         ackAt: ev.ackAt || ""
-      };
-      return new Response(JSON.stringify(miniPing), {
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
-    // 2. ACCUSÉ DE RÉCEPTION RÉEL (« VU / VIBRÉ SUR LE TÉLÉPHONE DU PARTENAIRE ✓✓ »)
+    // 2. ACCUSÉ DE RÉCEPTION RÉEL (« VU / VIBRÉ ✓✓ »)
     if (action === "ack" && request.method === "POST") {
       const ackData = await request.json();
       if (!memoryState && env.LOVE8_COUPLE_KV) {
@@ -142,7 +133,7 @@ export async function onRequest(context) {
       });
     }
 
-    // 3. STOCKAGE DÉDIÉ DES MÉDIAS WEBP (AVATARS & DERNIER DESSIN HORS /STATE)
+    // 3. STOCKAGE DÉDIÉ DES MÉDIAS WEBP (AVATARS, CAPSULES & DERNIER DESSIN)
     if (action === "media") {
       const key = url.searchParams.get("key") || "latest_drawing";
       if (request.method === "GET") {
@@ -172,22 +163,7 @@ export async function onRequest(context) {
       }
     }
 
-    // 4. CANAL LIVE DESSIN (100% EN MÉMOIRE VIVE POUR 0 QUOTA KV CONSOMMÉ)
-    if (action === "live") {
-      if (request.method === "GET") {
-        return new Response(memoryLiveCanvas || "{}", {
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
-      }
-      if (request.method === "POST") {
-        memoryLiveCanvas = await request.text();
-        return new Response(JSON.stringify({ ok: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
-      }
-    }
-
-    // 5. ARCHIVE CLOUD R2 / KV POUR LES DESSINS
+    // 4. ARCHIVE CLOUD R2 / KV POUR LES DESSINS
     if (action === "archive") {
       if (request.method === "GET") {
         const listRaw = env.LOVE8_COUPLE_KV ? await env.LOVE8_COUPLE_KV.get("archive_index_list") : "[]";
@@ -223,7 +199,7 @@ export async function onRequest(context) {
             const listRaw = await env.LOVE8_COUPLE_KV.get("archive_index_list");
             const list = listRaw ? JSON.parse(listRaw) : [];
             list.unshift(item);
-            await env.LOVE8_COUPLE_KV.put("archive_index_list", JSON.stringify(list.slice(0, 60)));
+            await env.LOVE8_COUPLE_KV.put("archive_index_list", JSON.stringify(list.slice(0, 40)));
           }
         } catch (kvErr) {}
 
@@ -233,7 +209,7 @@ export async function onRequest(context) {
       }
     }
 
-    // 6. ÉTAT PRINCIPAL DU COUPLE (< 1,5 KO GARANTI + ÉCRITURE KV DIFFÉRÉE)
+    // 5. ÉTAT PRINCIPAL ULTRA-LÉGER (< 1 KO)
     if (request.method === "GET") {
       if (!memoryState && env.LOVE8_COUPLE_KV) {
         const raw = await env.LOVE8_COUPLE_KV.get("state_jordan_lydie");
@@ -251,16 +227,12 @@ export async function onRequest(context) {
 
     if (request.method === "POST") {
       const incoming = await request.json();
-      const isUrgent = Boolean(incoming.urgent);
-      delete incoming.urgent;
-
       extractAndStripBase64(incoming);
       memoryState = mergeCoupleState(memoryState, incoming);
       memoryState.updatedAt = Date.now();
 
       const now = Date.now();
-      // Écrit sur le disque KV uniquement si urgent (vibration, dessin, jeu) ou toutes les 5 minutes
-      if (isUrgent || (now - lastKvWriteTime > 300000)) {
+      if (now - lastKvWriteTime > 10000) {
         lastKvWriteTime = now;
         try {
           if (env.LOVE8_COUPLE_KV) {
@@ -278,7 +250,7 @@ export async function onRequest(context) {
       });
     }
 
-    return new Response("Love8 Couple API Ready", { headers: corsHeaders });
+    return new Response("Love8 Light API Ready", { headers: corsHeaders });
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
       status: 200,
