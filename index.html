@@ -14,6 +14,17 @@
       -webkit-tap-highlight-color: transparent;
       overflow-x: hidden;
     }
+    /* Masquage immédiat de l'interface d'accueil lors d'un réveil FCM (aucun flash de l'accueil) */
+    html.wake-blackout,
+    html.wake-blackout body {
+      background: #000000 !important;
+    }
+    html.wake-blackout header,
+    html.wake-blackout main,
+    html.wake-blackout nav {
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
     body.app-hidden * {
       animation-play-state: paused !important;
     }
@@ -114,6 +125,7 @@
   <!-- INPUTS FICHIERS CACHÉS -->
   <input id="fileInputAvatar" type="file" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)" />
   <input id="fileInputCapsule" type="file" accept="image/*" class="hidden" onchange="handleCapsulePhotoUpload(event)" />
+  <input id="fileInputSexyPhoto" type="file" accept="image/*" class="hidden" onchange="handleSexyPhotoUpload(event)" />
 
   <!-- ==================== MODALE DE SÉLECTION INITIALE (PREMIER DÉMARRAGE) ==================== -->
   <div id="userSelectionModal" class="fixed inset-0 z-[99999] hidden bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
@@ -139,15 +151,23 @@
     </div>
   </div>
 
-  <!-- ==================== MODALE DE SÉLECTION : HUMEUR UNIQUEMENT ==================== -->
+  <!-- ==================== MODALE DE SÉLECTION : HUMEUR + LIEU ==================== -->
   <div id="moodLocModal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
-    <div class="bg-white w-full max-w-md rounded-3xl p-5 space-y-4 shadow-2xl border border-pink-100 max-h-[85vh] overflow-y-auto">
+    <div class="bg-white w-full max-w-md rounded-3xl p-5 space-y-4 shadow-2xl border border-pink-100 max-h-[88vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 class="font-extrabold text-base text-purple-950">😊 Choisir mon Humeur</h3>
+        <h3 class="font-extrabold text-base text-purple-950">😊 Mon Humeur & 📍 Mon Lieu</h3>
         <button onclick="closeMoodLocModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold text-xs">✕</button>
       </div>
 
-      <div id="moodPresetList" class="grid grid-cols-2 gap-2 text-xs font-bold"></div>
+      <div>
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-purple-700 mb-2">😊 Choisir mon Humeur</p>
+        <div id="moodPresetList" class="grid grid-cols-2 gap-2 text-xs font-bold"></div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-100">
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-pink-600 mb-2">📍 Où suis-je en ce moment ?</p>
+        <div id="locationPresetList" class="grid grid-cols-2 gap-2 text-xs font-bold"></div>
+      </div>
 
       <button onclick="closeMoodLocModal()" class="w-full py-3 rounded-2xl gradient-card text-white text-xs font-extrabold uppercase tracking-wider shadow">
         ✔️ Terminé
@@ -155,15 +175,68 @@
     </div>
   </div>
 
+  <!-- ==================== MODALE VISIONNEUSE PHOTO SEXY & ATTRIBUTION DES 5 PALIERS ==================== -->
+  <div id="sexyPhotoModal" class="fixed inset-0 z-[99985] hidden bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 text-white w-full max-w-md rounded-3xl p-5 space-y-3 shadow-2xl border border-pink-500/40 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
+        <div>
+          <h3 id="sexyModalTitle" class="font-extrabold text-base text-pink-400">🔥 Photo Sexy du Jour</h3>
+          <p id="sexyModalSub" class="text-[11px] text-slate-300">Envoyée avec amour</p>
+        </div>
+        <button onclick="closeSexyModal()" class="w-8 h-8 rounded-full bg-white/10 text-white font-bold text-xs">✕</button>
+      </div>
+
+      <div class="bg-black rounded-2xl p-2 flex items-center justify-center overflow-hidden min-h-[240px] max-h-[360px]">
+        <img id="sexyModalImg" src="" class="max-h-[340px] w-auto object-contain rounded-xl" />
+      </div>
+
+      <!-- Zone de vote (5 paliers) visible uniquement par le destinataire qui n'a pas encore noté -->
+      <div id="sexyRewardVoteBox" class="space-y-2 pt-1">
+        <p class="text-xs font-extrabold text-center text-amber-300 uppercase tracking-wider">
+          👑 Choisis le palier de récompense à offrir :
+        </p>
+        <div class="grid grid-cols-1 gap-1.5 text-xs font-extrabold">
+          <button onclick="rateSexyPhoto(1, 20, 'Palier 1 • Mignon 😊')" class="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-pink-600/40 border border-white/15 flex items-center justify-between active:scale-95 transition">
+            <span>😊 Palier 1 : Mignon & Craquant</span>
+            <span class="bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full">+20 🪙</span>
+          </button>
+          <button onclick="rateSexyPhoto(2, 40, 'Palier 2 • Charmeur 😘')" class="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-pink-600/40 border border-white/15 flex items-center justify-between active:scale-95 transition">
+            <span>😘 Palier 2 : Ultra Charmeur</span>
+            <span class="bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full">+40 🪙</span>
+          </button>
+          <button onclick="rateSexyPhoto(3, 70, 'Palier 3 • Sexy 🔥')" class="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-pink-600/40 border border-pink-400/40 flex items-center justify-between active:scale-95 transition">
+            <span>🔥 Palier 3 : Canon & Sexy</span>
+            <span class="bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full">+70 🪙</span>
+          </button>
+          <button onclick="rateSexyPhoto(4, 110, 'Palier 4 • Torride 🥵')" class="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-rose-600/50 border border-rose-400/50 flex items-center justify-between active:scale-95 transition">
+            <span>🥵 Palier 4 : Torride & Caliente</span>
+            <span class="bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full">+110 🪙</span>
+          </button>
+          <button onclick="rateSexyPhoto(5, 160, 'Palier 5 • Chef-d\'œuvre 😈🍓')" class="py-2.5 px-3 rounded-xl gradient-card border border-pink-300 flex items-center justify-between active:scale-95 transition shadow-lg">
+            <span>😈🍓 Palier 5 : Illégal / Chef-d'œuvre !</span>
+            <span class="bg-yellow-300 text-slate-950 px-2.5 py-0.5 rounded-full">+160 🪙</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="sexyAlreadyRatedBox" class="hidden bg-emerald-500/20 border border-emerald-400/40 rounded-2xl p-3 text-center text-xs font-extrabold text-emerald-200">
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== ÉCRAN NOIR PUR (100% BLACKOUT) POUR LES PLUIES DE VIBRATIONS ==================== -->
   <div id="pureBlackRainOverlay" onclick="closeBlackRainNow()" class="fixed inset-0 z-[99990] hidden bg-black flex flex-col items-center justify-center">
-    <p id="blackRainSubtitle" class="text-white/30 text-xs font-bold tracking-widest uppercase mt-auto mb-8">
+    <p id="blackRainBigEmoji" class="text-6xl mb-4 animate-bounce">❤️</p>
+    <p id="blackRainSubtitle" class="text-white/75 text-sm font-extrabold tracking-wide text-center px-6">
       Love8 • Pluie d'amour en cours
+    </p>
+    <p class="text-white/30 text-[10px] font-bold tracking-widest uppercase mt-auto mb-8">
+      Toucher l'écran pour fermer
     </p>
   </div>
 
   <!-- ==================== ÉCRAN DE VERROUILLAGE (POUR DESSIN 15S) ==================== -->
-  <div id="lockscreenOverlay" class="fixed inset-0 z-50 hidden bg-[#060609] text-white flex flex-col justify-between p-4 overflow-hidden">
+  <div id="lockscreenOverlay" class="fixed inset-0 z-[99980] hidden bg-[#060609] text-white flex flex-col justify-between p-4 overflow-hidden">
 
     <div class="mt-2">
       <div class="grid grid-cols-2 items-center gap-3">
@@ -255,7 +328,7 @@
 
   <main class="max-w-md mx-auto px-4 pt-3 space-y-4">
 
-    <!-- ==================== ONGLET 1 : NOUS (ÉPURÉ) ==================== -->
+    <!-- ==================== ONGLET 1 : NOUS ==================== -->
     <section id="tab-nous" class="space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80">
         <div class="flex justify-center items-center mb-3">
@@ -272,7 +345,8 @@
               <span id="jordanMoodBadge" class="absolute -top-1 -right-1 bg-white rounded-full px-1 text-xs shadow">😍</span>
             </div>
             <h3 class="font-extrabold text-sm mt-2">Jordan</h3>
-            <p id="jordanStatusText" class="text-xs text-slate-500 mt-0.5">Pense à toi ❤️</p>
+            <p id="jordanStatusText" class="text-xs text-slate-600 font-semibold mt-0.5">Pense à toi ❤️</p>
+            <span id="jordanLocationBadge" class="mt-1 bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-purple-100">🏠 À la maison</span>
           </div>
 
           <div class="flex flex-col items-center justify-center">
@@ -295,18 +369,19 @@
               <span id="lydieMoodBadge" class="absolute -top-1 -right-1 bg-white rounded-full px-1 text-xs shadow">😍</span>
             </div>
             <h3 class="font-extrabold text-sm mt-2">Lydie</h3>
-            <p id="lydieStatusText" class="text-xs text-slate-500 mt-0.5">Hâte de te voir 💕</p>
+            <p id="lydieStatusText" class="text-xs text-slate-600 font-semibold mt-0.5">Hâte de te voir 💕</p>
+            <span id="lydieLocationBadge" class="mt-1 bg-pink-50 text-pink-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-pink-100">🏠 À la maison</span>
           </div>
         </div>
 
         <div class="mt-4 pt-3 border-t border-slate-100">
           <button onclick="openMoodLocModal()" class="w-full bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 hover:from-purple-100 hover:to-pink-100 text-purple-900 text-xs font-extrabold py-2.5 rounded-2xl border border-pink-200 shadow-sm transition active:scale-[0.99]">
-            😊 Changer mon Humeur actuelle
+            😊 Changer mon Humeur & 📍 mon Lieu
           </button>
         </div>
       </div>
 
-      <!-- ==================== CARTE VIBRATIONS D'AMOUR (8 BOUTONS ESSENTIELS + ACCUSÉ ✓✓) ==================== -->
+      <!-- ==================== CARTE VIBRATIONS D'AMOUR (8 BOUTONS + ACCUSÉ ✓✓) ==================== -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-xs font-extrabold tracking-wider uppercase text-slate-500">⚡ VIBRATIONS EN DIRECT (+5 🪙)</span>
@@ -360,6 +435,44 @@
             <span class="text-3xl">🌹</span>
             <span id="badgeVibRose" class="absolute bottom-1 right-1.5 bg-black/30 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
           </button>
+        </div>
+      </div>
+
+      <!-- ==================== DÉFI QUOTIDIEN : PHOTO SEXY (5 PALIERS + SÉRIE) ==================== -->
+      <div class="bg-gradient-to-br from-rose-950 via-purple-950 to-slate-900 text-white rounded-3xl p-4 shadow-lg border border-pink-500/30 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="bg-pink-500/20 border border-pink-400/40 text-pink-200 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">
+              📸🔥 DÉFI PHOTO SEXY DU JOUR
+            </span>
+            <p class="text-[11px] text-slate-300 mt-1">1 photo par jour chacun • Le receveur vote (20 à 160 🪙)</p>
+          </div>
+          <div class="bg-amber-500/20 border border-amber-400/40 rounded-2xl px-2.5 py-1 text-center">
+            <p class="text-[9px] uppercase font-bold text-amber-200">Série</p>
+            <p class="text-xs font-extrabold text-amber-300">🔥 <span id="sexyStreakBadge">0</span>j</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 text-xs">
+          <!-- Statut Jordan -> Lydie -->
+          <div class="bg-white/10 border border-white/10 rounded-2xl p-2.5 flex flex-col justify-between space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-[11px] text-purple-200">👦🏻 Jordan → Lydie</span>
+              <span class="text-[10px] font-bold text-amber-300">🔥 <span id="jordanStreakCount">0</span>j</span>
+            </div>
+            <p id="sexyStatusJordan" class="text-[10px] text-slate-300">Aucune photo aujourd'hui</p>
+            <div id="sexyActionJordan"></div>
+          </div>
+
+          <!-- Statut Lydie -> Jordan -->
+          <div class="bg-white/10 border border-white/10 rounded-2xl p-2.5 flex flex-col justify-between space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-[11px] text-pink-200">👩🏻 Lydie → Jordan</span>
+              <span class="text-[10px] font-bold text-amber-300">🔥 <span id="lydieStreakCount">0</span>j</span>
+            </div>
+            <p id="sexyStatusLydie" class="text-[10px] text-slate-300">Aucune photo aujourd'hui</p>
+            <div id="sexyActionLydie"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -421,7 +534,7 @@
         <input id="sweetNoteInput" type="text" placeholder="Légende sous le dessin (ex: Bon courage mon amour ❤️)..." class="w-full text-xs bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-3 focus:outline-none focus:border-pink-400" />
 
         <button onclick="sendDrawingToPartner()" class="w-full gradient-card text-white font-extrabold text-sm py-3.5 rounded-2xl shadow-md active:scale-[0.99] transition">
-          🚀 Envoyer sur son écran (15s)
+          🚀 Envoyer sur son écran de verrouillage (15s)
         </button>
       </div>
 
@@ -607,13 +720,22 @@
         </button>
       </div>
 
+      <!-- QUIZ 100 QUESTIONS AVEC GESTION STRICTE DES RÔLES TOUR PAR TOUR -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
-          <span class="bg-purple-100 text-purple-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">🎯 QUIZ : TU ME CONNAIS PAR CŒUR ?</span>
-          <button onclick="nextQuizQuestion()" class="text-xs font-bold text-pink-600">🔀 Autre question</button>
+          <span class="bg-purple-100 text-purple-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">
+            🎯 QUIZ 100 QUESTIONS (<span id="quizNumberBadge">1/100</span>)
+          </span>
+          <button onclick="nextQuizQuestion()" class="text-xs font-bold text-pink-600">🔀 Passer / Suivante</button>
         </div>
+
+        <div class="flex items-center justify-between bg-slate-50 border border-slate-200/80 rounded-2xl px-3 py-2 text-[11px] font-extrabold">
+          <span id="quizRolePill" class="text-purple-900">Rôle : Jordan choisit</span>
+          <span id="quizScorePill" class="text-pink-600">👦🏻 0 • 👩🏻 0</span>
+        </div>
+
         <p id="quizQuestionTitle" class="font-extrabold text-sm text-slate-800"></p>
-        <p id="quizModeSubtitle" class="text-xs text-slate-500"></p>
+        <p id="quizModeSubtitle" class="text-xs text-slate-500 font-semibold"></p>
         <div id="quizOptionsGrid" class="grid grid-cols-2 gap-2 text-xs font-bold"></div>
         <div id="quizStatusBox" class="bg-pink-50/70 border border-pink-200 rounded-2xl p-3 text-xs font-bold text-pink-900 text-center"></div>
       </div>
@@ -719,16 +841,21 @@
     let blackRainTimer = null;
     let sleep15sTimer = null;
     let sleepCountdownInterval = null;
+    let currentSexyViewSender = '';
+
     let cachedMedia = {
       latestDrawingId: localStorage.getItem('love8_cached_draw_id') || '',
       latestDrawingUrl: localStorage.getItem('love8_cached_draw_url') || '',
       jordanAvatarId: Number(localStorage.getItem('love8_cached_jav_id') || 0),
       jordanAvatarUrl: localStorage.getItem('love8_cached_jav_url') || '',
       lydieAvatarId: Number(localStorage.getItem('love8_cached_lav_id') || 0),
-      lydieAvatarUrl: localStorage.getItem('love8_cached_lav_url') || ''
+      lydieAvatarUrl: localStorage.getItem('love8_cached_lav_url') || '',
+      sexyJordanId: Number(localStorage.getItem('love8_cached_sxy_j_id') || 0),
+      sexyJordanUrl: localStorage.getItem('love8_cached_sxy_j_url') || '',
+      sexyLydieId: Number(localStorage.getItem('love8_cached_sxy_l_id') || 0),
+      sexyLydieUrl: localStorage.getItem('love8_cached_sxy_l_url') || ''
     };
 
-    // Gestion du premier lancement et du choix de l'utilisateur
     function checkUserFirstLaunch() {
       if (!currentUser) {
         document.getElementById('userSelectionModal').classList.remove('hidden');
@@ -752,7 +879,6 @@
       triggerBanner('BIENVENUE ❤️', `Connecté en tant que ${user}`, user === 'Jordan' ? '👦🏻' : '👩🏻');
     }
 
-    // Fonction d'enregistrement du token FCM auprès de Cloudflare
     async function registerFcmTokenToCloud() {
       if (window.AndroidNative && window.AndroidNative.getFcmToken) {
         const token = window.AndroidNative.getFcmToken();
@@ -774,11 +900,22 @@
       { emoji: '😘', text: 'Envie de bisous 😘' },
       { emoji: '🤗', text: 'Besoin de câlins 🤗' },
       { emoji: '🔥', text: 'Humeur coquine 🔥' },
-      { emoji: '💪', text: 'Au boulot / Concentré 💪' },
-      { emoji: '😴', text: 'Fatigué(e) / Au lit 😴' },
+      { emoji: '💪', text: 'Concentré(e) 💪' },
+      { emoji: '😴', text: 'Fatigué(e) 😴' },
       { emoji: '🍔', text: 'J\'ai trop faim 🍔' },
       { emoji: '🥰', text: 'Amoureux(se) de toi 🥰' },
       { emoji: '🎉', text: 'En pleine forme 🎉' }
+    ];
+
+    const locationPresets = [
+      { emoji: '🏠', label: '🏠 À la maison' },
+      { emoji: '💼', label: '💼 Au travail' },
+      { emoji: '🏋️‍♂️', label: '🏋️‍♂️ Au sport' },
+      { emoji: '🚗', label: '🚗 En voiture / Route' },
+      { emoji: '🛒', label: '🛒 En courses' },
+      { emoji: '💍', label: '💍 Chez Maison Bella' },
+      { emoji: '🍻', label: '🍻 En sortie / Amis' },
+      { emoji: '🛏️', label: '🛏️ Au lit sous la couette' }
     ];
 
     const catAccessoriesCatalog = [
@@ -786,18 +923,15 @@
       { id: 'nerdglass',  name: 'Lunettes Geek',   emoji: '🤓', slot: 'eyes', price: 1200 },
       { id: 'vrglass',    name: 'Masque Futur',    emoji: '🥽', slot: 'eyes', price: 1650 },
       { id: 'star_eyes',  name: 'Yeux Étoilés',    emoji: '🤩', slot: 'eyes', price: 2100 },
-
       { id: 'bowtie',     name: 'Nœud Papillon',   emoji: '🎀', slot: 'neck', price: 1100 },
       { id: 'scarf',      name: 'Écharpe Hiver',   emoji: '🧣', slot: 'neck', price: 1450 },
       { id: 'medal',      name: 'Médaille d\'Or',  emoji: '🏅', slot: 'neck', price: 1900 },
       { id: 'diamond',    name: 'Collier Diamant', emoji: '💎', slot: 'neck', price: 3200 },
-
       { id: 'cap',        name: 'Casquette Cool',  emoji: '🧢', slot: 'hat',  price: 1250 },
       { id: 'tophat',     name: 'Haut-de-Forme',   emoji: '🎩', slot: 'hat',  price: 1750 },
       { id: 'xmas',       name: 'Bonnet Noël',     emoji: '🎅', slot: 'hat',  price: 2200 },
       { id: 'wizard',     name: 'Chapeau Magique', emoji: '🧙‍♂️', slot: 'hat',  price: 2800 },
       { id: 'crown',      name: 'Couronne Royale', emoji: '👑', slot: 'hat',  price: 4500 },
-
       { id: 'halo',       name: 'Bitmojis Amour',  emoji: '🥰', slot: 'aura', price: 2400 },
       { id: 'party',      name: 'Bitmojis Fête',   emoji: '🥳', slot: 'aura', price: 2900 },
       { id: 'king_aura',  name: 'Aura Légendaire', emoji: '🔥', slot: 'aura', price: 5000 }
@@ -824,7 +958,7 @@
       },
       fun: {
         Vérité: [
-          "Quelle est la petite habitude la plus bizarre ou drôle que tu aies remarquée chez moi ?",
+          "Quelle est la petite habitude la plus bizarre ou drôle que tu as remarquée chez moi ?",
           "Quel est le pire cadeau ou la pire surprise qu'on ait vécu ensemble ?",
           "Si on échangeait nos corps pendant 24h, quelle est la première chose que tu ferais ?",
           "Quelle est la chose la plus embarrassante que tu aies faite au début de notre relation ?",
@@ -860,24 +994,119 @@
       }
     };
 
+    // ==================== 100 QUESTIONS DU QUIZ "TU ME CONNAIS PAR CŒUR ?" ====================
     const coupleQuizPool = [
-      {
-        q: "Quel est mon plat réconfort préféré ?",
-        options: ["🍣 Japonais / Sushi", "🍕 Pizza & Burger", "🧀 Raclette / Fondue", "🍝 Pâtes maison"]
-      },
-      {
-        q: "Qu'est-ce qui me fait fondre immédiatement chez toi ?",
-        options: ["👀 Ton regard", "😂 Nos fous rires", "🤗 Tes câlins", "💋 Tes bisous dans le cou"]
-      },
-      {
-        q: "Ma soirée idéale avec toi ce week-end ?",
-        options: ["🎬 Film sous le plaid", "🕯️ Resto en amoureux", "🚗 Escapade surprise", "🔥 Soirée coquine à deux"]
-      },
-      {
-        q: "Mon moment préféré de la journée avec toi ?",
-        options: ["☀️ Le réveil ensemble", "💬 Nos messages la journée", "🛋️ Les retrouvailles le soir", "🌙 Se blottir au lit"]
-      }
+      { q: "Quel est mon plat réconfort préféré ?", options: ["🍣 Japonais / Sushi", "🍕 Pizza & Burger", "🧀 Raclette / Fondue", "🍝 Pâtes maison"] },
+      { q: "Qu'est-ce qui me fait fondre immédiatement chez toi ?", options: ["👀 Ton regard", "😂 Nos fous rires", "🤗 Tes câlins", "💋 Tes bisous dans le cou"] },
+      { q: "Ma soirée idéale avec toi ce week-end ?", options: ["🎬 Film sous le plaid", "🕯️ Resto en amoureux", "🚗 Escapade surprise", "🔥 Soirée coquine à deux"] },
+      { q: "Mon moment préféré de la journée avec toi ?", options: ["☀️ Le réveil ensemble", "💬 Nos messages la journée", "🛋️ Les retrouvailles le soir", "🌙 Se blottir au lit"] },
+      { q: "Quelle est ma destination de vacances de rêve avec toi ?", options: ["🏝️ Plage & Soleil", "🏔️ Montagne & Chalet", "🗽 Grande ville animée", "🏕️ Camping & Nature"] },
+      { q: "Qu'est-ce que je préfère comme petite attention surprise ?", options: ["💌 Un mot doux", "🍫 Une gourmandise", "💆‍♂️ Un massage", "💋 Un baiser volé"] },
+      { q: "Quelle est ma boisson préférée pour me détendre ?", options: ["☕ Café bien chaud", "🥤 Soda bien frais", "🍹 Cocktail / Apéro", "🍵 Thé ou Infusion"] },
+      { q: "Quand je suis stressé(e), de quoi ai-je le plus besoin ?", options: ["🤗 Un long câlin silencieux", "🗣️ En parler avec toi", "😂 Que tu me fasses rire", "😴 Dormir et me reposer"] },
+      { q: "Quel est mon langage de l'amour principal ?", options: ["💖 Le contact physique", "🎁 Les petites attentions", "⏳ Le temps passé à deux", "💬 Les mots valorisants"] },
+      { q: "Qu'est-ce que je remarque en premier quand tu t'habilles ?", options: ["👗/👕 Le style général", "👀 Ton sourire et tes yeux", "🍑 Ta silhouette", "🌸 Ton parfum"] },
+      { q: "Ma position préférée pour m'endormir contre toi ?", options: ["🥄 En cuillère collés", "🫂 Tête sur ton torse/épaule", "🤝 Main dans la main", "🌟 Chacun son côté après le câlin"] },
+      { q: "Quel type de film je préfère regarder avec toi ?", options: ["😂 Comédie pour rire", "💥 Action / Thriller", "👻 Horreur / Suspense", "💕 Romance / Drame"] },
+      { q: "Si je gagne au loto demain, que fait-on en premier ?", options: ["🏡 Acheter/Rénover la maison", "✈️ Faire le tour du monde", "🚗 S'offrir deux belles voitures", "🛍️ Tout claquer en plaisir"] },
+      { q: "Quelle est ma saison préférée de l'année ?", options: ["☀️ L'été et la plage", "🎄 L'hiver et Noël", "🌸 Le printemps doux", "🍂 L'automne cocooning"] },
+      { q: "Au restaurant avec toi, je prends toujours :", options: ["🥩 Une bonne viande", "🍕 Un plat italien", "🍔 Un burger gourmand", "🥗 Quelque chose de nouveau"] },
+      { q: "Mon dessert préféré à partager à deux ?", options: ["🍫 Fondant au chocolat", "🍦 Glace gourmande", "🍓 Tarte aux fruits / Fraises", "🥞 Crêpes ou Gaufres"] },
+      { q: "Quelle qualité j'admire le plus chez toi ?", options: ["💪 Ton courage au quotidien", "❤️ Ta générosité", "😂 Ton humour", "🔥 Ta passion pour moi"] },
+      { q: "Au réveil le matin, je suis plutôt :", options: ["😴 Encore dans le brouillard", "😘 Envie de câlins directs", "☕ Direction café d'abord", "📱 Je regarde mon téléphone"] },
+      { q: "Quelle partie de mon corps j'adore que tu caresses ?", options: ["💆‍♂️ La nuque et les cheveux", "🔙 Le dos doucement", "🦵 Les jambes", "💋 Les lèvres et le visage"] },
+      { q: "Mon péché mignon sucré devant la télé ?", options: ["🍬 Bonbons acidulés", "🍫 Chocolat", "🍿 Pop-corn / Chips", "🍪 Biscuits / Gâteaux"] },
+      { q: "Ce qui m'excite le plus chez toi en secret ?", options: ["😈 Ton regard coquin", "💋 Quand tu m'embrasses le cou", "🔥 Tes mains sur moi", "🗣️ Quand tu me murmures à l'oreille"] },
+      { q: "Dans la voiture en trajet tous les deux, j'aime :", options: ["🎵 Chanter à fond la musique", "🗣️ Discuter de tout", "🤝 Te tenir la main", "😴 Me reposer tranquillement"] },
+      { q: "Mon endroit préféré dans la maison avec toi ?", options: ["🛋️ Le canapé", "🛏️ Notre lit", "🍽️ La cuisine ensemble", "🌿 La terrasse / Dehors"] },
+      { q: "Quelle est ma plus grande fierté dans notre couple ?", options: ["👨‍👩‍👧‍👧 Notre belle famille", "❤️ Notre complicité depuis 2019", "💪 Tout ce qu'on construit", "🔥 Notre amour intact"] },
+      { q: "Si on avait une journée entière sans enfants ni travail :", options: ["🛏️ Grasse mat' et câlins", "🧖‍♀️ Spa & massage à deux", "🍽️ Resto et balade", "🎮/🎬 Journée geek & séries"] },
+      { q: "Le compliment qui me fait le plus plaisir venant de toi ?", options: ["😍 Tu es magnifique", "❤️ Je suis fier(e) de toi", "🔥 Tu me rends fou/folle", "🏡 J'aime notre vie ensemble"] },
+      { q: "Quand on se dispute (même rarement), je préfère :", options: ["🤗 Faire la paix tout de suite", "⏳ Bouder 5 minutes puis câlin", "🗣️ Expliquer calmement", "😂 Détendre l'atmosphère par une blague"] },
+      { q: "Mon parfum ou odeur préférée au quotidien ?", options: ["🌸 Ton parfum sur tes vêtements", "☕ L'odeur du café/croissant", "🌲 L'air frais après la pluie", "🕯️ Une bougie vanille/sucrée"] },
+      { q: "Quelle activité créative ou loisir me détend le plus ?", options: ["🎮 Jouer / Créer sur PC", "🛠️ Bricoler / Laser / Déco", "📱 Scroller au calme", "🎶 Écouter de la musique"] },
+      { q: "Quand tu m'envoies un message la journée, j'adore :", options: ["🔥 Un message coquin", "❤️ Un « Je pense à toi »", "📸 Une photo de toi", "😂 Une vidéo ou blague drôle"] },
+      { q: "Ma couleur préférée quand tu portes une tenue ?", options: ["🖤 Le noir classe", "❤️ Le rouge passion", "💙 Le bleu", "🤍 Le blanc / rose doux"] },
+      { q: "Le cadeau qui me touche à tous les coups ?", options: ["🎁 Une surprise personnalisée", "✈️ Un week-end à deux", "💎 Un bijou ou accessoire", "💌 Une lettre d'amour"] },
+      { q: "Pour notre anniversaire de rencontre (12 décembre), je préfère :", options: ["🕯️ Dîner romantique chic", "🏠 Soirée intime à la maison", "🏨 Nuit à l'hôtel", "🎁 S'offrir un cadeau commun"] },
+      { q: "Ce que je préfère faire le dimanche après-midi ?", options: ["🛋️ Sieste et film sous la couette", "🚶‍♂️ Balade en famille", "🍰 Goûter gourmand", "🎲 Jouer ensemble"] },
+      { q: "Quelle est ma plus grande qualité selon moi ?", options: ["❤️ Fidèle et aimant(e)", "😂 Drôle et solaire", "💪 Bosseur(se) et déterminé(e)", "🧠 Toujours plein(e) d'idées"] },
+      { q: "Mon petit défaut le plus mignon au quotidien ?", options: ["😤 Un peu têtu(e)", "⏳ Toujours pressé(e)", "🍫 Trop gourmand(e)", "😴 Marmotte le matin"] },
+      { q: "Si on partait vivre ailleurs un jour, ce serait :", options: ["🌊 Au bord de la mer dans le Sud", "🌳 À la campagne au calme", "☀️ En Espagne au soleil", "🏡 On reste ici près des nôtres"] },
+      { q: "Quel genre de musique me met direct de bonne humeur ?", options: ["🎶 Hits actuels / Pop", "🎤 Rap / RnB français", "🎸 Années 80/90/2000", "🌴 Sons d'été / Latino"] },
+      { q: "Au supermarché, le rayon où je craque toujours ?", options: ["🍫 Chocolats & Biscuits", "🧀 Fromages & Charcuterie", "🥤 Boissons & Nouveautés", "🍨 Glaces & Desserts"] },
+      { q: "Ce que j'aime le plus chez Douglasse 🐱 ?", options: ["🐾 Ses ronronnements", "😂 Ses têtes improbables", "💤 Quand il dort avec nous", "🧶 Quand il fait le fou"] },
+      { q: "Dans l'intimité, je préfère quand c'est :", options: ["🔥 Passionné et intense", "💕 Doux, lent et romantique", "😈 Imprévu et spontané", "🕯️ Préparé avec ambiance"] },
+      { q: "Quel baiser me fait chavirer à chaque fois ?", options: ["💋 Sur les lèvres langoureusement", "🔥 Dans le cou", "🥰 Sur le front tendrement", "😈 Mordiller doucement la lèvre"] },
+      { q: "Si tu me prépares le petit-déjeuner, je rêve de :", options: ["🥐 Croissants & Pains au chocolat", "🥞 Pancakes / Crêpes", "🍳 Œufs / Salé gourmand", "☕ Juste un café et tes bisous"] },
+      { q: "Ma réaction quand tu me regardes fixement dans les yeux ?", options: ["😊 Je souris timidement", "🔥 J'ai envie de t'embrasser", "😂 Je finis par rigoler", "🥰 Je fonds complètement"] },
+      { q: "Ce qui me manque le plus quand on n'est pas ensemble ?", options: ["🤗 Ta présence physique", "🗣️ Entendre ta voix", "😂 Nos délires", "🛏️ Dormir contre toi"] },
+      { q: "Quelle surprise coquine me ferait le plus kiffer ?", options: ["📸 Une photo sexy dans la journée", "👙/🩲 Une tenue surprise le soir", "💆‍♂️ Un massage aux huiles", "😈 Un message « Prépare-toi ce soir »"] },
+      { q: "Pour me réchauffer quand j'ai froid, je préfère :", options: ["🫂 Me coller contre toi", "🧣 Un gros plaid tout doux", "🚿 Une douche brûlante", "☕ Une boisson chaude"] },
+      { q: "Mon chiffre ou symbole porte-bonheur pour nous ?", options: ["8️⃣ Le 8 (Infini / Love8)", "1️⃣2️⃣ Le 12 (12 décembre)", "❤️ Le cœur rouge", "⭐ La bonne étoile"] },
+      { q: "Quand je rentre à la maison, la première chose que j'aime :", options: ["💋 T'embrasser direct", "🛋️ Poser mes affaires et souffler", "🗣️ Te raconter ma journée", "🐱 Saluer Douglasse aussi"] },
+      { q: "Le meilleur souvenir de nos vacances d'été ?", options: ["🏖️ La plage et la mer", "🌞 Les soirées d'été au camping", "🍦 Les glaces et restos", "😂 Les fous rires en famille"] },
+      { q: "Ce que je préfère regarder sur mon téléphone ?", options: ["💕 Notre appli Love8", "🎵 TikTok / Reels drôles", "🛍️ Idées shopping / projets", "🎮 Actus jeux & tech"] },
+      { q: "Si tu devais me décrire en un seul mot :", options: ["🔥 Passionné(e)", "❤️ Attachant(e)", "⚡ Énergique", "💎 Unique"] },
+      { q: "Quelle température j'aime dans la chambre pour dormir ?", options: ["❄️ Plutôt frais avec grosse couette", "🌡️ Bien chaud toute la nuit", "🪟 Fenêtre entrouverte", "🔥 Collé(e) à mon radiateur humain"] },
+      { q: "Mon plat de fête préféré en hiver ?", options: ["🧀 Raclette à volonté", "🍲 Fondue savoyarde", "🦪 Repas de Noël gastronomique", "🍕 Soirée pizzas géantes"] },
+      { q: "Quand j'ai une bonne nouvelle, qui j'appelle en premier ?", options: ["📱 Toi immédiatement !", "💬 Je t'envoie un vocal/message", "🏠 J'attends de te voir en vrai", "🎉 Je crie de joie"] },
+      { q: "Quel type de massage me fait le plus de bien ?", options: ["💆‍♂️ Crâne et nuque", "🔙 Le bas du dos et épaules", "🦶 Les pieds et jambes", "🔥 Massage corps entier"] },
+      { q: "Ma façon préférée de te dire « Je t'aime » ?", options: ["🗣️ Te le dire droit dans les yeux", "🤗 Te serrer fort dans mes bras", "🛠️ Faire plein de choses pour toi", "⚡ T'envoyer des vibrations Love8"] },
+      { q: "Si on faisait un jeu tous les deux ce soir, tu penses que je gagne à :", options: ["🎯 Ce quiz Tu me connais par cœur", "🎲 Action ou Vérité Caliente", "🃏 Un jeu de cartes / société", "😂 Le premier qui rit a perdu"] },
+      { q: "Quelle odeur de cuisine me donne faim instantanément ?", options: ["🍕 Pizza / Fromage fondu", "🥩 Barbecue / Grillades", "🍰 Gâteau au chocolat au four", "🧄 Plats mijotés maison"] },
+      { q: "Dans 10 ans, comment j'imagine notre couple ?", options: ["❤️ Encore plus amoureux qu'aujourd'hui", "✈️ En train de voyager partout", "🏡 Tranquilles et heureux chez nous", "🔥 Toujours aussi complices et coquins"] },
+      { q: "Qu'est-ce qui me fait rire à tous les coups avec toi ?", options: ["🤪 Tes grimaces et imitations", "😂 Nos blagues que seuls nous comprenons", "🐱 Les bêtises de Douglasse", "🤭 Nos gaffes du quotidien"] },
+      { q: "Si je pouvais choisir ton prochain cadeau, ce serait :", options: ["💆‍♂️ Un moment détente rien que pour toi", "👗/👕 Quelque chose qui te met en valeur", "🎁 Un objet que tu veux depuis longtemps", "🔥 Une surprise romantique à deux"] },
+      { q: "Quelle heure de la journée je préfère ?", options: ["🌅 Le matin plein d'énergie", "☀️ Le midi à la pause", "🌆 La fin d'après-midi", "🌙 La nuit quand tout est calme"] },
+      { q: "Quand on regarde un film ensemble, je suis du genre à :", options: ["😴 M'endormir avant la fin", "🗣️ Commenter ce qui se passe", "🤗 Me blottir contre toi en silence", "🍿 Manger tout le paquet de snacks"] },
+      { q: "Quelle est ma pizza préférée ?", options: ["🧀 4 Fromages / Chèvre-Miel", "🍖 Reine / Jambon-Fromage", "🌶️ Chorizo / Épicée", "🥩 Cannibale / Viande"] },
+      { q: "Ce que j'aime le plus dans ton sourire ?", options: ["✨ Il illumine tout ton visage", "😍 Tes lèvres", "👀 Les petits plis autour de tes yeux", "💖 Il me rassure immédiatement"] },
+      { q: "Si on devait refaire une déco dans la maison, ce serait :", options: ["🛏️ Notre chambre façon suite d'hôtel", "🛋️ Le salon encore plus cosy", "🌿 L'extérieur / Terrasse", "✨ Des créations bois & LED sur mesure"] },
+      { q: "Quel fruit je préfère (surtout à deux) ?", options: ["🍓 La fraise", "🍑 La pêche", "🍒 La cerise", "🥭 La mangue / Fruits exotiques"] },
+      { q: "Quand tu me fais un câlin par derrière par surprise :", options: ["🥰 Je souris et me laisse aller", "💋 Je me retourne pour t'embrasser", "🔥 Ça me donne des frissons", "😂 Je sursaute puis je ris"] },
+      { q: "Quelle est ma plus grande force quand il y a un imprévu ?", options: ["🛠️ Je trouve toujours une solution", "🧘 Je garde mon sang-froid", "💪 Je fonce sans hésiter", "🤝 On fait équipe tous les deux"] },
+      { q: "Mon style de tenue préféré à la maison ?", options: ["🩳 Jogging / Pyjama ultra confort", "👕 T-shirt large tout doux", "🔥 En sous-vêtements sous la couette", "👖 Habillé(e) prêt(e) à bouger"] },
+      { q: "La chose la plus romantique qu'on ait faite ?", options: ["🌅 Regarder le coucher de soleil ensemble", "💌 S'écrire et se créer notre appli Love8", "🕯️ Nos soirées rien qu'à deux", "💍 Nos projets d'avenir ensemble"] },
+      { q: "Si je devais choisir une ambiance pour ce soir :", options: ["🕯️ Lumières tamisées & musique douce", "🎬 Grand écran & plaid", "🎲 Soirée jeux et gages coquins", "😴 Gros dodo réparateur dans tes bras"] },
+      { q: "Qu'est-ce que je préfère quand on se réveille le week-end ?", options: ["⏳ Rester au lit sans réveil", "💋 Nos câlins du matin", "🥐 Aller chercher les croissants", "☕ Boire le café ensemble au calme"] },
+      { q: "Quelle glace je choisis en vacances ?", options: ["🍦 Vanille / Chocolat / Fraise", "🥜 Caramel / Kinder / Nocciolata", "🍋 Citron / Fruits rafraîchissants", "🍨 Une énorme coupe glacée chantilly"] },
+      { q: "Mon endroit préféré pour t'embrasser ?", options: ["💋 Sur la bouche", "🔥 Dans le cou et l'épaule", "🥰 Partout sur le visage", "😈 Là où ça te fait frissonner"] },
+      { q: "Quand je pense à notre rencontre en 2019, je me dis :", options: ["❤️ C'était écrit, une évidence", "🎉 La meilleure décision de ma vie", "⏳ Que le temps passe vite avec toi", "🔥 On est encore mieux aujourd'hui"] },
+      { q: "Quel super-pouvoir j'aimerais avoir pour notre couple ?", options: ["⚡ Me téléporter près de toi direct", "⏸️ Arrêter le temps quand on est bien", "💭 Lire dans tes pensées coquines", "🪄 Exaucer tous tes souhaits"] },
+      { q: "Ce qui me rend immédiatement jaloux(se) (même un peu) ?", options: ["👀 Qu'on te regarde d'un peu trop près", "📱 Qu'on te vole ton attention", "😤 Rien, j'ai 100% confiance en nous", "🥰 Je suis juste possessif(ve) par amour"] },
+      { q: "Quel est mon plat rapide préféré quand on a la flemme ?", options: ["🍝 Pâtes carbo / bolognaise", "🍔 Burgers / Tacos livrés", "🧀 Croque-monsieur / Quiche", "🍣 Sushis / Poke bowl"] },
+      { q: "Quelle attention au lit me fait le plus plaisir ?", options: ["🔥 Que tu prennes les devants", "💆‍♂️ Des caresses lentes partout", "💋 Des baisers passionnés", "🗣️ Des mots doux et coquins à l'oreille"] },
+      { q: "Mon état d'esprit quand je reçois une vibration Love8 ?", options: ["😍 Un grand sourire instantané", "🔥 Hâte de te retrouver ce soir", "⚡ Je te réponds direct par une autre", "🥰 Ça illumine ma journée"] },
+      { q: "Si on partait en week-end demain matin à 2h de route :", options: ["🌲 Chalet avec jacuzzi privatif", "🏰 Hôtel spa & gastronomique", "🛍️ Escapade shopping & resto", "🏕️ Aventure nature en amoureux"] },
+      { q: "Quelle est la chose que tu fais le mieux ?", options: ["❤️ Prendre soin de nous", "😂 Me faire rire et décompresser", "🔥 Me faire perdre la tête", "💪 Gérer mille projets à la fois"] },
+      { q: "Mon moment préféré pendant les fêtes de fin d'année ?", options: ["🎄 L'ambiance des décorations et lumières", "🎁 Ouvrir les cadeaux en famille", "🍽️ Les bons repas qui durent des heures", "❄️ Se blottir au chaud tous les deux"] },
+      { q: "Quand je te regarde dormir, je pense :", options: ["🥰 Qu'est-ce que je l'aime", "😂 Il/Elle prend toute la couette !", "💋 J'ai envie de lui faire un bisou", "😇 Quelle chance de t'avoir"] },
+      { q: "Quel défi j'adorerais qu'on relève ensemble cette année ?", options: ["📸 Continuer notre série Photo Sexy", "✈️ S'organiser un vrai voyage à deux", "🚀 Réussir tous nos projets pro & perso", "🏋️‍♂️ Se motiver ensemble au quotidien"] },
+      { q: "Ma réaction si tu m'offres un « Joker Coquin » ce soir ?", options: ["😈 Je l'utilise dans la minute !", "🔥 Je prépare une idée bien spéciale", "😘 Je te saute au cou", "⏳ Je le garde pour te surprendre"] },
+      { q: "Quelle est la chanson ou le rythme qui nous ressemble ?", options: ["❤️ Une mélodie romantique et forte", "🔥 Un son caliente et entraînant", "🎉 Une musique joyeuse et pleine de vie", "✨ Notre propre musique d'amour"] },
+      { q: "Qu'est-ce que je préfère dans nos soirées à deux ?", options: ["🥂 L'apéro en discutant de tout", "🛋️ Le moment câlin sur le canapé", "🔥 La fin de soirée sous la couette", "😂 Nos fous rires sans raison"] },
+      { q: "Si je devais noter notre complicité sur 10 :", options: ["🔟 10/10 évidemment !", "💯 100/10, au-dessus des étoiles", "🔥 Infini comme Love8", "❤️ Plus forte chaque jour"] },
+      { q: "Quelle petite habitude du soir est sacrée pour moi ?", options: ["💋 Le bisou de bonne nuit", "🤗 Se coller quelques minutes au lit", "📱 Un dernier tour sur Love8", "🐱 Vérifier que Douglasse va bien"] },
+      { q: "Ce qui me donne le plus d'énergie le matin ?", options: ["😘 Ton premier bisou", "☕ Une bonne tasse de café", "☀️ Voir qu'il fait beau", "💪 Avoir plein de projets en tête"] },
+      { q: "Dans un parc d'attractions avec toi, je vais direct :", options: ["🎢 Dans le grand huit à sensations", "👻 Dans le train fantôme collé à toi", "🍭 Manger des churros / barbe à papa", "🎡 Dans la grande roue en amoureux"] },
+      { q: "Quel vêtement chez moi tu préfères me voir porter ?", options: ["👗/👔 Une tenue chic de soirée", "🔥 Une tenue près du corps", "🩳 Une tenue décontractée", "😈 Rien du tout !"] },
+      { q: "Quand tu me tiens la main en marchant :", options: ["❤️ Je me sens fier(e) d'être avec toi", "🥰 J'adore entrelacer nos doigts", "😊 Ça m'apaise instantanément", "💋 J'ai envie de t'embrasser"] },
+      { q: "Quel est mon péché mignon salé à l'apéro ?", options: ["🧀 Saucisson & Fromage", "🥜 Cacahuètes / Pistaches / Chips", "🍕 Petits feuilletés chauds", "🫒 Olives & Tapas"] },
+      { q: "La plus belle preuve d'amour au quotidien selon moi ?", options: ["⏳ Être toujours là l'un pour l'autre", "🔥 Continuer à se séduire chaque jour", "🤝 Se soutenir dans tous nos projets", "😂 Rire ensemble même dans la fatigue"] },
+      { q: "Quelle vibration Love8 je préfère recevoir de toi ?", options: ["💌 Tu me manques", "🍑 Envie de toi / 🥒 Pensée coquine", "🌶️ Caliente / 😈 Prépare-toi ce soir", "💋 Pluie de baisers / 🌹 Mon amour"] },
+      { q: "Et enfin, combien je t'aime ?", options: ["❤️ À la folie", "🔥 Passionnément", "🌌 Plus que tout dans l'univers", "♾️ Pour toujours et à l'infini (Love8)"] }
     ];
+
+    function getTodayDateStr() {
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function getYesterdayDateStr() {
+      const d = new Date(Date.now() - 86400000);
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
 
     let state = JSON.parse(localStorage.getItem('love8_state')) || {
       updatedAt: Date.now(),
@@ -885,8 +1114,8 @@
       coins: 180,
       vibCounts: { env: 12, peach: 9, cuc: 8, chili: 12, straw: 4, devil: 6, lips: 10, rose: 7 },
       lastEvent: { id: 0, sender: 'Jordan', type: 'vibration', title: '', message: '', emoji: '❤️', sound: 'love', pattern: [150, 80, 250] },
-      jordan: { mood: '😍', text: 'Pense à toi ❤️', avatarId: 0 },
-      lydie: { mood: '😍', text: 'Hâte de te voir 💕', avatarId: 0 },
+      jordan: { mood: '😍', text: 'Pense à toi ❤️', location: '🏠 À la maison', avatarId: 0 },
+      lydie: { mood: '😍', text: 'Hâte de te voir 💕', location: '🏠 À la maison', avatarId: 0 },
       cat: {
         level: 4,
         xp: 40,
@@ -915,26 +1144,50 @@
         qIndex: 0,
         targetUser: 'Jordan',
         secretChoice: null,
-        statusText: 'Jordan : Choisis ta réponse secrète pour que Lydie devine !'
+        scores: { Jordan: 0, Lydie: 0 },
+        statusText: 'Tour de Jordan : Choisis ta réponse secrète pour que Lydie devine !'
+      },
+      sexyChallenge: {
+        jordanToLydie: { date: '', photoId: 0, time: '', rated: false, tier: 0, coinsAwarded: 0, streak: 0, lastSentDate: '' },
+        lydieToJordan: { date: '', photoId: 0, time: '', rated: false, tier: 0, coinsAwarded: 0, streak: 0, lastSentDate: '' }
       },
       capsules: []
     };
 
-    if (typeof state.coins !== 'number') state.coins = 180;
-    if (!state.vibCounts) state.vibCounts = { env: 12, peach: 9, cuc: 8, chili: 12, straw: 4, devil: 6, lips: 10, rose: 7 };
-    if (!state.cat.ownedAcc) state.cat.ownedAcc = [];
-    if (!state.cat.equippedSlots) state.cat.equippedSlots = { hat: '', eyes: '', neck: '', aura: '' };
-    if (!state.coupons) state.coupons = [];
-    if (!state.truthOrDare) {
-      state.truthOrDare = {
-        level: 'doux',
-        turn: 'Jordan',
-        lastType: 'Vérité',
-        cardText: 'Choisis un niveau (Doux, Fun ou Caliente) et tire une carte !'
-      };
+    function sanitizeStateStructure() {
+      if (typeof state.coins !== 'number') state.coins = 180;
+      if (!state.vibCounts) state.vibCounts = { env: 12, peach: 9, cuc: 8, chili: 12, straw: 4, devil: 6, lips: 10, rose: 7 };
+      if (!state.jordan) state.jordan = { mood: '😍', text: 'Pense à toi ❤️', location: '🏠 À la maison', avatarId: 0 };
+      if (!state.lydie) state.lydie = { mood: '😍', text: 'Hâte de te voir 💕', location: '🏠 À la maison', avatarId: 0 };
+      if (!state.jordan.location) state.jordan.location = '🏠 À la maison';
+      if (!state.lydie.location) state.lydie.location = '🏠 À la maison';
+      if (!state.cat) state.cat = { level: 4, xp: 40, hunger: 100, love: 100, energy: 100, equippedSlots: {}, ownedAcc: [], journal: [] };
+      if (!state.cat.ownedAcc) state.cat.ownedAcc = [];
+      if (!state.cat.equippedSlots) state.cat.equippedSlots = { hat: '', eyes: '', neck: '', aura: '' };
+      if (!state.cat.journal) state.cat.journal = [];
+      if (!state.coupons) state.coupons = [];
+      if (!state.truthOrDare) {
+        state.truthOrDare = {
+          level: 'doux',
+          turn: 'Jordan',
+          lastType: 'Vérité',
+          cardText: 'Choisis un niveau (Doux, Fun ou Caliente) et tire une carte !'
+        };
+      }
+      if (!state.quiz) {
+        state.quiz = { qIndex: 0, targetUser: 'Jordan', secretChoice: null, scores: { Jordan: 0, Lydie: 0 }, statusText: 'Choisis une réponse !' };
+      }
+      if (!state.quiz.scores) state.quiz.scores = { Jordan: 0, Lydie: 0 };
+      if (!state.quiz.targetUser) state.quiz.targetUser = 'Jordan';
+      if (!state.sexyChallenge) {
+        state.sexyChallenge = {
+          jordanToLydie: { date: '', photoId: 0, time: '', rated: false, tier: 0, coinsAwarded: 0, streak: 0, lastSentDate: '' },
+          lydieToJordan: { date: '', photoId: 0, time: '', rated: false, tier: 0, coinsAwarded: 0, streak: 0, lastSentDate: '' }
+        };
+      }
+      if (!state.capsules) state.capsules = [];
     }
-    if (!state.quiz) state.quiz = { qIndex: 0, targetUser: 'Jordan', secretChoice: null, statusText: 'Choisis une réponse !' };
-    if (!state.capsules) state.capsules = [];
+    sanitizeStateStructure();
 
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
@@ -1175,49 +1428,70 @@
       } catch (e) {}
     }
 
+    // Détection automatique de l'emoji exact même si le serveur ou l'intent ne l'a pas passé
+    function resolveEventEmoji(explicitEmoji, messageText, soundType) {
+      if (explicitEmoji && explicitEmoji !== '❤️') return explicitEmoji;
+      const str = (messageText || '') + ' ';
+      const known = ['💌', '🍑', '🥒', '🌶️', '🍓', '😈', '💋', '🌹', '🎨', '📸', '🎟️', '🔥', '❤️'];
+      for (const em of known) {
+        if (str.includes(em)) return em;
+      }
+      const soundMap = { env: '💌', peach: '🍑', cuc: '🥒', chili: '🌶️', straw: '🍓', devil: '😈', kiss: '💋', lips: '💋', rose: '🌹' };
+      if (soundType && soundMap[soundType]) return soundMap[soundType];
+      return explicitEmoji || '❤️';
+    }
+
+    // Pluie sur fond 100% noir pur (sans fermer l'application si on était déjà dedans !)
     function triggerBlackScreenRain(emoji, labelText, soundType = 'love', pattern = [200, 80, 300], shouldSleepAfter = false) {
       if (sleep15sTimer) clearTimeout(sleep15sTimer);
       if (sleepCountdownInterval) clearInterval(sleepCountdownInterval);
       document.getElementById('lockscreenOverlay').classList.add('hidden');
       document.getElementById('lockSleepCountdown').classList.add('hidden');
 
+      const realEmoji = resolveEventEmoji(emoji, labelText, soundType);
+
       const blackOverlay = document.getElementById('pureBlackRainOverlay');
+      document.getElementById('blackRainBigEmoji').innerText = realEmoji;
       document.getElementById('blackRainSubtitle').innerText = labelText || '';
       blackOverlay.classList.remove('hidden');
 
       playLoveSound(soundType);
       triggerDeviceVibration(pattern);
 
-      const animDurationMs = 2500;
-      spawnParticles(emoji, pattern, animDurationMs);
+      const animDurationMs = 2800;
+      spawnParticles(realEmoji, pattern, animDurationMs);
 
       if (blackRainTimer) clearTimeout(blackRainTimer);
 
       blackRainTimer = setTimeout(() => {
-        const isLockedNow = window.AndroidNative && window.AndroidNative.isDeviceLocked && window.AndroidNative.isDeviceLocked();
-        if (shouldSleepAfter || isLockedNow) {
+        if (shouldSleepAfter) {
           requestPhoneSleepNow();
-        }
-        setTimeout(() => {
+          setTimeout(() => {
+            blackOverlay.classList.add('hidden');
+            document.documentElement.classList.remove('wake-blackout');
+          }, 400);
+        } else {
           blackOverlay.classList.add('hidden');
-          document.getElementById('lockscreenOverlay').classList.add('hidden');
-        }, 250);
-      }, animDurationMs + 1000);
+          document.documentElement.classList.remove('wake-blackout');
+        }
+      }, animDurationMs + 700);
     }
 
     function closeBlackRainNow() {
       if (blackRainTimer) clearTimeout(blackRainTimer);
       document.getElementById('pureBlackRainOverlay').classList.add('hidden');
       document.getElementById('lockscreenOverlay').classList.add('hidden');
+      document.documentElement.classList.remove('wake-blackout');
     }
 
-    function toggleLockscreen(show, autoSleep15s = false) {
+    function toggleLockscreen(show, autoSleep15s = false, shouldSleepDevice = false) {
       const el = document.getElementById('lockscreenOverlay');
       const badge = document.getElementById('lockSleepCountdown');
       if (sleep15sTimer) clearTimeout(sleep15sTimer);
       if (sleepCountdownInterval) clearInterval(sleepCountdownInterval);
 
       if (show) {
+        document.getElementById('pureBlackRainOverlay').classList.add('hidden');
         el.classList.remove('hidden');
         if (autoSleep15s) {
           let secLeft = 15;
@@ -1231,7 +1505,10 @@
             clearInterval(sleepCountdownInterval);
             badge.classList.add('hidden');
             el.classList.add('hidden');
-            requestPhoneSleepNow();
+            document.documentElement.classList.remove('wake-blackout');
+            if (shouldSleepDevice) {
+              requestPhoneSleepNow();
+            }
           }, 15000);
         } else {
           badge.classList.add('hidden');
@@ -1239,31 +1516,47 @@
       } else {
         badge.classList.add('hidden');
         el.classList.add('hidden');
+        document.documentElement.classList.remove('wake-blackout');
       }
     }
 
-    window.onNativeWakeAlert = function(emoji, title, message, evType, soundType) {
+    // Appelé par le service natif Android lors d'un réveil FCM
+    window.onNativeWakeAlert = async function(emoji, title, message, evType, soundType, wasSleeping = true) {
+      document.documentElement.classList.add('wake-blackout');
+
       if (evType === 'cat' || (title && title.toLowerCase().includes('douglasse'))) {
-        requestPhoneSleepNow();
+        document.documentElement.classList.remove('wake-blackout');
+        if (wasSleeping) requestPhoneSleepNow();
         return;
       }
 
-      if (!evType || evType === 'vibration') {
-        document.getElementById('lockscreenOverlay').classList.add('hidden');
+      const isDrawingEvent = (evType === 'drawing' || evType === 'other' || (title && title.includes('dessin')));
+
+      if (!isDrawingEvent) {
+        const realEmoji = resolveEventEmoji(emoji, message, soundType);
         triggerBlackScreenRain(
-          emoji || state.lastEvent?.emoji || '❤️',
+          realEmoji,
           message || state.lastEvent?.message || '',
           soundType || state.lastEvent?.sound || 'love',
           [250, 100, 350],
-          true
+          Boolean(wasSleeping)
         );
       } else {
+        // C'est un dessin : on affiche immédiatement l'écran de verrouillage Love8 et on charge le dernier dessin du serveur
+        toggleLockscreen(true, true, Boolean(wasSleeping));
         playLoveSound(soundType || 'rose');
         triggerDeviceVibration([200, 80, 250]);
-        fetchMediaIfNeeded('latest_drawing', state.latestDrawing?.id || 'latest');
-        toggleLockscreen(true, true);
+        await pollCloudState();
+        await fetchMediaIfNeeded('latest_drawing', state.latestDrawing?.id || ('draw_' + Date.now()));
+        renderAll();
       }
     };
+
+    if (window.__pendingWakeAlert) {
+      const args = window.__pendingWakeAlert;
+      delete window.__pendingWakeAlert;
+      window.onNativeWakeAlert(args[0], args[1], args[2], args[3], args[4], args[5]);
+    }
 
     async function saveState() {
       state.updatedAt = Date.now();
@@ -1315,6 +1608,16 @@
           cachedMedia.lydieAvatarUrl = data.dataUrl;
           localStorage.setItem('love8_cached_lav_id', String(newId));
           localStorage.setItem('love8_cached_lav_url', data.dataUrl);
+        } else if (key === 'sexy_Jordan') {
+          cachedMedia.sexyJordanId = Number(newId);
+          cachedMedia.sexyJordanUrl = data.dataUrl;
+          localStorage.setItem('love8_cached_sxy_j_id', String(newId));
+          localStorage.setItem('love8_cached_sxy_j_url', data.dataUrl);
+        } else if (key === 'sexy_Lydie') {
+          cachedMedia.sexyLydieId = Number(newId);
+          cachedMedia.sexyLydieUrl = data.dataUrl;
+          localStorage.setItem('love8_cached_sxy_l_id', String(newId));
+          localStorage.setItem('love8_cached_sxy_l_url', data.dataUrl);
         }
         renderAll();
       } catch (e) {}
@@ -1327,20 +1630,29 @@
         const res = await fetch(API_ENDPOINT + '?t=' + Date.now(), { cache: 'no-store' });
         if (!res.ok) return;
         const remote = await res.json();
-        if (remote && remote.updatedAt) {
+        if (remote && remote.updatedAt && remote.jordan && remote.lydie) {
           const hasNewAck = remote.lastEvent && state.lastEvent && remote.lastEvent.ack && !state.lastEvent.ack;
           if (!state.updatedAt || remote.updatedAt >= state.updatedAt || hasNewAck) {
             state = remote;
+            sanitizeStateStructure();
             localStorage.setItem('love8_state', JSON.stringify(state));
 
             if (state.latestDrawing && state.latestDrawing.id && state.latestDrawing.id !== cachedMedia.latestDrawingId) {
-              fetchMediaIfNeeded('latest_drawing', state.latestDrawing.id);
+              await fetchMediaIfNeeded('latest_drawing', state.latestDrawing.id);
             }
             if (state.jordan && state.jordan.avatarId && state.jordan.avatarId !== cachedMedia.jordanAvatarId) {
               fetchMediaIfNeeded('avatar_jordan', state.jordan.avatarId);
             }
             if (state.lydie && state.lydie.avatarId && state.lydie.avatarId !== cachedMedia.lydieAvatarId) {
               fetchMediaIfNeeded('avatar_lydie', state.lydie.avatarId);
+            }
+            const jSexyId = state.sexyChallenge?.jordanToLydie?.photoId || 0;
+            if (jSexyId && jSexyId !== cachedMedia.sexyJordanId) {
+              fetchMediaIfNeeded('sexy_Jordan', jSexyId);
+            }
+            const lSexyId = state.sexyChallenge?.lydieToJordan?.photoId || 0;
+            if (lSexyId && lSexyId !== cachedMedia.sexyLydieId) {
+              fetchMediaIfNeeded('sexy_Lydie', lSexyId);
             }
 
             checkCatDecay();
@@ -1349,26 +1661,28 @@
             if (remote.lastEvent && remote.lastEvent.id > lastEventId && remote.lastEvent.sender !== currentUser) {
               lastEventId = remote.lastEvent.id;
               localStorage.setItem('love8_last_event', String(lastEventId));
-              if (window.AndroidNative && window.AndroidNative.syncLastSeenEvent) {
-                window.AndroidNative.syncLastSeenEvent(lastEventId);
-              }
 
               sendWebAck(lastEventId);
 
               const evType = remote.lastEvent.type || 'vibration';
               if (evType === 'vibration') {
-                document.getElementById('lockscreenOverlay').classList.add('hidden');
+                // On est dans l'application : shouldSleepAfter = false (ne ferme jamais l'app !)
+                const realEmoji = resolveEventEmoji(remote.lastEvent.emoji, remote.lastEvent.message, remote.lastEvent.sound);
                 triggerBlackScreenRain(
-                  remote.lastEvent.emoji || '❤️',
+                  realEmoji,
                   remote.lastEvent.message || '',
                   remote.lastEvent.sound || 'love',
                   remote.lastEvent.pattern || [200, 80, 300],
                   false
                 );
-              } else if (evType === 'other') {
+              } else if (evType === 'drawing' || (remote.lastEvent.title && remote.lastEvent.title.includes('dessin'))) {
+                await fetchMediaIfNeeded('latest_drawing', state.latestDrawing?.id || 'latest');
                 playLoveSound(remote.lastEvent.sound || 'rose');
-                triggerBanner(remote.lastEvent.title, remote.lastEvent.message, remote.lastEvent.emoji || '🎨');
-                toggleLockscreen(true, true);
+                triggerDeviceVibration([200, 80, 250]);
+                toggleLockscreen(true, true, false);
+              } else {
+                playLoveSound(remote.lastEvent.sound || 'rose');
+                triggerBanner(remote.lastEvent.title, remote.lastEvent.message, remote.lastEvent.emoji || '🔥');
               }
             }
           }
@@ -1386,7 +1700,7 @@
     }
 
     function selectMoodPreset(idx) {
-      const key = currentUser.toLowerCase();
+      const key = (currentUser || 'Jordan').toLowerCase();
       const item = moodPresets[idx];
       state[key].mood = item.emoji;
       state[key].text = item.text;
@@ -1395,9 +1709,19 @@
       renderMoodLocLists();
     }
 
+    function selectLocationPreset(idx) {
+      const key = (currentUser || 'Jordan').toLowerCase();
+      const item = locationPresets[idx];
+      state[key].location = item.label;
+      playLoveSound('env');
+      saveState();
+      renderMoodLocLists();
+    }
+
     function renderMoodLocLists() {
-      const key = currentUser.toLowerCase();
+      const key = (currentUser || 'Jordan').toLowerCase();
       const curText = state[key].text;
+      const curLoc = state[key].location || '🏠 À la maison';
 
       document.getElementById('moodPresetList').innerHTML = moodPresets.map((m, i) => {
         const active = curText === m.text;
@@ -1405,6 +1729,15 @@
           <button onclick="selectMoodPreset(${i})" class="p-2.5 rounded-2xl border text-left flex items-center gap-2 transition active:scale-95 ${active ? 'bg-pink-100 border-pink-500 text-pink-900' : 'bg-slate-50 border-slate-200 text-slate-700'}">
             <span class="text-lg">${m.emoji}</span>
             <span class="truncate">${m.text}</span>
+          </button>
+        `;
+      }).join('');
+
+      document.getElementById('locationPresetList').innerHTML = locationPresets.map((loc, i) => {
+        const active = curLoc === loc.label;
+        return `
+          <button onclick="selectLocationPreset(${i})" class="p-2.5 rounded-2xl border text-left flex items-center gap-2 transition active:scale-95 ${active ? 'bg-purple-100 border-purple-500 text-purple-900' : 'bg-slate-50 border-slate-200 text-slate-700'}">
+            <span class="truncate">${loc.label}</span>
           </button>
         `;
       }).join('');
@@ -1417,9 +1750,6 @@
       const eventId = Date.now();
       lastEventId = eventId;
       localStorage.setItem('love8_last_event', String(eventId));
-      if (window.AndroidNative && window.AndroidNative.syncLastSeenEvent) {
-        window.AndroidNative.syncLastSeenEvent(eventId);
-      }
 
       state.lastEvent = {
         id: eventId,
@@ -1450,12 +1780,167 @@
           c.width = w;
           c.height = h;
           c.getContext('2d').drawImage(img, 0, 0, w, h);
-          const webpUrl = c.toDataURL('image/webp', 0.7);
-          callback(webpUrl.startsWith('data:image/webp') ? webpUrl : c.toDataURL('image/jpeg', 0.72));
+          const webpUrl = c.toDataURL('image/webp', 0.72);
+          callback(webpUrl.startsWith('data:image/webp') ? webpUrl : c.toDataURL('image/jpeg', 0.75));
         };
         img.src = e.target.result;
       };
       reader.readAsDataURL(file);
+    }
+
+    // ==================== FONCTIONS DÉFI PHOTO SEXY QUOTIDIEN ====================
+    function triggerSexyPhotoUpload() {
+      document.getElementById('fileInputSexyPhoto').click();
+    }
+
+    function handleSexyPhotoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      resizeImageToWebp(file, 480, async (dataUrl) => {
+        const today = getTodayDateStr();
+        const yesterday = getYesterdayDateStr();
+        const nowTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        const slotKey = currentUser === 'Jordan' ? 'jordanToLydie' : 'lydieToJordan';
+        const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
+        const slot = state.sexyChallenge[slotKey];
+
+        // Calcul de la série (streak) sur plusieurs jours
+        let newStreak = slot.streak || 0;
+        if (slot.lastSentDate !== today) {
+          if (slot.lastSentDate === yesterday) {
+            newStreak += 1;
+          } else {
+            newStreak = 1;
+          }
+        }
+
+        const photoId = Date.now();
+        state.sexyChallenge[slotKey] = {
+          date: today,
+          photoId: photoId,
+          time: nowTime,
+          rated: false,
+          tier: 0,
+          coinsAwarded: 0,
+          streak: newStreak,
+          lastSentDate: today
+        };
+
+        if (currentUser === 'Jordan') {
+          cachedMedia.sexyJordanId = photoId;
+          cachedMedia.sexyJordanUrl = dataUrl;
+          localStorage.setItem('love8_cached_sxy_j_id', String(photoId));
+          localStorage.setItem('love8_cached_sxy_j_url', dataUrl);
+        } else {
+          cachedMedia.sexyLydieId = photoId;
+          cachedMedia.sexyLydieUrl = dataUrl;
+          localStorage.setItem('love8_cached_sxy_l_id', String(photoId));
+          localStorage.setItem('love8_cached_sxy_l_url', dataUrl);
+        }
+
+        try {
+          await fetch(API_ENDPOINT + '?action=media', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: 'sexy_' + currentUser, dataUrl })
+          });
+        } catch (e) {}
+
+        const eventId = Date.now();
+        lastEventId = eventId;
+        state.lastEvent = {
+          id: eventId,
+          sender: currentUser,
+          type: 'vibration',
+          title: `📸🔥 PHOTO SEXY DE ${currentUser.toUpperCase()}`,
+          message: `${currentUser} t'a envoyé sa Photo Sexy du jour 🔥 Ouvre vite pour lui attribuer ses pièces !`,
+          emoji: '🔥',
+          sound: 'fire',
+          pattern: [200, 80, 200, 80, 400],
+          ack: 0
+        };
+
+        playLoveSound('fire');
+        spawnParticles('🔥', [200, 80, 350]);
+        triggerBanner('📸 PHOTO SEXY ENVOYÉE !', `${partner} va pouvoir la découvrir et voter pour tes pièces !`, '🔥');
+        saveState();
+      });
+    }
+
+    async function openSexyPhotoModal(senderName) {
+      currentSexyViewSender = senderName;
+      const slotKey = senderName === 'Jordan' ? 'jordanToLydie' : 'lydieToJordan';
+      const slot = state.sexyChallenge[slotKey];
+
+      if (senderName === 'Jordan' && (!cachedMedia.sexyJordanUrl || cachedMedia.sexyJordanId !== slot.photoId)) {
+        await fetchMediaIfNeeded('sexy_Jordan', slot.photoId);
+      } else if (senderName === 'Lydie' && (!cachedMedia.sexyLydieUrl || cachedMedia.sexyLydieId !== slot.photoId)) {
+        await fetchMediaIfNeeded('sexy_Lydie', slot.photoId);
+      }
+
+      const imgUrl = senderName === 'Jordan' ? cachedMedia.sexyJordanUrl : cachedMedia.sexyLydieUrl;
+      document.getElementById('sexyModalImg').src = imgUrl || '';
+      document.getElementById('sexyModalTitle').innerText = `📸🔥 Photo Sexy de ${senderName}`;
+      document.getElementById('sexyModalSub').innerText = `Envoyée aujourd'hui à ${slot.time || ''} • Série : 🔥 ${slot.streak || 1} jour(s)`;
+
+      const voteBox = document.getElementById('sexyRewardVoteBox');
+      const ratedBox = document.getElementById('sexyAlreadyRatedBox');
+
+      if (slot.rated) {
+        voteBox.classList.add('hidden');
+        ratedBox.classList.remove('hidden');
+        ratedBox.innerText = `✔️ Récompense déjà attribuée : +${slot.coinsAwarded} 🪙 (Palier ${slot.tier}/5)`;
+      } else if (currentUser !== senderName) {
+        voteBox.classList.remove('hidden');
+        ratedBox.classList.add('hidden');
+      } else {
+        voteBox.classList.add('hidden');
+        ratedBox.classList.remove('hidden');
+        ratedBox.innerText = `⏳ En attente du vote de ${senderName === 'Jordan' ? 'Lydie' : 'Jordan'} pour débloquer tes pièces !`;
+      }
+
+      document.getElementById('sexyPhotoModal').classList.remove('hidden');
+    }
+
+    function closeSexyModal() {
+      document.getElementById('sexyPhotoModal').classList.add('hidden');
+    }
+
+    function rateSexyPhoto(tier, baseCoins, tierLabel) {
+      const senderName = currentSexyViewSender;
+      const slotKey = senderName === 'Jordan' ? 'jordanToLydie' : 'lydieToJordan';
+      const slot = state.sexyChallenge[slotKey];
+      if (!slot || slot.rated || currentUser === senderName) return;
+
+      // Calcul du bonus automatique de série (dès 2 jours consécutifs : +10 pièces par jour de série, max +100)
+      const streakDays = slot.streak || 1;
+      const streakBonus = streakDays > 1 ? Math.min(100, streakDays * 10) : 0;
+      const totalAwarded = baseCoins + streakBonus;
+
+      slot.rated = true;
+      slot.tier = tier;
+      slot.coinsAwarded = totalAwarded;
+      state.coins = (state.coins || 0) + totalAwarded;
+
+      const eventId = Date.now();
+      lastEventId = eventId;
+      state.lastEvent = {
+        id: eventId,
+        sender: currentUser,
+        type: 'vibration',
+        title: `👑 PHOTO SEXY VALIDÉE (+${totalAwarded} 🪙)`,
+        message: `${currentUser} a validé ta photo (${tierLabel}) : +${baseCoins}🪙 ${streakBonus > 0 ? `+ Bonus série ${streakDays}j (+${streakBonus}🪙)` : ''} !`,
+        emoji: '🍓',
+        sound: 'fire',
+        pattern: [150, 60, 150, 60, 380],
+        ack: 0
+      };
+
+      closeSexyModal();
+      playLoveSound('fire');
+      spawnParticles('🪙', [150, 60, 300]);
+      triggerBanner('🎉 PIÈCES ATTRIBUÉES !', `+${totalAwarded} 🪙 ajoutées (dont ${streakBonus} 🪙 de bonus série) !`, '🔥');
+      saveState();
     }
 
     function triggerAvatarUpload(personKey) {
@@ -1510,6 +1995,7 @@
       if (window.AndroidNative && window.AndroidNative.setUser) {
         window.AndroidNative.setUser(user);
       }
+      registerFcmTokenToCloud();
       renderAll();
     }
 
@@ -1524,10 +2010,10 @@
       if (tab === 'dessin') loadCloudArchives();
     }
 
-    function spawnParticles(emoji, pattern = [150, 70, 250], maxDurationMs = 2500) {
+    function spawnParticles(emoji, pattern = [150, 70, 250], maxDurationMs = 2800) {
       if (document.hidden) return;
       triggerDeviceVibration(pattern);
-      for (let i = 0; i < 32; i++) {
+      for (let i = 0; i < 36; i++) {
         const el = document.createElement('div');
         el.className = 'heart-particle text-4xl';
         el.innerText = emoji;
@@ -1562,19 +2048,16 @@
       const eventId = Date.now();
       lastEventId = eventId;
       localStorage.setItem('love8_last_event', String(eventId));
-      if (window.AndroidNative && window.AndroidNative.syncLastSeenEvent) {
-        window.AndroidNative.syncLastSeenEvent(eventId);
-      }
 
       state.lastEvent = {
         id: eventId,
         sender: currentUser,
         type: 'vibration',
-        title: `⚡ VIBRATION D'AMOUR`,
+        title: `${emoji} VIBRATION DE ${currentUser.toUpperCase()}`,
         message: `${currentUser} → ${partner} : ${label}`,
-        emoji,
+        emoji: emoji,
         sound: soundType,
-        pattern,
+        pattern: pattern,
         ack: 0
       };
 
@@ -1710,7 +2193,7 @@
       state.lastEvent = {
         id: eventId,
         sender: currentUser,
-        type: 'other',
+        type: 'vibration',
         title: '🎟️ NOUVEAU BON D\'AMOUR !',
         message: `${currentUser} t'offre : ${title}`,
         emoji: '🎟️',
@@ -1754,37 +2237,62 @@
       saveState();
     }
 
+    // ==================== GESTION DU QUIZ 100 QUESTIONS TOUR PAR TOUR ====================
     function nextQuizQuestion() {
-      state.quiz.qIndex = (state.quiz.qIndex + 1) % coupleQuizPool.length;
-      state.quiz.targetUser = currentUser;
+      state.quiz.qIndex = ((state.quiz.qIndex || 0) + 1) % coupleQuizPool.length;
+      // Inverse automatiquement le rôle de celui qui pose la question
+      state.quiz.targetUser = state.quiz.targetUser === 'Jordan' ? 'Lydie' : 'Jordan';
+      const guesser = state.quiz.targetUser === 'Jordan' ? 'Lydie' : 'Jordan';
       state.quiz.secretChoice = null;
-      state.quiz.statusText = `${currentUser} : Choisis ta réponse secrète pour que ton partenaire devine !`;
+      state.quiz.statusText = `Étape 1 : ${state.quiz.targetUser} doit choisir sa réponse secrète (pour que ${guesser} devine ensuite) !`;
       saveState();
     }
 
     function selectQuizOption(optIndex) {
-      const qObj = coupleQuizPool[state.quiz.qIndex || 0];
-      const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
+      const idx = (state.quiz.qIndex || 0) % coupleQuizPool.length;
+      const qObj = coupleQuizPool[idx];
+      const target = state.quiz.targetUser || 'Jordan';
+      const guesser = target === 'Jordan' ? 'Lydie' : 'Jordan';
 
-      if (state.quiz.secretChoice === null || state.quiz.targetUser === currentUser) {
-        state.quiz.targetUser = currentUser;
+      // ÉTAPE 1 : La personne ciblée (targetUser) verrouille sa réponse secrète
+      if (state.quiz.secretChoice === null) {
+        if (currentUser !== target) {
+          triggerBanner('⏳ ATTENDS TON TOUR', `C'est d'abord à ${target} de choisir sa réponse secrète !`, '🔒');
+          triggerDeviceVibration([80, 50, 80]);
+          return;
+        }
         state.quiz.secretChoice = optIndex;
-        state.quiz.statusText = `🔒 ${currentUser} a verrouillé sa réponse ! C'est au tour de ${partner} de deviner !`;
-        triggerBanner('🎯 RÉPONSE ENREGISTRÉE', `Maintenant ${partner} doit deviner ton choix !`, '🤫');
+        state.quiz.statusText = `🔒 ${target} a verrouillé sa réponse secrète ! Étape 2 : C'est au tour de ${guesser} de deviner !`;
+        playLoveSound('env');
+        triggerBanner('🎯 RÉPONSE VERROUILLÉE', `Au tour de ${guesser} de deviner sur son téléphone !`, '🤫');
         saveState();
+        return;
+      }
+
+      // ÉTAPE 2 : Le partenaire (guesser) tente de deviner
+      if (currentUser !== guesser) {
+        triggerBanner('🤫 CHUT !', `Tu as déjà verrouillé ta réponse, laisse ${guesser} deviner !`, '👀');
+        triggerDeviceVibration([80, 50, 80]);
         return;
       }
 
       if (optIndex === state.quiz.secretChoice) {
         state.coins = (state.coins || 0) + 25;
+        state.quiz.scores[guesser] = (state.quiz.scores[guesser] || 0) + 1;
         state.cat.xp = (state.cat.xp || 0) + 30;
         if (state.cat.xp >= 100) { state.cat.level += 1; state.cat.xp -= 100; }
-        state.quiz.statusText = `🎉 BRAVO ${currentUser} ! Tu connais ${state.quiz.targetUser} par cœur (« ${qObj.options[optIndex]} ») ! +25 🪙 & +30 XP !`;
+
+        // On passe automatiquement à la question suivante et on inverse les rôles !
+        const nextIdx = (idx + 1) % coupleQuizPool.length;
+        state.quiz.qIndex = nextIdx;
+        state.quiz.targetUser = guesser; // Celui qui vient de deviner pose la prochaine question !
         state.quiz.secretChoice = null;
+        state.quiz.statusText = `🎉 BRAVO ${guesser} ! C'était bien « ${qObj.options[optIndex]} » (+25 🪙) ! Maintenant à ${guesser} de verrouiller sa réponse pour la question ${nextIdx + 1} !`;
+
         spawnParticles('🏆', [150, 70, 250, 70, 350]);
         playLoveSound('rose');
       } else {
-        state.quiz.statusText = `😜 Raté ${currentUser} ! Ce n'était pas « ${qObj.options[optIndex]} », réessaie !`;
+        state.quiz.statusText = `😜 Raté ${guesser} ! Ce n'était pas « ${qObj.options[optIndex]} », essaie une autre réponse !`;
         triggerDeviceVibration([100, 50, 100]);
       }
       saveState();
@@ -1843,7 +2351,7 @@
     let cloudArchivesList = [];
 
     function exportCanvasWebp() {
-      const webp = canvas.toDataURL('image/webp', 0.7);
+      const webp = canvas.toDataURL('image/webp', 0.75);
       return webp.startsWith('data:image/webp') ? webp : canvas.toDataURL('image/png');
     }
 
@@ -1961,7 +2469,13 @@
       state.latestDrawing = { id: drawId, caption: `« ${note} »`, author: currentUser, time: `${dateStr} à ${now}` };
       state.coins = (state.coins || 0) + 15;
 
+      // On sauvegarde d'abord l'image du dessin sur le serveur AVANT d'envoyer la notification FCM
       try {
+        await fetch(API_ENDPOINT + '?action=media', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'latest_drawing', dataUrl })
+        });
         await fetch(API_ENDPOINT + '?action=archive', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1971,14 +2485,12 @@
 
       const eventId = Date.now();
       lastEventId = eventId;
-      if (window.AndroidNative && window.AndroidNative.syncLastSeenEvent) {
-        window.AndroidNative.syncLastSeenEvent(eventId);
-      }
+      localStorage.setItem('love8_last_event', String(eventId));
 
       state.lastEvent = {
         id: eventId,
         sender: currentUser,
-        type: 'other',
+        type: 'drawing',
         title: `🖌️ Nouveau dessin de ${currentUser}`,
         message: note,
         emoji: '🎨',
@@ -1989,8 +2501,8 @@
 
       document.getElementById('sweetNoteInput').value = '';
       playLoveSound('rose');
-      triggerBanner('DESSIN ENVOYÉ (15S)', `Affiché pendant 15s sur l'écran de ${partner} !`, '🎨');
-      saveState();
+      triggerBanner('DESSIN ENVOYÉ (15S)', `Affiché en plein écran verrouillé sur le téléphone de ${partner} !`, '🎨');
+      await saveState();
       loadCloudArchives();
       showTab('nous');
     }
@@ -2034,7 +2546,58 @@
       document.getElementById('statHours').innerText = hours;
     }
 
+    function renderSexyChallengeCard() {
+      const today = getTodayDateStr();
+      const jSlot = state.sexyChallenge.jordanToLydie || {};
+      const lSlot = state.sexyChallenge.lydieToJordan || {};
+
+      document.getElementById('jordanStreakCount').innerText = jSlot.streak || 0;
+      document.getElementById('lydieStreakCount').innerText = lSlot.streak || 0;
+      document.getElementById('sexyStreakBadge').innerText = Math.max(jSlot.streak || 0, lSlot.streak || 0);
+
+      // Carte Jordan -> Lydie
+      const jSentToday = jSlot.date === today && jSlot.photoId;
+      const jStatusEl = document.getElementById('sexyStatusJordan');
+      const jActionEl = document.getElementById('sexyActionJordan');
+      if (!jSentToday) {
+        jStatusEl.innerText = "Pas encore envoyée aujourd'hui";
+        if (currentUser === 'Jordan') {
+          jActionEl.innerHTML = `<button onclick="triggerSexyPhotoUpload()" class="w-full py-2 rounded-xl gradient-card text-white font-extrabold text-[11px] shadow active:scale-95 transition">📷 Envoyer ma photo</button>`;
+        } else {
+          jActionEl.innerHTML = `<span class="block text-center py-1.5 rounded-xl bg-white/5 text-slate-400 text-[10px] font-bold">⏳ En attente de Jordan</span>`;
+        }
+      } else {
+        jStatusEl.innerText = jSlot.rated ? `✔️ Notée (+${jSlot.coinsAwarded} 🪙)` : `🔥 Envoyée à ${jSlot.time}`;
+        if (currentUser === 'Lydie' && !jSlot.rated) {
+          jActionEl.innerHTML = `<button onclick="openSexyPhotoModal('Jordan')" class="w-full py-2 rounded-xl bg-amber-400 text-slate-950 font-extrabold text-[11px] shadow pulse-ring active:scale-95 transition">👀 Voir & Attribuer 🪙</button>`;
+        } else {
+          jActionEl.innerHTML = `<button onclick="openSexyPhotoModal('Jordan')" class="w-full py-2 rounded-xl bg-white/15 text-white font-bold text-[11px] active:scale-95 transition">👁️ Voir la photo</button>`;
+        }
+      }
+
+      // Carte Lydie -> Jordan
+      const lSentToday = lSlot.date === today && lSlot.photoId;
+      const lStatusEl = document.getElementById('sexyStatusLydie');
+      const lActionEl = document.getElementById('sexyActionLydie');
+      if (!lSentToday) {
+        lStatusEl.innerText = "Pas encore envoyée aujourd'hui";
+        if (currentUser === 'Lydie') {
+          lActionEl.innerHTML = `<button onclick="triggerSexyPhotoUpload()" class="w-full py-2 rounded-xl gradient-card text-white font-extrabold text-[11px] shadow active:scale-95 transition">📷 Envoyer ma photo</button>`;
+        } else {
+          lActionEl.innerHTML = `<span class="block text-center py-1.5 rounded-xl bg-white/5 text-slate-400 text-[10px] font-bold">⏳ En attente de Lydie</span>`;
+        }
+      } else {
+        lStatusEl.innerText = lSlot.rated ? `✔️ Notée (+${lSlot.coinsAwarded} 🪙)` : `🔥 Envoyée à ${lSlot.time}`;
+        if (currentUser === 'Jordan' && !lSlot.rated) {
+          lActionEl.innerHTML = `<button onclick="openSexyPhotoModal('Lydie')" class="w-full py-2 rounded-xl bg-amber-400 text-slate-950 font-extrabold text-[11px] shadow pulse-ring active:scale-95 transition">👀 Voir & Attribuer 🪙</button>`;
+        } else {
+          lActionEl.innerHTML = `<button onclick="openSexyPhotoModal('Lydie')" class="w-full py-2 rounded-xl bg-white/15 text-white font-bold text-[11px] active:scale-95 transition">👁️ Voir la photo</button>`;
+        }
+      }
+    }
+
     function renderAll() {
+      sanitizeStateStructure();
       const isJordan = currentUser === 'Jordan';
       document.getElementById('btnJordan').className = isJordan
         ? 'px-2.5 py-1 rounded-full gradient-card text-white shadow transition-all flex items-center gap-1'
@@ -2052,14 +2615,15 @@
       const ackTxt = document.getElementById('ackStatusText');
       const ackIcon = document.getElementById('ackCheckIcon');
       if (ev.id) {
+        const displayEvEmoji = resolveEventEmoji(ev.emoji, ev.message, ev.sound);
         if (ev.ack && Number(ev.ack) === Number(ev.id)) {
           ackBox.className = 'bg-emerald-50 border border-emerald-200 text-emerald-900 text-[11px] font-bold px-3 py-2 rounded-2xl flex items-center justify-between';
-          ackTxt.innerText = `${ev.emoji || '❤️'} Reçu et vibré sur le téléphone de ${ev.ackBy || 'ton amour'} à ${ev.ackAt || ''}`;
+          ackTxt.innerText = `${displayEvEmoji} Reçu et vibré sur le téléphone de ${ev.ackBy || 'ton amour'} à ${ev.ackAt || ''}`;
           ackIcon.innerText = '✓✓';
         } else {
           const target = ev.sender === 'Jordan' ? 'Lydie' : 'Jordan';
           ackBox.className = 'bg-amber-50 border border-amber-200 text-amber-900 text-[11px] font-bold px-3 py-2 rounded-2xl flex items-center justify-between';
-          ackTxt.innerText = `⏳ ${ev.emoji || '❤️'} Envoyé à ${target} • En attente...`;
+          ackTxt.innerText = `⏳ ${displayEvEmoji} Envoyé à ${target} • En attente...`;
           ackIcon.innerText = '✓';
         }
       }
@@ -2079,6 +2643,10 @@
       document.getElementById('lydieMoodBadge').innerText = state.lydie.mood || '😍';
       document.getElementById('jordanStatusText').innerText = state.jordan.text || 'Pense à toi ❤️';
       document.getElementById('lydieStatusText').innerText = state.lydie.text || 'Hâte de te voir 💕';
+      document.getElementById('jordanLocationBadge').innerText = state.jordan.location || '🏠 À la maison';
+      document.getElementById('lydieLocationBadge').innerText = state.lydie.location || '🏠 À la maison';
+
+      renderSexyChallengeCard();
 
       const slots = state.cat.equippedSlots || { hat: '', eyes: '', neck: '', aura: '' };
       document.getElementById('accSlotHat').innerText = slots.hat || '';
@@ -2180,16 +2748,40 @@
         if (el) el.className = `py-2 rounded-xl border transition ${tod.level === k ? lvlStyles[k].active : lvlStyles[k].idle}`;
       });
 
-      const qObj = coupleQuizPool[state.quiz.qIndex || 0];
-      document.getElementById('quizQuestionTitle').innerText = `Pour ${state.quiz.targetUser} : « ${qObj.q} »`;
-      document.getElementById('quizModeSubtitle').innerText = state.quiz.secretChoice === null
-        ? `👉 ${state.quiz.targetUser} doit choisir sa réponse secrète ci-dessous :`
-        : `👉 Réponse verrouillée ! Au partenaire de deviner :`;
-      document.getElementById('quizOptionsGrid').innerHTML = qObj.options.map((opt, idx) => `
-        <button onclick="selectQuizOption(${idx})" class="bg-slate-50 hover:bg-purple-50 border border-slate-200 p-3 rounded-2xl text-left active:scale-95 transition">
-          ${opt}
-        </button>
-      `).join('');
+      // Rendu du Quiz 100 Questions avec rôles clairs
+      const qIdx = (state.quiz.qIndex || 0) % coupleQuizPool.length;
+      const qObj = coupleQuizPool[qIdx];
+      const targetUser = state.quiz.targetUser || 'Jordan';
+      const guesserUser = targetUser === 'Jordan' ? 'Lydie' : 'Jordan';
+      const isSecretLocked = state.quiz.secretChoice !== null;
+
+      document.getElementById('quizNumberBadge').innerText = `${qIdx + 1}/${coupleQuizPool.length}`;
+      document.getElementById('quizScorePill').innerText = `👦🏻 ${state.quiz.scores?.Jordan || 0} • 👩🏻 ${state.quiz.scores?.Lydie || 0}`;
+      document.getElementById('quizRolePill').innerText = !isSecretLocked
+        ? `Étape 1 : ${targetUser} choisit 🔒`
+        : `Étape 2 : ${guesserUser} devine 🤔`;
+
+      document.getElementById('quizQuestionTitle').innerText = `Question sur ${targetUser} : « ${qObj.q} »`;
+
+      if (!isSecretLocked) {
+        document.getElementById('quizModeSubtitle').innerText = currentUser === targetUser
+          ? `👉 C'est ton tour ${targetUser} : touche ta réponse secrète ci-dessous :`
+          : `⏳ Attends que ${targetUser} verrouille sa réponse secrète sur son téléphone...`;
+      } else {
+        document.getElementById('quizModeSubtitle').innerText = currentUser === guesserUser
+          ? `👉 À toi de jouer ${guesserUser} : devine ce que ${targetUser} a choisi !`
+          : `🤫 Tu as verrouillé « ${qObj.options[state.quiz.secretChoice]} ». ${guesserUser} est en train de deviner !`;
+      }
+
+      const canClickQuiz = (!isSecretLocked && currentUser === targetUser) || (isSecretLocked && currentUser === guesserUser);
+      document.getElementById('quizOptionsGrid').innerHTML = qObj.options.map((opt, idx) => {
+        const isMySecret = isSecretLocked && currentUser === targetUser && state.quiz.secretChoice === idx;
+        return `
+          <button onclick="selectQuizOption(${idx})" class="p-3 rounded-2xl text-left border transition ${isMySecret ? 'bg-purple-100 border-purple-500 text-purple-950' : (canClickQuiz ? 'bg-slate-50 hover:bg-pink-50 border-slate-200 active:scale-95' : 'bg-slate-100/70 border-slate-200 text-slate-400 opacity-75')}">
+            ${opt} ${isMySecret ? '🔒' : ''}
+          </button>
+        `;
+      }).join('');
       document.getElementById('quizStatusBox').innerText = state.quiz.statusText || '';
 
       document.getElementById('couponsListContainer').innerHTML = (state.coupons || []).map(c => `
@@ -2245,7 +2837,6 @@
     pollCloudState();
     setInterval(pollCloudState, 2500);
 
-    // Lancement automatique de l'enregistrement du token FCM au démarrage
     window.addEventListener('DOMContentLoaded', () => {
       setTimeout(registerFcmTokenToCloud, 2000);
     });
