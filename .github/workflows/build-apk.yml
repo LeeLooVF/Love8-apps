@@ -63,7 +63,6 @@ jobs:
           npx cap add android
           npx cap sync android
 
-          # Injection automatique du google-services.json à l'endroit exact attendu par Gradle
           if [ -f "google-services.json" ]; then
             cp google-services.json android/app/
           else
@@ -94,11 +93,9 @@ jobs:
 
       - name: 🔒 Configuration Gradle, Dépendance Firebase et Code Java FCM
         run: |
-          # Ajout du plugin google-services dans le build.gradle racine ou app
           echo "buildscript { dependencies { classpath 'com.google.gms:google-services:4.4.1' } }" >> android/build.gradle
           echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
 
-          # Ajout de la dépendance Firebase Messaging dans android/app/build.gradle
           cat << 'EOF' >> android/app/build.gradle
 
           dependencies {
@@ -190,6 +187,7 @@ jobs:
           cat << 'EOF' > android/app/src/main/java/com/love8/app/Love8FirebaseMessagingService.java
           package com.love8.app;
 
+          import android.app.KeyguardManager;
           import android.app.Notification;
           import android.app.NotificationChannel;
           import android.app.NotificationManager;
@@ -217,16 +215,34 @@ jobs:
                       String title = remoteMessage.getData().get("title");
                       String body = remoteMessage.getData().get("body");
                       String sound = remoteMessage.getData().get("sound");
+                      String emoji = remoteMessage.getData().get("emoji");
+                      String evType = remoteMessage.getData().get("evType");
+                      if (evType == null) evType = remoteMessage.getData().get("type");
+
                       if (title == null) title = "Love8 ❤️";
                       if (body == null) body = "Nouvelle vibration !";
+                      if (emoji == null) emoji = "❤️";
+                      if (evType == null) evType = "vibration";
+                      if (sound == null) sound = "love";
 
                       PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-                      if (pm != null) {
+                      KeyguardManager km = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+                      boolean isInteractive = pm != null && pm.isInteractive();
+                      boolean isLocked = km != null && km.isKeyguardLocked();
+                      boolean wasSleeping = (!isInteractive || isLocked);
+
+                      // Si le téléphone est déverrouillé ET que l'application est déjà ouverte au premier plan,
+                      // on laisse le polling Web gérer l'animation sans relancer l'Activity ni fermer l'application !
+                      if (!wasSleeping && MainActivity.isAppInForeground) {
+                          return;
+                      }
+
+                      if (pm != null && wasSleeping) {
                           PowerManager.WakeLock screenLock = pm.newWakeLock(
                               PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
                               "love8:fcmWake"
                           );
-                          screenLock.acquire(4000);
+                          screenLock.acquire(5000);
                       }
 
                       Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -239,14 +255,17 @@ jobs:
                       }
 
                       Intent intent = new Intent(this, MainActivity.class);
-                      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NO_ANIMATION);
                       intent.putExtra("lock_alert", true);
+                      intent.putExtra("was_sleeping", wasSleeping);
+                      intent.putExtra("emoji", emoji);
                       intent.putExtra("title", title);
                       intent.putExtra("message", body);
+                      intent.putExtra("evType", evType);
                       intent.putExtra("sound", sound);
 
                       PendingIntent pendingIntent = PendingIntent.getActivity(
-                          this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                          this, (int) System.currentTimeMillis(), intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
                       );
 
                       NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -289,6 +308,7 @@ jobs:
           import android.content.Intent;
           import android.content.SharedPreferences;
           import android.content.pm.PackageManager;
+          import android.graphics.Color;
           import android.net.Uri;
           import android.os.Build;
           import android.os.Bundle;
@@ -303,6 +323,8 @@ jobs:
           import com.google.firebase.messaging.FirebaseMessaging;
 
           public class MainActivity extends BridgeActivity {
+              public static boolean isAppInForeground = false;
+
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
@@ -315,12 +337,28 @@ jobs:
                       WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
                       WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
                   );
+                  getWindow().getDecorView().setBackgroundColor(Color.BLACK);
 
                   requestEssentialPermissions();
                   registerFcmToken();
 
-                  this.bridge.getWebView().addJavascriptInterface(new WebAppBridge(this), "AndroidNative");
+                  if (this.bridge != null && this.bridge.getWebView() != null) {
+                      this.bridge.getWebView().setBackgroundColor(Color.BLACK);
+                      this.bridge.getWebView().addJavascriptInterface(new WebAppBridge(this), "AndroidNative");
+                  }
                   handleWakeIntent(getIntent());
+              }
+
+              @Override
+              public void onResume() {
+                  super.onResume();
+                  isAppInForeground = true;
+              }
+
+              @Override
+              public void onPause() {
+                  super.onPause();
+                  isAppInForeground = false;
               }
 
               private void registerFcmToken() {
@@ -378,6 +416,8 @@ jobs:
 
               private void handleWakeIntent(Intent intent) {
                   if (intent != null && intent.getBooleanExtra("lock_alert", false)) {
+                      intent.removeExtra("lock_alert");
+
                       WindowManager.LayoutParams params = getWindow().getAttributes();
                       params.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE;
                       getWindow().setAttributes(params);
@@ -391,6 +431,8 @@ jobs:
                           setShowWhenLocked(true);
                           setTurnScreenOn(true);
                       }
+
+                      boolean wasSleeping = intent.getBooleanExtra("was_sleeping", true);
                       String emoji = intent.getStringExtra("emoji");
                       String title = intent.getStringExtra("title");
                       String msg = intent.getStringExtra("message");
@@ -407,15 +449,19 @@ jobs:
                       final String safeMsg = msg.replace("'", "\\'");
                       final String safeType = evType.replace("'", "\\'");
                       final String safeSound = sound.replace("'", "\\'");
+                      final String sleepFlag = wasSleeping ? "true" : "false";
 
-                      this.bridge.getWebView().postDelayed(new Runnable() {
+                      // Masque immédiatement le contenu Web en noir avant même que la frame ne s'affiche
+                      final String jsCall = "document.documentElement.classList.add('wake-blackout');" +
+                          "if(window.onNativeWakeAlert){window.onNativeWakeAlert('" + safeEmoji + "','" + safeTitle + "','" + safeMsg + "','" + safeType + "','" + safeSound + "'," + sleepFlag + ");}" +
+                          "else{window.__pendingWakeAlert=['" + safeEmoji + "','" + safeTitle + "','" + safeMsg + "','" + safeType + "','" + safeSound + "'," + sleepFlag + "];}";
+
+                      this.bridge.getWebView().post(new Runnable() {
                           @Override
                           public void run() {
-                              MainActivity.this.bridge.getWebView().evaluateJavascript(
-                                  "if(window.onNativeWakeAlert) window.onNativeWakeAlert('" + safeEmoji + "','" + safeTitle + "','" + safeMsg + "','" + safeType + "','" + safeSound + "');", null
-                              );
+                              MainActivity.this.bridge.getWebView().evaluateJavascript(jsCall, null);
                           }
-                      }, 300);
+                      });
                   }
               }
 
@@ -456,11 +502,6 @@ jobs:
                                       setShowWhenLocked(false);
                                   }
                                   moveTaskToBack(true);
-                                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                      finishAndRemoveTask();
-                                  } else {
-                                      finish();
-                                  }
                               } catch (Exception ignored) {}
                           }
                       });
