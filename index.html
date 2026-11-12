@@ -14,7 +14,6 @@
       -webkit-tap-highlight-color: transparent;
       overflow-x: hidden;
     }
-    /* Mise en pause totale des animations CSS quand l'écran est en arrière-plan (0% CPU) */
     body.app-hidden * {
       animation-play-state: paused !important;
     }
@@ -52,15 +51,6 @@
     .vib-btn-rose {
       background: linear-gradient(135deg, #d946ef 0%, #86198f 100%);
       box-shadow: 0 6px 15px -3px rgba(134, 25, 143, 0.4);
-    }
-    .sos-siren-btn {
-      background: linear-gradient(135deg, #dc2626 0%, #991b1b 50%, #e11d48 100%);
-      box-shadow: 0 0 20px rgba(220, 38, 38, 0.55);
-      animation: sosPulse 1.4s infinite alternate;
-    }
-    @keyframes sosPulse {
-      from { transform: scale(1); box-shadow: 0 0 12px rgba(220, 38, 38, 0.45); }
-      to { transform: scale(1.015); box-shadow: 0 0 24px rgba(220, 38, 38, 0.85); }
     }
     .cat-bounce {
       animation: floatCat 2.8s ease-in-out infinite;
@@ -117,40 +107,23 @@
       70% { box-shadow: 0 0 0 14px rgba(236, 72, 153, 0); }
       100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0); }
     }
-    .fusion-glow {
-      animation: fusionPulse 0.7s ease-in-out infinite alternate;
-      box-shadow: 0 0 35px 12px rgba(236, 72, 153, 0.85), inset 0 0 25px rgba(168, 85, 247, 0.7);
-    }
-    @keyframes fusionPulse {
-      from { transform: scale(0.95); opacity: 0.85; }
-      to { transform: scale(1.18); opacity: 1; }
-    }
   </style>
 </head>
 <body class="min-h-screen pb-24 text-slate-800">
 
   <!-- INPUTS FICHIERS CACHÉS -->
   <input id="fileInputAvatar" type="file" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)" />
-  <input id="fileInputCanvas" type="file" accept="image/*" class="hidden" onchange="handleCanvasImageUpload(event)" />
   <input id="fileInputCapsule" type="file" accept="image/*" class="hidden" onchange="handleCapsulePhotoUpload(event)" />
 
-  <!-- ==================== MODALE DE SÉLECTION : LISTE D'HUMEURS & LISTE DE LIEUX ==================== -->
+  <!-- ==================== MODALE DE SÉLECTION : HUMEUR UNIQUEMENT ==================== -->
   <div id="moodLocModal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
-    <div class="bg-white w-full max-w-md rounded-3xl p-5 space-y-4 shadow-2xl border border-pink-100 max-h-[88vh] overflow-y-auto">
+    <div class="bg-white w-full max-w-md rounded-3xl p-5 space-y-4 shadow-2xl border border-pink-100 max-h-[85vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 class="font-extrabold text-base text-purple-950">😊 Choisir mon Humeur & mon Lieu</h3>
+        <h3 class="font-extrabold text-base text-purple-950">😊 Choisir mon Humeur</h3>
         <button onclick="closeMoodLocModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold text-xs">✕</button>
       </div>
 
-      <div class="space-y-2">
-        <label class="text-xs font-extrabold uppercase tracking-wider text-pink-600">1. Mon Humeur actuelle</label>
-        <div id="moodPresetList" class="grid grid-cols-2 gap-2 text-xs font-bold"></div>
-      </div>
-
-      <div class="space-y-2 pt-1">
-        <label class="text-xs font-extrabold uppercase tracking-wider text-purple-600">2. Ma Localisation</label>
-        <div id="locPresetList" class="grid grid-cols-2 gap-2 text-xs font-bold"></div>
-      </div>
+      <div id="moodPresetList" class="grid grid-cols-2 gap-2 text-xs font-bold"></div>
 
       <button onclick="closeMoodLocModal()" class="w-full py-3 rounded-2xl gradient-card text-white text-xs font-extrabold uppercase tracking-wider shadow">
         ✔️ Terminé
@@ -158,27 +131,22 @@
     </div>
   </div>
 
-  <!-- ==================== ÉCRAN NOIR PUR (100% BLACKOUT) POUR TOUTES LES PLUIES DE VIBRATIONS ==================== -->
+  <!-- ==================== ÉCRAN NOIR PUR (100% BLACKOUT) POUR LES PLUIES DE VIBRATIONS ==================== -->
   <div id="pureBlackRainOverlay" onclick="closeBlackRainNow()" class="fixed inset-0 z-[99990] hidden bg-black flex flex-col items-center justify-center">
     <p id="blackRainSubtitle" class="text-white/30 text-xs font-bold tracking-widest uppercase mt-auto mb-8">
       Love8 • Pluie d'amour en cours
     </p>
   </div>
 
-  <!-- ==================== ÉCRAN DE VERROUILLAGE (POUR DESSIN / MANUEL) ==================== -->
+  <!-- ==================== ÉCRAN DE VERROUILLAGE (POUR DESSIN 15S) ==================== -->
   <div id="lockscreenOverlay" class="fixed inset-0 z-50 hidden bg-[#060609] text-white flex flex-col justify-between p-4 overflow-hidden">
 
     <div class="mt-2">
-      <div class="grid grid-cols-3 items-center gap-2">
+      <div class="grid grid-cols-2 items-center gap-3">
         <div class="bg-rose-500/15 border border-rose-400/35 rounded-2xl p-2.5 text-center">
           <p class="text-[9px] uppercase tracking-wider text-rose-300 font-bold">Notre Relation</p>
           <p class="text-lg font-extrabold text-white leading-tight mt-0.5"><span id="lockRelationDays">2525</span>j ❤️</p>
           <p class="text-[9px] text-rose-200/80">Depuis 12/12/19</p>
-        </div>
-
-        <div onclick="resetTogetherNow()" class="text-center cursor-pointer active:scale-95 transition">
-          <p id="lockSepTimer" class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">00:00</p>
-          <p id="lockSepStatus" class="text-[9px] text-emerald-300 font-bold uppercase tracking-wider mt-0.5">📍 Ensemble (0m)</p>
         </div>
 
         <div class="bg-emerald-500/15 border border-emerald-400/35 rounded-2xl p-2 text-center">
@@ -200,7 +168,7 @@
     </div>
 
     <div class="flex-1 my-4 bg-[#12131c] border border-white/10 rounded-3xl p-4 flex flex-col justify-between overflow-hidden shadow-2xl">
-      <p id="lockDrawingMeta" class="text-xs text-slate-300 text-center font-medium">Dessiné par Jordan • À 21:22</p>
+      <p id="lockDrawingMeta" class="text-xs text-slate-300 text-center font-medium">Dessiné par Jordan</p>
       
       <div class="flex-1 my-3 bg-white rounded-2xl p-2 flex items-center justify-center overflow-hidden">
         <img id="lockDrawingImg" src="" class="w-full h-full object-contain hidden" />
@@ -221,7 +189,7 @@
       <div id="bannerIcon" class="w-10 h-10 rounded-full gradient-card flex items-center justify-center text-white text-xl">❤️</div>
       <div>
         <p id="bannerTitle" class="text-xs font-bold uppercase tracking-wider text-pink-600">⚡ VIBRATION D'AMOUR</p>
-        <p id="bannerText" class="text-sm font-semibold text-slate-800">Lydie → Jordan : Gros Câlin 🤗</p>
+        <p id="bannerText" class="text-sm font-semibold text-slate-800">Lydie → Jordan</p>
       </div>
     </div>
     <button onclick="hideBanner()" class="text-xs font-bold text-slate-400 px-2 py-1">OK</button>
@@ -252,7 +220,7 @@
     </div>
 
     <div class="flex items-center gap-1">
-      <button onclick="downloadLatestApk()" title="Mettre à jour directement sans désinstaller" class="px-2 py-1.5 rounded-full bg-emerald-100 border border-emerald-300 text-[10px] font-extrabold text-emerald-800 active:scale-95 transition">
+      <button onclick="downloadLatestApk()" title="Mettre à jour directement" class="px-2 py-1.5 rounded-full bg-emerald-100 border border-emerald-300 text-[10px] font-extrabold text-emerald-800 active:scale-95 transition">
         🔄 MAJ
       </button>
       <button onclick="toggleLockscreen(true, false)" class="px-2 py-1.5 rounded-full bg-purple-100 border border-purple-200 text-[10px] font-extrabold text-purple-800 active:scale-95 transition">
@@ -263,15 +231,12 @@
 
   <main class="max-w-md mx-auto px-4 pt-3 space-y-4">
 
-    <!-- ==================== ONGLET 1 : NOUS ==================== -->
+    <!-- ==================== ONGLET 1 : NOUS (ÉPURÉ) ==================== -->
     <section id="tab-nous" class="space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80">
-        <div class="flex justify-between items-center mb-3">
-          <button onclick="showTab('souvenirs')" class="bg-pink-50 hover:bg-pink-100 text-purple-800 text-xs font-bold px-3.5 py-1.5 rounded-full transition flex items-center gap-1">
-            Ensemble depuis <span id="daysBadgeTop">2525</span> jours ›
-          </button>
-          <button onclick="resetTogetherNow()" id="topSepBadge" class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold px-3 py-1 rounded-full active:scale-95 transition">
-            📍 <span id="topSepTimer">Ensemble (0m)</span>
+        <div class="flex justify-center items-center mb-3">
+          <button onclick="showTab('souvenirs')" class="bg-pink-50 hover:bg-pink-100 text-purple-800 text-xs font-bold px-4 py-1.5 rounded-full transition flex items-center gap-1">
+            ❤️ Ensemble depuis <span id="daysBadgeTop">2525</span> jours ›
           </button>
         </div>
 
@@ -282,10 +247,8 @@
               <span id="jordanAvatarEmoji" class="text-4xl">🧔🏻‍♂️</span>
               <span id="jordanMoodBadge" class="absolute -top-1 -right-1 bg-white rounded-full px-1 text-xs shadow">😍</span>
             </div>
-            <span id="jordanBat" class="mt-2 bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">🔋 --%</span>
-            <h3 class="font-extrabold text-sm mt-1">Jordan</h3>
-            <p id="jordanStatusText" class="text-xs text-slate-500">Pense à toi ❤️</p>
-            <span id="jordanLocText" class="mt-1 bg-purple-50 text-purple-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">📍 À la maison</span>
+            <h3 class="font-extrabold text-sm mt-2">Jordan</h3>
+            <p id="jordanStatusText" class="text-xs text-slate-500 mt-0.5">Pense à toi ❤️</p>
           </div>
 
           <div class="flex flex-col items-center justify-center">
@@ -297,7 +260,7 @@
               <div class="h-[2px] w-5 bg-pink-200"></div>
             </div>
             <span class="mt-2 bg-pink-50 text-pink-600 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-pink-200">
-              Toucher = ❤️ Noir
+              Toucher = ❤️
             </span>
           </div>
 
@@ -307,31 +270,27 @@
               <span id="lydieAvatarEmoji" class="text-4xl">👩🏻</span>
               <span id="lydieMoodBadge" class="absolute -top-1 -right-1 bg-white rounded-full px-1 text-xs shadow">😍</span>
             </div>
-            <span id="lydieBat" class="mt-2 bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">🔋 --%</span>
-            <h3 class="font-extrabold text-sm mt-1">Lydie</h3>
-            <p id="lydieStatusText" class="text-xs text-slate-500">Hâte de te voir 💕</p>
-            <span id="lydieLocText" class="mt-1 bg-pink-50 text-pink-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">📍 À la maison</span>
+            <h3 class="font-extrabold text-sm mt-2">Lydie</h3>
+            <p id="lydieStatusText" class="text-xs text-slate-500 mt-0.5">Hâte de te voir 💕</p>
           </div>
         </div>
 
         <div class="mt-4 pt-3 border-t border-slate-100">
-          <button onclick="openMoodLocModal()" class="w-full bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 hover:from-purple-100 hover:to-pink-100 text-purple-900 text-xs font-extrabold py-3 rounded-2xl border border-pink-200 shadow-sm transition active:scale-[0.99] flex items-center justify-center gap-2">
-            <span>😊 Choisir mon Humeur & mon Lieu</span>
-            <span class="text-[10px] bg-white px-2 py-0.5 rounded-full text-emerald-600 border border-emerald-200">⚡ Éco-GPS 10m</span>
+          <button onclick="openMoodLocModal()" class="w-full bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 hover:from-purple-100 hover:to-pink-100 text-purple-900 text-xs font-extrabold py-2.5 rounded-2xl border border-pink-200 shadow-sm transition active:scale-[0.99]">
+            😊 Changer mon Humeur actuelle
           </button>
         </div>
       </div>
 
-      <!-- ==================== CARTE VIBRATION D'AMOUR + ACCUSÉ ✓✓ + S.O.S ==================== -->
+      <!-- ==================== CARTE VIBRATIONS D'AMOUR (8 BOUTONS ESSENTIELS + ACCUSÉ ✓✓) ==================== -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-extrabold tracking-wider uppercase text-slate-500">⚡ VIBRATIONS SUR FOND NOIR (+5 🪙)</span>
+          <span class="text-xs font-extrabold tracking-wider uppercase text-slate-500">⚡ VIBRATIONS EN DIRECT (+5 🪙)</span>
           <span class="bg-pink-50 text-pink-600 text-xs font-bold px-3 py-1 rounded-full"><span id="pingCounter">41</span> Pings 💕</span>
         </div>
 
-        <!-- BARRE D'ACCUSÉ DE RÉCEPTION RÉEL ✓✓ -->
         <div id="ackStatusBanner" class="bg-slate-50 border border-slate-200 text-slate-600 text-[11px] font-bold px-3 py-2 rounded-2xl flex items-center justify-between">
-          <span id="ackStatusText">Prêt à envoyer une vibration en direct ⚡</span>
+          <span id="ackStatusText">Prêt à envoyer une vibration ⚡</span>
           <span id="ackCheckIcon" class="text-xs font-extrabold text-emerald-600"></span>
         </div>
 
@@ -378,67 +337,18 @@
             <span id="badgeVibRose" class="absolute bottom-1 right-1.5 bg-black/30 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
           </button>
         </div>
-
-        <div class="grid grid-cols-4 gap-2 text-xs font-extrabold pt-1">
-          <button onclick="sendLovePing('Je t\'aime ❤️', '❤️', [100, 60, 100, 60, 260], 'love')" class="bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300 py-2.5 rounded-xl transition active:scale-95">
-            ❤️ Je t'aime
-          </button>
-          <button onclick="sendLovePing('Gros Bisou 😘', '😘', [140, 70, 200], 'kiss')" class="bg-pink-100 hover:bg-pink-200 text-pink-800 border border-pink-300 py-2.5 rounded-xl transition active:scale-95">
-            😘 Bisou
-          </button>
-          <button onclick="sendLovePing('Gros Câlin 🤗', '🤗', [500], 'hug')" class="bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 py-2.5 rounded-xl transition active:scale-95">
-            🤗 Câlin
-          </button>
-          <button onclick="sendLovePing('Ce soir ? 🔥', '🔥', [160, 60, 160, 60, 320], 'fire')" class="bg-orange-100 hover:bg-orange-200 text-orange-900 border border-orange-300 py-2.5 rounded-xl transition active:scale-95">
-            🔥 Ce soir ?
-          </button>
-        </div>
-
-        <div class="pt-1">
-          <button onclick="sendSosFlashSiren()" class="sos-siren-btn w-full py-3.5 px-4 rounded-2xl text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 active:scale-95 transition">
-            <span class="text-lg">🚨</span>
-            <span>S.O.S Amour : « Réponds-moi vite ! » (Flash LED + Sirène)</span>
-            <span class="text-lg">🔦</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Mini Carte Douglasse -->
-      <div onclick="showTab('douglasse')" class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 flex items-center justify-between cursor-pointer active:scale-[0.99] transition">
-        <div class="flex items-center gap-3">
-          <div class="relative w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-2xl overflow-hidden border border-slate-200">
-            <img id="miniCatPhoto" src="Snapchat-1098749864.jpg" onerror="if(this.src.indexOf('pages.dev')===-1){this.src='https://love8-apps.pages.dev/Snapchat-1098749864.jpg';}else{this.classList.add('hidden');}" class="w-full h-full object-cover" />
-            <span id="miniCatEmoji">🐱</span>
-          </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h4 class="font-extrabold text-sm">Douglasse</h4>
-              <span id="miniCatBadge" class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Ronronne 🐾</span>
-            </div>
-            <p class="text-xs text-slate-500 mt-0.5">
-              Faim: <strong id="miniHunger" class="text-slate-800">100%</strong> • Amour: <strong id="miniLove" class="text-pink-600">100%</strong>
-            </p>
-          </div>
-        </div>
-        <span class="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center font-bold">›</span>
       </div>
     </section>
 
-    <!-- ==================== ONGLET 2 : DESSIN LIVE À DEUX & TOUCHER HAPTIQUE ==================== -->
+    <!-- ==================== ONGLET 2 : DESSIN SIMPLE & LÉGER ==================== -->
     <section id="tab-dessin" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="font-extrabold text-base flex items-center gap-1.5">🎨 Dessin Live & Magie Haptique</h2>
-            <p class="text-[11px] text-slate-400">Touchez au même endroit ensemble pour fusionner ✨</p>
+            <h2 class="font-extrabold text-base flex items-center gap-1.5">🎨 Dessin & Mot Doux</h2>
+            <p class="text-[11px] text-slate-400">Dessine un message qui s'affichera 15s sur son écran</p>
           </div>
           <div class="flex gap-1.5">
-            <button id="btnLiveDraw" onclick="toggleLiveDrawMode()" class="px-2.5 h-9 rounded-full bg-rose-50 border border-rose-200 text-rose-600 font-extrabold flex items-center gap-1 text-[11px]">
-              🔴 Live ON
-            </button>
-            <button onclick="document.getElementById('fileInputCanvas').click()" class="px-2.5 h-9 rounded-full bg-purple-50 border border-purple-200 text-purple-700 font-bold flex items-center gap-1 text-xs">
-              🖼️
-            </button>
             <button onclick="undoCanvas()" class="w-9 h-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-sm">↩️</button>
             <button onclick="clearCanvas()" class="w-9 h-9 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-sm">🗑️</button>
           </div>
@@ -446,18 +356,6 @@
 
         <div class="relative border-2 border-purple-200 rounded-2xl overflow-hidden bg-white shadow-inner">
           <canvas id="drawCanvas" width="360" height="360" class="w-full touch-none bg-white cursor-crosshair"></canvas>
-
-          <div id="partnerLiveCursor" class="pointer-events-none absolute hidden transform -translate-x-1/2 -translate-y-1/2 z-20 transition-all duration-150">
-            <div class="w-6 h-6 rounded-full bg-pink-500/40 border-2 border-pink-600 flex items-center justify-center shadow-lg">
-              <span class="text-xs">❤️</span>
-            </div>
-            <span id="partnerCursorLabel" class="bg-pink-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full shadow whitespace-nowrap">Lydie</span>
-          </div>
-
-          <div id="hapticFusionOrb" class="pointer-events-none absolute hidden w-28 h-28 rounded-full bg-gradient-to-r from-pink-500/60 via-purple-500/60 to-amber-400/60 transform -translate-x-1/2 -translate-y-1/2 z-30 flex flex-col items-center justify-center fusion-glow">
-            <span class="text-3xl">✨💖✨</span>
-            <span class="text-[9px] font-extrabold text-white uppercase bg-black/50 px-2 py-0.5 rounded-full">Fusion !</span>
-          </div>
         </div>
 
         <div class="space-y-1">
@@ -499,13 +397,13 @@
         <input id="sweetNoteInput" type="text" placeholder="Légende sous le dessin (ex: Bon courage mon amour ❤️)..." class="w-full text-xs bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-3 focus:outline-none focus:border-pink-400" />
 
         <button onclick="sendDrawingToPartner()" class="w-full gradient-card text-white font-extrabold text-sm py-3.5 rounded-2xl shadow-md active:scale-[0.99] transition">
-          🚀 Envoyer sur l'écran (15s) & Archiver WebP
+          🚀 Envoyer sur son écran (15s)
         </button>
       </div>
 
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
-          <h3 class="font-extrabold text-sm flex items-center gap-1.5">☁️ Album Cloud R2 (<span id="archiveCountBadge">0</span> souvenirs)</h3>
+          <h3 class="font-extrabold text-sm flex items-center gap-1.5">☁️ Album Souvenirs (<span id="archiveCountBadge">0</span> dessins)</h3>
           <button onclick="loadCloudArchives()" class="text-[11px] font-bold text-purple-600">🔄 Actualiser</button>
         </div>
         <div id="drawingsGallery" class="grid grid-cols-2 gap-2.5 max-h-96 overflow-y-auto pr-1"></div>
@@ -623,8 +521,8 @@
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <div>
-            <h3 class="font-extrabold text-sm">👑 Boutique Prestige de Douglasse (16 items)</h3>
-            <p class="text-[10px] text-slate-400">Économisez vos pièces à deux pendant la semaine pour les débloquer !</p>
+            <h3 class="font-extrabold text-sm">👑 Boutique Prestige de Douglasse</h3>
+            <p class="text-[10px] text-slate-400">Économisez vos pièces à deux pour les débloquer !</p>
           </div>
           <button onclick="clearAllAccessories()" class="text-[11px] font-bold text-rose-500">Tout retirer</button>
         </div>
@@ -760,15 +658,6 @@
         </button>
         <div id="capsulesListContainer" class="space-y-2.5 pt-1"></div>
       </div>
-
-      <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
-        <h3 class="font-extrabold text-sm">✨ Nos Envies & Projets à Deux</h3>
-        <div class="flex gap-2">
-          <input id="wishInput" type="text" placeholder="Ajouter une idée (ex: Soirée sushi, massage...)" class="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2.5" />
-          <button onclick="addWishItem()" class="bg-purple-600 text-white font-bold w-10 rounded-2xl shadow">+</button>
-        </div>
-        <div id="wishListContainer" class="space-y-2 text-xs"></div>
-      </div>
     </section>
 
   </main>
@@ -780,7 +669,7 @@
     </button>
     <button id="nav-dessin" onclick="showTab('dessin')" class="flex flex-col items-center gap-0.5">
       <span class="text-lg">🖌️</span>
-      <span>Dessin Live</span>
+      <span>Dessin</span>
     </button>
     <button id="nav-douglasse" onclick="showTab('douglasse')" class="flex flex-col items-center gap-0.5">
       <span class="text-lg">🐱</span>
@@ -826,19 +715,6 @@
       { emoji: '🍔', text: 'J\'ai trop faim 🍔' },
       { emoji: '🥰', text: 'Amoureux(se) de toi 🥰' },
       { emoji: '🎉', text: 'En pleine forme 🎉' }
-    ];
-
-    const locationPresets = [
-      '📍 À la maison',
-      '📍 Au travail',
-      '📍 En route 🚗',
-      '📍 En courses 🛒',
-      '📍 Chez des amis 🥂',
-      '📍 Au sport 🏃',
-      '📍 Au restaurant 🍽️',
-      '📍 En balade 🌳',
-      '📍 Chez la famille 👨‍👩‍👧',
-      '📍 Sous la couette 🛌'
     ];
 
     const catAccessoriesCatalog = [
@@ -944,11 +820,9 @@
       pingsToday: 41,
       coins: 180,
       vibCounts: { env: 12, peach: 9, cuc: 8, chili: 12, straw: 4, devil: 6, lips: 10, rose: 7 },
-      separationStart: null,
-      lastDistanceMeters: 0,
       lastEvent: { id: 0, sender: 'Jordan', type: 'vibration', title: '', message: '', emoji: '❤️', sound: 'love', pattern: [150, 80, 250] },
-      jordan: { mood: '😍', text: 'Pense à toi ❤️', loc: '📍 À la maison', bat: 75, lat: null, lng: null, avatarId: 0 },
-      lydie: { mood: '😍', text: 'Hâte de te voir 💕', loc: '📍 À la maison', bat: 68, lat: null, lng: null, avatarId: 0 },
+      jordan: { mood: '😍', text: 'Pense à toi ❤️', avatarId: 0 },
+      lydie: { mood: '😍', text: 'Hâte de te voir 💕', avatarId: 0 },
       cat: {
         level: 4,
         xp: 40,
@@ -963,7 +837,6 @@
         ]
       },
       latestDrawing: { id: '', caption: '« Mot doux pour toi ❤️ »', author: 'Jordan', time: '21:22' },
-      gallery: [],
       coupons: [
         { id: 1, title: '💆‍♂️ Bon pour un massage de 15 min', from: 'Jordan', to: 'Lydie', used: false },
         { id: 2, title: '🎬 Bon pour choisir le film ce soir', from: 'Lydie', to: 'Jordan', used: false }
@@ -980,11 +853,7 @@
         secretChoice: null,
         statusText: 'Jordan : Choisis ta réponse secrète pour que Lydie devine !'
       },
-      capsules: [],
-      wishes: [
-        { text: 'Soirée resto en amoureux aux chandelles 🕯️', done: false },
-        { text: 'Week-end détente & spa tous les deux 💆‍♀️', done: false }
-      ]
+      capsules: []
     };
 
     if (typeof state.coins !== 'number') state.coins = 180;
@@ -1003,20 +872,18 @@
     if (!state.quiz) state.quiz = { qIndex: 0, targetUser: 'Jordan', secretChoice: null, statusText: 'Choisis une réponse !' };
     if (!state.capsules) state.capsules = [];
 
-    // Gestion de la visibilité de l'application (coupe les animations et le polling Web quand l'écran est éteint)
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         document.body.classList.add('app-hidden');
       } else {
         document.body.classList.remove('app-hidden');
         pollCloudState();
-        refreshBatteryAndGpsOnce();
       }
     });
 
     function downloadLatestApk() {
       const apkUrl = "https://github.com/LeeLooVF/Love8-apps/releases/download/latest/Love8.apk?t=" + Date.now();
-      triggerBanner("MISE À JOUR APK", "Téléchargement lancé (Installation directe sans désinstaller) !", "🔄");
+      triggerBanner("MISE À JOUR APK", "Téléchargement lancé !", "🔄");
       triggerDeviceVibration([120, 60, 180]);
       if (window.AndroidNative && window.AndroidNative.downloadApkUpdate) {
         window.AndroidNative.downloadApkUpdate(apkUrl);
@@ -1037,24 +904,6 @@
         const ctx = getAudioContext();
         const now = ctx.currentTime;
 
-        if (type === 'siren') {
-          [0, 0.42, 0.84].forEach(cycle => {
-            const osc = ctx.createOscillator();
-            const g = ctx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(520, now + cycle);
-            osc.frequency.linearRampToValueAtTime(980, now + cycle + 0.2);
-            osc.frequency.linearRampToValueAtTime(520, now + cycle + 0.4);
-            g.gain.setValueAtTime(0.35, now + cycle);
-            g.gain.exponentialRampToValueAtTime(0.01, now + cycle + 0.41);
-            osc.connect(g);
-            g.connect(ctx.destination);
-            osc.start(now + cycle);
-            osc.stop(now + cycle + 0.42);
-          });
-          return;
-        }
-
         if (type === 'kiss' || type === 'lips') {
           [0, 0.22].forEach(delay => {
             const osc = ctx.createOscillator();
@@ -1074,95 +923,32 @@
         }
 
         if (type === 'env') {
-          const bufferSize = Math.floor(ctx.sampleRate * 0.35);
-          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-          const data = buffer.getChannelData(0);
-          for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-          const noise = ctx.createBufferSource();
-          noise.buffer = buffer;
-          const filter = ctx.createBiquadFilter();
-          filter.type = 'bandpass';
-          filter.frequency.setValueAtTime(280, now);
-          filter.frequency.exponentialRampToValueAtTime(2600, now + 0.3);
-          filter.Q.value = 4.0;
-          const gain = ctx.createGain();
-          gain.gain.setValueAtTime(0.02, now);
-          gain.gain.linearRampToValueAtTime(0.42, now + 0.14);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.34);
-          noise.connect(filter);
-          filter.connect(gain);
-          gain.connect(ctx.destination);
-          noise.start(now);
-
           const chime = ctx.createOscillator();
           const cGain = ctx.createGain();
           chime.type = 'sine';
-          chime.frequency.setValueAtTime(1046, now + 0.25);
-          cGain.gain.setValueAtTime(0.2, now + 0.25);
-          cGain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+          chime.frequency.setValueAtTime(784, now);
+          chime.frequency.exponentialRampToValueAtTime(1046, now + 0.25);
+          cGain.gain.setValueAtTime(0.25, now);
+          cGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
           chime.connect(cGain);
           cGain.connect(ctx.destination);
-          chime.start(now + 0.25);
-          chime.stop(now + 0.56);
+          chime.start(now);
+          chime.stop(now + 0.46);
           return;
         }
 
-        if (type === 'fire') {
-          const dur = 0.65;
-          const bufferSize = Math.floor(ctx.sampleRate * dur);
-          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-          const data = buffer.getChannelData(0);
-          for (let i = 0; i < bufferSize; i++) {
-            data[i] = (Math.random() * 2 - 1) * (Math.random() > 0.9 ? 1.8 : 0.4);
-          }
-          const noise = ctx.createBufferSource();
-          noise.buffer = buffer;
-          const filter = ctx.createBiquadFilter();
-          filter.type = 'bandpass';
-          filter.frequency.setValueAtTime(220, now);
-          filter.frequency.exponentialRampToValueAtTime(780, now + 0.3);
-          filter.frequency.exponentialRampToValueAtTime(300, now + dur);
-          filter.Q.value = 1.5;
-          const gain = ctx.createGain();
-          gain.gain.setValueAtTime(0.5, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + dur);
-          noise.connect(filter);
-          filter.connect(gain);
-          gain.connect(ctx.destination);
-          noise.start(now);
-          return;
-        }
-
-        if (type === 'chili') {
-          const dur = 0.45;
-          const bufferSize = Math.floor(ctx.sampleRate * dur);
-          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-          const data = buffer.getChannelData(0);
-          for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-          const noise = ctx.createBufferSource();
-          noise.buffer = buffer;
-          const filter = ctx.createBiquadFilter();
-          filter.type = 'highpass';
-          filter.frequency.setValueAtTime(2800, now);
-          const gain = ctx.createGain();
-          gain.gain.setValueAtTime(0.32, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
-          noise.connect(filter);
-          filter.connect(gain);
-          gain.connect(ctx.destination);
-          noise.start(now);
-
+        if (type === 'fire' || type === 'chili') {
           const osc = ctx.createOscillator();
           const oGain = ctx.createGain();
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(400, now);
-          osc.frequency.exponentialRampToValueAtTime(1400, now + 0.35);
-          oGain.gain.setValueAtTime(0.18, now);
-          oGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+          osc.frequency.setValueAtTime(380, now);
+          osc.frequency.exponentialRampToValueAtTime(1200, now + 0.32);
+          oGain.gain.setValueAtTime(0.22, now);
+          oGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
           osc.connect(oGain);
           oGain.connect(ctx.destination);
           osc.start(now);
-          osc.stop(now + 0.4);
+          osc.stop(now + 0.36);
           return;
         }
 
@@ -1174,7 +960,7 @@
             const base = idx === 0 ? 220 : 290;
             osc.frequency.setValueAtTime(base, now + d);
             osc.frequency.exponentialRampToValueAtTime(base * 2.4, now + d + 0.14);
-            g.gain.setValueAtTime(0.38, now + d);
+            g.gain.setValueAtTime(0.35, now + d);
             g.gain.exponentialRampToValueAtTime(0.001, now + d + 0.16);
             osc.connect(g);
             g.connect(ctx.destination);
@@ -1185,54 +971,48 @@
         }
 
         if (type === 'cuc' || type === 'crunch') {
-          [0, 0.14, 0.28].forEach(d => {
-            const bufSz = Math.floor(ctx.sampleRate * 0.09);
-            const buf = ctx.createBuffer(1, bufSz, ctx.sampleRate);
-            const ch = buf.getChannelData(0);
-            for (let i = 0; i < bufSz; i++) ch[i] = (Math.random() * 2 - 1);
-            const n = ctx.createBufferSource();
-            n.buffer = buf;
-            const f = ctx.createBiquadFilter();
-            f.type = 'bandpass';
-            f.frequency.setValueAtTime(1100, now + d);
+          [0, 0.14].forEach(d => {
+            const osc = ctx.createOscillator();
             const g = ctx.createGain();
-            g.gain.setValueAtTime(0.4, now + d);
-            g.gain.exponentialRampToValueAtTime(0.01, now + d + 0.09);
-            n.connect(f);
-            f.connect(g);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(320, now + d);
+            osc.frequency.exponentialRampToValueAtTime(640, now + d + 0.1);
+            g.gain.setValueAtTime(0.3, now + d);
+            g.gain.exponentialRampToValueAtTime(0.01, now + d + 0.11);
+            osc.connect(g);
             g.connect(ctx.destination);
-            n.start(now + d);
+            osc.start(now + d);
+            osc.stop(now + d + 0.12);
           });
           return;
         }
 
         if (type === 'straw') {
-          [523, 659, 784, 987, 1174, 1318, 1567].forEach((freq, i) => {
+          [523, 659, 784, 1046].forEach((freq, i) => {
             const osc = ctx.createOscillator();
             const g = ctx.createGain();
             osc.type = 'sine';
-            const t = now + i * 0.055;
+            const t = now + i * 0.06;
             osc.frequency.setValueAtTime(freq, t);
-            osc.frequency.exponentialRampToValueAtTime(freq * 1.25, t + 0.05);
             g.gain.setValueAtTime(0.22, t);
-            g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
             osc.connect(g);
             g.connect(ctx.destination);
             osc.start(t);
-            osc.stop(t + 0.065);
+            osc.stop(t + 0.09);
           });
           return;
         }
 
         if (type === 'devil') {
-          [440, 392, 349, 311, 261].forEach((freq, i) => {
+          [440, 392, 349, 261].forEach((freq, i) => {
             const osc = ctx.createOscillator();
             const g = ctx.createGain();
             osc.type = 'sawtooth';
-            const t = now + i * 0.085;
+            const t = now + i * 0.08;
             osc.frequency.setValueAtTime(freq, t);
             g.gain.setValueAtTime(0.2, t);
-            g.gain.exponentialRampToValueAtTime(0.001, t + 0.075);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
             osc.connect(g);
             g.connect(ctx.destination);
             osc.start(t);
@@ -1242,18 +1022,18 @@
         }
 
         if (type === 'rose') {
-          [392, 493, 587, 784, 987, 1174].forEach((freq, i) => {
+          [392, 493, 587, 784].forEach((freq, i) => {
             const osc = ctx.createOscillator();
             const g = ctx.createGain();
             osc.type = 'triangle';
             const t = now + i * 0.07;
             osc.frequency.setValueAtTime(freq, t);
             g.gain.setValueAtTime(0.25, t);
-            g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
             osc.connect(g);
             g.connect(ctx.destination);
             osc.start(t);
-            osc.stop(t + 0.36);
+            osc.stop(t + 0.32);
           });
           return;
         }
@@ -1265,8 +1045,7 @@
           osc.frequency.setValueAtTime(520, now);
           osc.frequency.exponentialRampToValueAtTime(920, now + 0.16);
           osc.frequency.exponentialRampToValueAtTime(460, now + 0.45);
-          g.gain.setValueAtTime(0.01, now);
-          g.gain.linearRampToValueAtTime(0.32, now + 0.1);
+          g.gain.setValueAtTime(0.3, now);
           g.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
           osc.connect(g);
           g.connect(ctx.destination);
@@ -1277,59 +1056,30 @@
 
         if (type === 'purr') {
           const osc = ctx.createOscillator();
-          const lfo = ctx.createOscillator();
-          const lfoGain = ctx.createGain();
           const mainGain = ctx.createGain();
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(52, now);
-          lfo.frequency.setValueAtTime(24, now);
-          lfoGain.gain.setValueAtTime(0.15, now);
-          mainGain.gain.setValueAtTime(0.22, now);
-          mainGain.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
-          lfo.connect(lfoGain);
-          lfoGain.connect(mainGain.gain);
+          osc.frequency.setValueAtTime(55, now);
+          mainGain.gain.setValueAtTime(0.2, now);
+          mainGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
           osc.connect(mainGain);
           mainGain.connect(ctx.destination);
           osc.start(now);
-          lfo.start(now);
-          osc.stop(now + 0.76);
-          lfo.stop(now + 0.76);
+          osc.stop(now + 0.62);
           return;
         }
 
-        if (type === 'heart' || type === 'love') {
-          [0, 0.22].forEach(delay => {
-            const osc = ctx.createOscillator();
-            const g = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(115, now + delay);
-            osc.frequency.exponentialRampToValueAtTime(45, now + delay + 0.16);
-            g.gain.setValueAtTime(0.55, now + delay);
-            g.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.18);
-            osc.connect(g);
-            g.connect(ctx.destination);
-            osc.start(now + delay);
-            osc.stop(now + delay + 0.19);
-          });
-          return;
-        }
-
-        const notes = type === 'hug'
-          ? [[349, 0.22], [440, 0.22], [523, 0.38]]
-          : [[523, 0.15], [659, 0.15], [784, 0.15], [1046, 0.35]];
-        let offset = 0;
-        notes.forEach(([freq, dur]) => {
+        [0, 0.22].forEach(delay => {
           const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
+          const g = ctx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, now + offset);
-          gain.gain.setValueAtTime(0.25, now + offset);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + offset + dur);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now + offset);
-          osc.stop(now + offset + dur);
-          offset += dur + 0.03;
+          osc.frequency.setValueAtTime(115, now + delay);
+          osc.frequency.exponentialRampToValueAtTime(45, now + delay + 0.16);
+          g.gain.setValueAtTime(0.5, now + delay);
+          g.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.18);
+          osc.connect(g);
+          g.connect(ctx.destination);
+          osc.start(now + delay);
+          osc.stop(now + delay + 0.19);
         });
       } catch (e) {}
     }
@@ -1340,14 +1090,6 @@
           window.AndroidNative.vibrateDevice(pattern.join(','));
         } else if (navigator.vibrate) {
           navigator.vibrate(pattern);
-        }
-      } catch (e) {}
-    }
-
-    function triggerHardwareFlashStrobe(pulses = 10) {
-      try {
-        if (window.AndroidNative && window.AndroidNative.flashTorchStrobe) {
-          window.AndroidNative.flashTorchStrobe(pulses);
         }
       } catch (e) {}
     }
@@ -1369,35 +1111,6 @@
       } catch (e) {}
     }
 
-    function sendSosFlashSiren() {
-      state.pingsToday += 1;
-      state.coins = (state.coins || 0) + 5;
-      const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
-      const eventId = Date.now();
-      lastEventId = eventId;
-      localStorage.setItem('love8_last_event', String(eventId));
-      if (window.AndroidNative && window.AndroidNative.syncLastSeenEvent) {
-        window.AndroidNative.syncLastSeenEvent(eventId);
-      }
-
-      const sosPattern = [350, 90, 350, 90, 350, 90, 500];
-      state.lastEvent = {
-        id: eventId,
-        sender: currentUser,
-        type: 'vibration',
-        title: `🚨 S.O.S AMOUR DE ${currentUser.toUpperCase()} !`,
-        message: `🚨 ${currentUser} → ${partner} : RÉPONDS-MOI VITE ! ❤️`,
-        emoji: '🚨',
-        sound: 'siren',
-        pattern: sosPattern,
-        ack: 0
-      };
-
-      triggerHardwareFlashStrobe(8);
-      triggerBlackScreenRain('🚨', `🚨 S.O.S envoyé à ${partner} : Réponds-moi vite !`, 'siren', sosPattern, false);
-      saveState(true);
-    }
-
     function triggerBlackScreenRain(emoji, labelText, soundType = 'love', pattern = [200, 80, 300], shouldSleepAfter = false) {
       if (sleep15sTimer) clearTimeout(sleep15sTimer);
       if (sleepCountdownInterval) clearInterval(sleepCountdownInterval);
@@ -1407,10 +1120,6 @@
       const blackOverlay = document.getElementById('pureBlackRainOverlay');
       document.getElementById('blackRainSubtitle').innerText = labelText || '';
       blackOverlay.classList.remove('hidden');
-
-      if (soundType === 'siren') {
-        triggerHardwareFlashStrobe(12);
-      }
 
       playLoveSound(soundType);
       triggerDeviceVibration(pattern);
@@ -1496,8 +1205,7 @@
       window.AndroidNative.setUser(currentUser);
     }
 
-    // ==================== FONCTION SAVESTATE ULTRA-LÉGÈRE (< 1,5 KO GARANTI) ====================
-    async function saveState(urgent = true) {
+    async function saveState() {
       state.updatedAt = Date.now();
       state.activeUser = currentUser;
 
@@ -1505,17 +1213,15 @@
       if (state.latestDrawing && state.latestDrawing.dataUrl) delete state.latestDrawing.dataUrl;
       if (state.jordan && state.jordan.avatar) delete state.jordan.avatar;
       if (state.lydie && state.lydie.avatar) delete state.lydie.avatar;
-      if (state.gallery && state.gallery.length > 4) state.gallery = state.gallery.slice(0, 4);
 
       localStorage.setItem('love8_state', JSON.stringify(state));
       renderAll();
 
       try {
-        const payload = Object.assign({}, state, { urgent });
         const res = await fetch(API_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(state)
         });
         if (res.ok) {
           document.getElementById('syncDot').className = 'w-2 h-2 rounded-full bg-emerald-500 inline-block';
@@ -1555,7 +1261,6 @@
     }
 
     async function pollCloudState() {
-      // Arrêt complet du polling Web dès que l'écran est éteint ou en arrière-plan (0 doublon avec Love8Service)
       if (document.hidden) return;
 
       try {
@@ -1611,42 +1316,6 @@
       } catch (e) {}
     }
 
-    // ==================== GESTION ÉCO-BATTERIE & GPS PONCTUEL (OUVERTURE + 10 MIN) ====================
-    async function refreshBatteryAndGpsOnce() {
-      if (document.hidden) return;
-      const key = currentUser.toLowerCase();
-      let changed = false;
-
-      if (navigator.getBattery) {
-        try {
-          const bat = await navigator.getBattery();
-          const newLevel = Math.round(bat.level * 100);
-          if (Math.abs((state[key].bat || 0) - newLevel) >= 2) {
-            state[key].bat = newLevel;
-            changed = true;
-          }
-        } catch (e) {}
-      }
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-          state[key].lat = Number(pos.coords.latitude.toFixed(5));
-          state[key].lng = Number(pos.coords.longitude.toFixed(5));
-          updateGpsSeparationState();
-          saveState(false);
-        }, () => {
-          if (changed) saveState(false);
-        }, { enableHighAccuracy: false, maximumAge: 120000, timeout: 6000 });
-      } else if (changed) {
-        saveState(false);
-      }
-    }
-
-    // Actualisation GPS/Batterie ponctuelle toutes les 10 minutes uniquement si l'application est ouverte
-    setInterval(() => {
-      if (!document.hidden) refreshBatteryAndGpsOnce();
-    }, 600000);
-
     function openMoodLocModal() {
       renderMoodLocLists();
       document.getElementById('moodLocModal').classList.remove('hidden');
@@ -1662,24 +1331,13 @@
       state[key].mood = item.emoji;
       state[key].text = item.text;
       playLoveSound('kiss');
-      saveState(true);
-      renderMoodLocLists();
-    }
-
-    function selectLocationPreset(idx) {
-      const key = currentUser.toLowerCase();
-      state[key].loc = locationPresets[idx];
-      updateGpsSeparationState();
-      playLoveSound('env');
-      saveState(true);
-      refreshBatteryAndGpsOnce();
+      saveState();
       renderMoodLocLists();
     }
 
     function renderMoodLocLists() {
       const key = currentUser.toLowerCase();
       const curText = state[key].text;
-      const curLoc = state[key].loc;
 
       document.getElementById('moodPresetList').innerHTML = moodPresets.map((m, i) => {
         const active = curText === m.text;
@@ -1690,87 +1348,7 @@
           </button>
         `;
       }).join('');
-
-      document.getElementById('locPresetList').innerHTML = locationPresets.map((loc, i) => {
-        const active = curLoc === loc;
-        return `
-          <button onclick="selectLocationPreset(${i})" class="p-2.5 rounded-2xl border text-left truncate transition active:scale-95 ${active ? 'bg-purple-100 border-purple-500 text-purple-900' : 'bg-slate-50 border-slate-200 text-slate-700'}">
-            ${loc}
-          </button>
-        `;
-      }).join('');
     }
-
-    function calcDistanceMeters(lat1, lon1, lat2, lon2) {
-      const R = 6371000;
-      const toRad = x => x * Math.PI / 180;
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-    }
-
-    function updateGpsSeparationState() {
-      const j = state.jordan;
-      const l = state.lydie;
-      if (j.loc && l.loc && j.loc.trim().toLowerCase() === l.loc.trim().toLowerCase()) {
-        state.lastDistanceMeters = 0;
-        state.separationStart = null;
-        return;
-      }
-      if (j.lat && j.lng && l.lat && l.lng) {
-        const rawDist = calcDistanceMeters(j.lat, j.lng, l.lat, l.lng);
-        if (rawDist <= 300) {
-          state.lastDistanceMeters = 0;
-          state.separationStart = null;
-        } else {
-          state.lastDistanceMeters = rawDist;
-          if (!state.separationStart) state.separationStart = Date.now();
-        }
-      } else {
-        if (j.loc !== l.loc) {
-          if (!state.separationStart) state.separationStart = Date.now();
-        } else {
-          state.lastDistanceMeters = 0;
-          state.separationStart = null;
-        }
-      }
-    }
-
-    function resetTogetherNow() {
-      state.separationStart = null;
-      state.lastDistanceMeters = 0;
-      state.jordan.loc = '📍 À la maison';
-      state.lydie.loc = '📍 À la maison';
-      triggerBanner('📍 ENSEMBLE', 'Compteur de séparation remis à zéro (Ensemble 0m) ❤️', '💑');
-      saveState(true);
-    }
-
-    function formatSeparationTimer() {
-      if (!state.separationStart) {
-        return { timeStr: "00:00", statusStr: "📍 Ensemble (0m)" };
-      }
-      const diffSec = Math.max(0, Math.floor((Date.now() - state.separationStart) / 1000));
-      const hours = Math.floor(diffSec / 3600);
-      const mins = Math.floor((diffSec % 3600) / 60);
-      const secs = diffSec % 60;
-      const pad = n => String(n).padStart(2, '0');
-      const timeStr = hours > 0 ? `${pad(hours)}:${pad(mins)}:${pad(secs)}` : `${pad(mins)}:${pad(secs)}`;
-      const distKm = state.lastDistanceMeters >= 1000
-        ? (state.lastDistanceMeters / 1000).toFixed(1) + ' km'
-        : (state.lastDistanceMeters > 300 ? state.lastDistanceMeters + ' m' : 'Lieux différents');
-      return { timeStr, statusStr: `📍 Séparés (${distKm})` };
-    }
-
-    setInterval(() => {
-      if (document.hidden) return;
-      const sep = formatSeparationTimer();
-      document.getElementById('lockSepTimer').innerText = sep.timeStr;
-      document.getElementById('lockSepStatus').innerText = sep.statusStr;
-      document.getElementById('topSepTimer').innerText = sep.statusStr === "📍 Ensemble (0m)" ? "Ensemble (0m)" : `${sep.timeStr} (${sep.statusStr.replace('📍 Séparés ', '')})`;
-    }, 1000);
 
     function sendCenterHeartLockscreen() {
       state.pingsToday += 1;
@@ -1796,10 +1374,9 @@
       };
 
       triggerBlackScreenRain('❤️', `${currentUser} → ${partner} ❤️`, 'heart', [120, 60, 120, 60, 280], false);
-      saveState(true);
+      saveState();
     }
 
-    // Compression automatique en WebP (qualité 0.7) divisant le poids des images par 4
     function resizeImageToWebp(file, maxSize, callback) {
       const reader = new FileReader();
       reader.onload = function(e) {
@@ -1850,8 +1427,8 @@
             body: JSON.stringify({ key: 'avatar_' + avatarUploadTarget, dataUrl })
           });
         } catch (e) {}
-        triggerBanner('📷 PHOTO DE PROFIL', `Photo WebP mise à jour !`, '😍');
-        saveState(true);
+        triggerBanner('📷 PHOTO DE PROFIL', `Photo mise à jour !`, '😍');
+        saveState();
       });
     }
 
@@ -1873,7 +1450,6 @@
       if (window.AndroidNative && window.AndroidNative.setUser) {
         window.AndroidNative.setUser(user);
       }
-      refreshBatteryAndGpsOnce();
       renderAll();
     }
 
@@ -1891,7 +1467,7 @@
     function spawnParticles(emoji, pattern = [150, 70, 250], maxDurationMs = 2500) {
       if (document.hidden) return;
       triggerDeviceVibration(pattern);
-      for (let i = 0; i < 36; i++) {
+      for (let i = 0; i < 32; i++) {
         const el = document.createElement('div');
         el.className = 'heart-particle text-4xl';
         el.innerText = emoji;
@@ -1943,33 +1519,7 @@
       };
 
       triggerBlackScreenRain(emoji, `${currentUser} → ${partner} : ${label}`, soundType, pattern, false);
-      saveState(true);
-    }
-
-    function sendLovePing(label, emoji, pattern, soundType) {
-      state.pingsToday += 1;
-      state.coins = (state.coins || 0) + 5;
-      const partner = currentUser === 'Jordan' ? 'Lydie' : 'Jordan';
-      const eventId = Date.now();
-      lastEventId = eventId;
-      localStorage.setItem('love8_last_event', String(eventId));
-      if (window.AndroidNative && window.AndroidNative.syncLastSeenEvent) {
-        window.AndroidNative.syncLastSeenEvent(eventId);
-      }
-
-      state.lastEvent = {
-        id: eventId,
-        sender: currentUser,
-        type: 'vibration',
-        title: `⚡ VIBRATION D'AMOUR`,
-        message: `${currentUser} → ${partner} : ${label}`,
-        emoji,
-        sound: soundType,
-        pattern,
-        ack: 0
-      };
-      triggerBlackScreenRain(emoji, `${currentUser} → ${partner} : ${label}`, soundType, pattern, false);
-      saveState(true);
+      saveState();
     }
 
     function interactCat(action) {
@@ -2012,7 +1562,7 @@
 
       playLoveSound(soundEffect);
       spawnParticles(emoji, [100, 60, 160], 2200);
-      saveState(true);
+      saveState();
     }
 
     function buyOrEquipAccessory(accId) {
@@ -2025,7 +1575,7 @@
         const currentInSlot = state.cat.equippedSlots[item.slot];
         state.cat.equippedSlots[item.slot] = currentInSlot === item.emoji ? '' : item.emoji;
         playLoveSound('meow');
-        saveState(true);
+        saveState();
       } else {
         if ((state.coins || 0) < item.price) {
           const manquant = item.price - (state.coins || 0);
@@ -2039,19 +1589,19 @@
         playLoveSound('rose');
         spawnParticles(item.emoji, [150, 80, 250], 2200);
         triggerBanner('🎉 ACCESSOIRE DÉBLOQUÉ !', `Douglasse porte maintenant ${item.name} ${item.emoji} !`, item.emoji);
-        saveState(true);
+        saveState();
       }
     }
 
     function clearAllAccessories() {
       state.cat.equippedSlots = { hat: '', eyes: '', neck: '', aura: '' };
-      saveState(true);
+      saveState();
     }
 
     function setTodLevel(lvl) {
       state.truthOrDare.level = lvl;
       playLoveSound(lvl === 'caliente' ? 'fire' : (lvl === 'fun' ? 'straw' : 'rose'));
-      saveState(true);
+      saveState();
     }
 
     function drawTruthOrDare(choiceType) {
@@ -2065,7 +1615,7 @@
       const soundMap = { doux: 'rose', fun: 'straw', caliente: 'fire' };
       playLoveSound(soundMap[lvl] || 'rose');
       triggerDeviceVibration([120, 60, 200]);
-      saveState(true);
+      saveState();
     }
 
     function completeTruthOrDareTurn() {
@@ -2082,7 +1632,7 @@
       playLoveSound('kiss');
       spawnParticles('🎲', [120, 60, 220], 2000);
       triggerBanner('🎉 DÉFI RELEVÉ (+20 🪙)', `Au tour de ${nextTurn} de jouer !`, '🎲');
-      saveState(true);
+      saveState();
     }
 
     function createCoupon(title) {
@@ -2111,7 +1661,7 @@
       playLoveSound('rose');
       spawnParticles('🎟️', [180, 80, 280]);
       triggerBanner('🎟️ BON ENVOYÉ', `Tu as offert « ${title} » à ${partner} !`, '🎁');
-      saveState(true);
+      saveState();
     }
 
     function addCustomCoupon() {
@@ -2141,7 +1691,7 @@
         ack: 0
       };
       triggerBlackScreenRain('🎟️', `${currentUser} utilise : ${c.title} !`, 'fire', [200, 80, 350], false);
-      saveState(true);
+      saveState();
     }
 
     function nextQuizQuestion() {
@@ -2149,7 +1699,7 @@
       state.quiz.targetUser = currentUser;
       state.quiz.secretChoice = null;
       state.quiz.statusText = `${currentUser} : Choisis ta réponse secrète pour que ton partenaire devine !`;
-      saveState(true);
+      saveState();
     }
 
     function selectQuizOption(optIndex) {
@@ -2161,7 +1711,7 @@
         state.quiz.secretChoice = optIndex;
         state.quiz.statusText = `🔒 ${currentUser} a verrouillé sa réponse ! C'est au tour de ${partner} de deviner !`;
         triggerBanner('🎯 RÉPONSE ENREGISTRÉE', `Maintenant ${partner} doit deviner ton choix !`, '🤫');
-        saveState(true);
+        saveState();
         return;
       }
 
@@ -2177,7 +1727,7 @@
         state.quiz.statusText = `😜 Raté ${currentUser} ! Ce n'était pas « ${qObj.options[optIndex]} », réessaie !`;
         triggerDeviceVibration([100, 50, 100]);
       }
-      saveState(true);
+      saveState();
     }
 
     function handleCapsulePhotoUpload(event) {
@@ -2185,7 +1735,7 @@
       if (!file) return;
       resizeImageToWebp(file, 260, (dataUrl) => {
         pendingCapsulePhoto = dataUrl;
-        document.getElementById('btnCapsulePhoto').innerText = '✅ Photo WebP';
+        document.getElementById('btnCapsulePhoto').innerText = '✅ Photo prête';
       });
     }
 
@@ -2220,7 +1770,7 @@
       document.getElementById('btnCapsulePhoto').innerText = '📷 Photo';
       spawnParticles('🔐', [150, 80, 250]);
       triggerBanner('🔐 CAPSULE SCELLÉE', 'Votre capsule temporelle est verrouillée jusqu\'à la date choisie !', '⏳');
-      saveState(true);
+      saveState();
     }
 
     const canvas = document.getElementById('drawCanvas');
@@ -2230,24 +1780,11 @@
     let historyStack = [];
     let currentTextLines = 0;
     const MAX_TEXT_LINES = 6;
-    let liveDrawEnabled = true;
-    let myFingerPos = null;
-    let lastLiveBroadcast = 0;
-    let lastRemoteLiveStamp = 0;
     let cloudArchivesList = [];
 
     function exportCanvasWebp() {
       const webp = canvas.toDataURL('image/webp', 0.7);
       return webp.startsWith('data:image/webp') ? webp : canvas.toDataURL('image/png');
-    }
-
-    function toggleLiveDrawMode() {
-      liveDrawEnabled = !liveDrawEnabled;
-      const btn = document.getElementById('btnLiveDraw');
-      btn.innerText = liveDrawEnabled ? '🔴 Live ON' : '⚪ Live OFF';
-      btn.className = liveDrawEnabled
-        ? 'px-2.5 h-9 rounded-full bg-rose-50 border border-rose-200 text-rose-600 font-extrabold flex items-center gap-1 text-[11px]'
-        : 'px-2.5 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-500 font-bold flex items-center gap-1 text-[11px]';
     }
 
     function updateLinesBadge() {
@@ -2257,27 +1794,6 @@
     function saveCanvasHistory() {
       historyStack.push({ dataUrl: exportCanvasWebp(), lines: currentTextLines });
       if (historyStack.length > 8) historyStack.shift();
-    }
-
-    function handleCanvasImageUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      saveCanvasHistory();
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          const ratio = Math.min(canvas.width / img.width, canvas.height / img.height);
-          const w = img.width * ratio;
-          const h = img.height * ratio;
-          const x = (canvas.width - w) / 2;
-          const y = (canvas.height - h) / 2;
-          ctx.drawImage(img, x, y, w, h);
-          broadcastLiveCanvas(true);
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
     }
 
     function getPos(e) {
@@ -2290,109 +1806,26 @@
       };
     }
 
-    async function broadcastLiveCanvas(force = false) {
-      if (!liveDrawEnabled || activeTab !== 'dessin' || document.hidden) return;
-      const now = Date.now();
-      if (!force && now - lastLiveBroadcast < 320) return;
-      lastLiveBroadcast = now;
-      try {
-        await fetch(API_ENDPOINT + '?action=live', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sender: currentUser,
-            updatedAt: now,
-            touching: drawing,
-            x: myFingerPos ? myFingerPos.x : null,
-            y: myFingerPos ? myFingerPos.y : null,
-            dataUrl: exportCanvasWebp()
-          })
-        });
-      } catch (e) {}
-    }
-
-    async function pollLiveCanvas() {
-      // Canal Dessin Live strictement coupé hors de l'onglet Dessin ou écran éteint
-      if (activeTab !== 'dessin' || !liveDrawEnabled || document.hidden) return;
-      try {
-        const res = await fetch(API_ENDPOINT + '?action=live&t=' + Date.now(), { cache: 'no-store' });
-        if (!res.ok) return;
-        const live = await res.json();
-        if (!live || !live.sender || live.sender === currentUser) return;
-
-        const cursor = document.getElementById('partnerLiveCursor');
-        const orb = document.getElementById('hapticFusionOrb');
-
-        if (live.touching && live.x !== null && live.y !== null && (Date.now() - live.updatedAt < 4000)) {
-          cursor.style.left = (live.x / canvas.width * 100) + '%';
-          cursor.style.top = (live.y / canvas.height * 100) + '%';
-          document.getElementById('partnerCursorLabel').innerText = live.sender;
-          cursor.classList.remove('hidden');
-
-          if (drawing && myFingerPos) {
-            const dist = Math.hypot(live.x - myFingerPos.x, live.y - myFingerPos.y);
-            if (dist < 65) {
-              orb.style.left = ((live.x + myFingerPos.x) / 2 / canvas.width * 100) + '%';
-              orb.style.top = ((live.y + myFingerPos.y) / 2 / canvas.height * 100) + '%';
-              orb.classList.remove('hidden');
-              triggerDeviceVibration([300, 40, 300]);
-              playLoveSound('rose');
-              state.coins = (state.coins || 0) + 2;
-              document.getElementById('headerCoins').innerText = state.coins;
-            } else {
-              orb.classList.add('hidden');
-            }
-          } else {
-            orb.classList.add('hidden');
-          }
-        } else {
-          cursor.classList.add('hidden');
-          orb.classList.add('hidden');
-        }
-
-        if (live.updatedAt > lastRemoteLiveStamp && live.dataUrl && !drawing) {
-          lastRemoteLiveStamp = live.updatedAt;
-          const img = new Image();
-          img.onload = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0);
-          };
-          img.src = live.dataUrl;
-        }
-      } catch (e) {}
-    }
-
-    setInterval(pollLiveCanvas, 550);
-
     canvas.addEventListener('pointerdown', (e) => {
       saveCanvasHistory();
       drawing = true;
       const p = getPos(e);
-      myFingerPos = p;
       ctx.beginPath();
       ctx.moveTo(p.x, p.y);
-      broadcastLiveCanvas(true);
     });
 
     canvas.addEventListener('pointermove', (e) => {
       if (!drawing) return;
       const p = getPos(e);
-      myFingerPos = p;
       ctx.lineWidth = document.getElementById('brushSize').value;
       ctx.lineCap = 'round';
       ctx.strokeStyle = brushColor;
       ctx.lineTo(p.x, p.y);
       ctx.stroke();
-      broadcastLiveCanvas(false);
     });
 
     window.addEventListener('pointerup', () => {
-      if (drawing) {
-        drawing = false;
-        myFingerPos = null;
-        document.getElementById('hapticFusionOrb').classList.add('hidden');
-        broadcastLiveCanvas(true);
-      }
+      drawing = false;
     });
 
     function setBrushColor(c) { brushColor = c; }
@@ -2402,7 +1835,6 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       currentTextLines = 0;
       updateLinesBadge();
-      broadcastLiveCanvas(true);
     }
 
     function undoCanvas() {
@@ -2414,7 +1846,6 @@
       img.onload = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
-        broadcastLiveCanvas(true);
       };
       img.src = last.dataUrl;
     }
@@ -2424,7 +1855,6 @@
       ctx.font = '42px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(emoji, 60 + Math.random() * 240, 60 + Math.random() * 240);
-      broadcastLiveCanvas(true);
     }
 
     function writeKeyboardTextOnCanvas() {
@@ -2452,7 +1882,6 @@
       ctx.fillText(text, canvas.width / 2, yPos);
 
       input.value = '';
-      broadcastLiveCanvas(true);
     }
 
     async function sendDrawingToPartner() {
@@ -2501,7 +1930,7 @@
       document.getElementById('sweetNoteInput').value = '';
       playLoveSound('rose');
       triggerBanner('DESSIN ENVOYÉ (15S)', `Affiché pendant 15s sur l'écran de ${partner} !`, '🎨');
-      saveState(true);
+      saveState();
       loadCloudArchives();
       showTab('nous');
     }
@@ -2545,19 +1974,6 @@
       document.getElementById('statHours').innerText = hours;
     }
 
-    function addWishItem() {
-      const val = document.getElementById('wishInput').value.trim();
-      if (!val) return;
-      state.wishes.unshift({ text: val, done: false });
-      document.getElementById('wishInput').value = '';
-      saveState(true);
-    }
-
-    function toggleWish(idx) {
-      state.wishes[idx].done = !state.wishes[idx].done;
-      saveState(true);
-    }
-
     function renderAll() {
       const isJordan = currentUser === 'Jordan';
       document.getElementById('btnJordan').className = isJordan
@@ -2571,7 +1987,6 @@
       document.getElementById('headerCoins').innerText = state.coins || 0;
       document.getElementById('catCoinsLabel').innerText = state.coins || 0;
 
-      // Affichage de l'accusé de réception réel ✓✓
       const ev = state.lastEvent || {};
       const ackBox = document.getElementById('ackStatusBanner');
       const ackTxt = document.getElementById('ackStatusText');
@@ -2584,7 +1999,7 @@
         } else {
           const target = ev.sender === 'Jordan' ? 'Lydie' : 'Jordan';
           ackBox.className = 'bg-amber-50 border border-amber-200 text-amber-900 text-[11px] font-bold px-3 py-2 rounded-2xl flex items-center justify-between';
-          ackTxt.innerText = `⏳ ${ev.emoji || '❤️'} Envoyé à ${target} • En attente de réception...`;
+          ackTxt.innerText = `⏳ ${ev.emoji || '❤️'} Envoyé à ${target} • En attente...`;
           ackIcon.innerText = '✓';
         }
       }
@@ -2602,6 +2017,8 @@
 
       document.getElementById('jordanMoodBadge').innerText = state.jordan.mood || '😍';
       document.getElementById('lydieMoodBadge').innerText = state.lydie.mood || '😍';
+      document.getElementById('jordanStatusText').innerText = state.jordan.text || 'Pense à toi ❤️';
+      document.getElementById('lydieStatusText').innerText = state.lydie.text || 'Hâte de te voir 💕';
 
       const slots = state.cat.equippedSlots || { hat: '', eyes: '', neck: '', aura: '' };
       document.getElementById('accSlotHat').innerText = slots.hat || '';
@@ -2649,13 +2066,6 @@
       document.getElementById('lockCountCuc').innerText = vc.cuc || 0;
       document.getElementById('lockCountChili').innerText = vc.chili || 0;
 
-      document.getElementById('jordanStatusText').innerText = state.jordan.text;
-      document.getElementById('jordanLocText').innerText = state.jordan.loc;
-      document.getElementById('jordanBat').innerText = `🔋 ${state.jordan.bat}%`;
-      document.getElementById('lydieStatusText').innerText = state.lydie.text;
-      document.getElementById('lydieLocText').innerText = state.lydie.loc;
-      document.getElementById('lydieBat').innerText = `🔋 ${state.lydie.bat}%`;
-
       if (cachedMedia.latestDrawingUrl) {
         document.getElementById('lockDrawingImg').src = cachedMedia.latestDrawingUrl;
         document.getElementById('lockDrawingImg').classList.remove('hidden');
@@ -2677,13 +2087,10 @@
       }
 
       document.getElementById('catSpeechBubble').innerText = speech;
-      document.getElementById('miniCatBadge').innerText = badge;
       document.getElementById('catMoodPill').innerText = badge;
 
       document.getElementById('catLevel').innerText = state.cat.level || 4;
       document.getElementById('catXp').innerText = state.cat.xp || 40;
-      document.getElementById('miniHunger').innerText = state.cat.hunger + '%';
-      document.getElementById('miniLove').innerText = state.cat.love + '%';
       document.getElementById('barHunger').style.width = state.cat.hunger + '%';
       document.getElementById('barHungerLabel').innerText = state.cat.hunger + '%';
       document.getElementById('barLove').style.width = state.cat.love + '%';
@@ -2769,21 +2176,12 @@
           </div>
         `;
       }).join('');
-
-      document.getElementById('wishListContainer').innerHTML = state.wishes.map((w, i) => `
-        <div onclick="toggleWish(${i})" class="flex items-center gap-2.5 bg-slate-50 p-3 rounded-2xl border border-slate-100 cursor-pointer">
-          <span class="w-5 h-5 rounded-full border-2 border-pink-400 flex items-center justify-center text-xs">${w.done ? '✔️' : ''}</span>
-          <span class="${w.done ? 'line-through text-slate-400' : 'font-semibold text-slate-700'}">${w.text}</span>
-        </div>
-      `).join('');
     }
 
     checkCatDecay();
     updateCoupleTimer();
     renderAll();
-    refreshBatteryAndGpsOnce();
     pollCloudState();
-    // Polling Web espacé à 2.5s et automatiquement coupé dès que l'écran s'éteint
     setInterval(pollCloudState, 2500);
   </script>
 </body>
