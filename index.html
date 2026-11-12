@@ -150,68 +150,73 @@
     </div>
   </div>
 
-  <!-- ==================== MODALE STATUTS DES SERVICES & SYNCHRONISATION MANUELLE ==================== -->
+  <!-- ==================== MODALE STATUTS & QUOTAS EN TEMPS RÉEL ==================== -->
   <div id="serviceStatusModal" class="fixed inset-0 z-[99988] hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-3xl p-5 space-y-4 shadow-2xl border border-pink-100 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div>
-          <h3 class="font-extrabold text-base text-purple-950 flex items-center gap-1.5">📡 État des Services Love8</h3>
-          <p class="text-[11px] text-slate-400">Diagnostic temps réel & Synchronisation</p>
+          <h3 class="font-extrabold text-base text-purple-950 flex items-center gap-1.5">📡 Quotas & Statuts Love8</h3>
+          <p class="text-[11px] text-slate-400">Suivi des services & consommation du jour</p>
         </div>
         <button onclick="closeServiceStatusModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold text-xs">✕</button>
       </div>
 
       <div class="space-y-2 text-xs">
+        <!-- 1. Cloudflare Pages Requests -->
         <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
           <div class="flex items-center gap-2.5">
             <span class="text-lg">☁️</span>
             <div>
-              <p class="font-extrabold text-slate-800">Cloudflare Pages & API</p>
-              <p id="statusDescCloudflare" class="text-[10px] text-slate-500">Vérification en cours...</p>
+              <p class="font-extrabold text-slate-800">Cloudflare Requests</p>
+              <p id="quotaTextRequests" class="text-[10px] text-slate-500">0 / 100 000 par jour</p>
             </div>
           </div>
           <span id="statusBadgeCloudflare" class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-200 text-slate-700">⏳ Test...</span>
         </div>
 
+        <!-- 2. KV Reads -->
         <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
           <div class="flex items-center gap-2.5">
-            <span class="text-lg">🗄️</span>
+            <span class="text-lg">📖</span>
             <div>
-              <p class="font-extrabold text-slate-800">Base Cloudflare KV</p>
-              <p id="statusDescKv" class="text-[10px] text-slate-500">LOVE8_COUPLE_KV</p>
+              <p class="font-extrabold text-slate-800">KV Lectures (Reads)</p>
+              <p id="quotaTextKvReads" class="text-[10px] text-slate-500">0 / 100 000 par jour</p>
             </div>
           </div>
-          <span id="statusBadgeKv" class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-200 text-slate-700">⏳ Test...</span>
+          <span id="statusBadgeKvReads" class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-200 text-slate-700">⏳ Test...</span>
         </div>
 
+        <!-- 3. KV Writes -->
+        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
+          <div class="flex items-center gap-2.5">
+            <span class="text-lg">✍️</span>
+            <div>
+              <p class="font-extrabold text-slate-800">KV Écritures (Writes)</p>
+              <p id="quotaTextKvWrites" class="text-[10px] text-slate-500">0 / 1 000 par jour</p>
+            </div>
+          </div>
+          <span id="statusBadgeKvWrites" class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-200 text-slate-700">⏳ Test...</span>
+        </div>
+
+        <!-- 4. FCM Pushes -->
         <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
           <div class="flex items-center gap-2.5">
             <span class="text-lg">🔥</span>
             <div>
-              <p class="font-extrabold text-slate-800">Firebase Cloud Messaging (OAuth2)</p>
-              <p id="statusDescFcm" class="text-[10px] text-slate-500">Authentification Google v1</p>
+              <p class="font-extrabold text-slate-800">Firebase FCM Push (v1)</p>
+              <p id="quotaTextFcm" class="text-[10px] text-slate-500">0 envoyés aujourd'hui (Illimité)</p>
             </div>
           </div>
           <span id="statusBadgeFcm" class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-200 text-slate-700">⏳ Test...</span>
         </div>
 
-        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
-          <div class="flex items-center gap-2.5">
-            <span class="text-lg">📱</span>
-            <div>
-              <p class="font-extrabold text-slate-800">Tokens Push (Jordan & Lydie)</p>
-              <p id="statusDescTokens" class="text-[10px] text-slate-500">Vérification des appareils...</p>
-            </div>
-          </div>
-          <span id="statusBadgeTokens" class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-200 text-slate-700">⏳ Test...</span>
-        </div>
-
+        <!-- 5. GitHub API & Tokens -->
         <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
           <div class="flex items-center gap-2.5">
             <span class="text-lg">🐙</span>
             <div>
-              <p class="font-extrabold text-slate-800">GitHub Releases (Serveur APK)</p>
-              <p id="statusDescGithub" class="text-[10px] text-slate-500">LeeLooVF/Love8-apps</p>
+              <p class="font-extrabold text-slate-800">GitHub & Tokens Appareils</p>
+              <p id="statusDescGithub" class="text-[10px] text-slate-500">Limite : 60 req/h • Jordan/Lydie OK</p>
             </div>
           </div>
           <span id="statusBadgeGithub" class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-200 text-slate-700">⏳ Test...</span>
@@ -225,7 +230,7 @@
 
         <div class="grid grid-cols-2 gap-2">
           <button onclick="refreshServicesDiagnostics()" class="py-2.5 rounded-xl bg-purple-50 border border-purple-200 text-purple-800 text-[11px] font-extrabold active:scale-95 transition">
-            📡 Retester les services
+            📡 Actualiser les quotas
           </button>
           <button onclick="downloadLatestApk()" class="py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-extrabold active:scale-95 transition">
             📥 Télécharger MAJ APK
@@ -259,7 +264,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODALE VISIONNEUSE PHOTO SEXY & ATTRIBUTION DES 5 PALIERS ==================== -->
+  <!-- ==================== MODALE VISIONNEUSE PHOTO SEXY & 5 PALIERS ==================== -->
   <div id="sexyPhotoModal" class="fixed inset-0 z-[99985] hidden bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-slate-900 text-white w-full max-w-md rounded-3xl p-5 space-y-3 shadow-2xl border border-pink-500/40 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
@@ -400,7 +405,7 @@
     </div>
 
     <div class="flex items-center gap-1">
-      <button onclick="openServiceStatusModal()" title="Statut des services & Synchronisation manuelle" class="px-2.5 py-1.5 rounded-full bg-sky-100 border border-sky-300 text-[10px] font-extrabold text-sky-900 active:scale-95 transition flex items-center gap-1">
+      <button onclick="openServiceStatusModal()" title="Statuts & Quotas" class="px-2.5 py-1.5 rounded-full bg-sky-100 border border-sky-300 text-[10px] font-extrabold text-sky-900 active:scale-95 transition flex items-center gap-1">
         📡 Statuts
       </button>
       <button onclick="toggleLockscreen(true, false)" class="px-2 py-1.5 rounded-full bg-purple-100 border border-purple-200 text-[10px] font-extrabold text-purple-800 active:scale-95 transition">
@@ -464,7 +469,7 @@
         </div>
       </div>
 
-      <!-- ==================== CARTE VIBRATIONS D'AMOUR (8 BOUTONS + ACCUSÉ ✓✓) ==================== -->
+      <!-- ==================== CARTE VIBRATIONS D'AMOUR ==================== -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-xs font-extrabold tracking-wider uppercase text-slate-500">⚡ VIBRATIONS EN DIRECT (+5 🪙)</span>
@@ -521,7 +526,7 @@
         </div>
       </div>
 
-      <!-- ==================== DÉFI QUOTIDIEN : PHOTO SEXY (5 PALIERS + SÉRIE) ==================== -->
+      <!-- ==================== DÉFI QUOTIDIEN : PHOTO SEXY ==================== -->
       <div class="bg-gradient-to-br from-rose-950 via-purple-950 to-slate-900 text-white rounded-3xl p-4 shadow-lg border border-pink-500/30 space-y-3">
         <div class="flex items-center justify-between">
           <div>
@@ -558,7 +563,7 @@
       </div>
     </section>
 
-    <!-- ==================== ONGLET 2 : DESSIN SIMPLE & LÉGER ==================== -->
+    <!-- ==================== ONGLET 2 : DESSIN ==================== -->
     <section id="tab-dessin" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
@@ -753,13 +758,13 @@
       </div>
     </section>
 
-    <!-- ==================== ONGLET 4 : JEUX & BONS D'AMOUR ==================== -->
+    <!-- ==================== ONGLET 4 : JEUX & BONS (60 CARTES + QUIZ 100 Q) ==================== -->
     <section id="tab-jeux" class="hidden space-y-4">
 
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <div>
-            <span class="bg-rose-100 text-rose-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">🎲 ACTION OU VÉRITÉ COUPLE</span>
+            <span class="bg-rose-100 text-rose-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">🎲 ACTION OU VÉRITÉ COUPLE (60 CARTES)</span>
           </div>
           <span id="todTurnBadge" class="bg-purple-600 text-white text-[11px] font-extrabold px-3 py-1 rounded-full shadow-sm">
             Tour de Jordan 👦🏻
@@ -788,26 +793,26 @@
         </div>
 
         <div class="grid grid-cols-2 gap-2.5 text-xs font-extrabold">
-          <button onclick="drawTruthOrDare('Vérité')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 py-3 rounded-2xl active:scale-95 transition">
+          <button id="btnDrawTruth" onclick="drawTruthOrDare('Vérité')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 py-3 rounded-2xl active:scale-95 transition">
             🤔 Tirer une VÉRITÉ
           </button>
-          <button onclick="drawTruthOrDare('Action')" class="bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 py-3 rounded-2xl active:scale-95 transition">
+          <button id="btnDrawDare" onclick="drawTruthOrDare('Action')" class="bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 py-3 rounded-2xl active:scale-95 transition">
             🔥 Tirer une ACTION
           </button>
         </div>
 
-        <button onclick="completeTruthOrDareTurn()" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-extrabold py-2.5 rounded-2xl active:scale-95 transition">
-          ✔️ Défi relevé (+20 🪙 & Passer au tour suivant)
+        <button id="btnCompleteTod" onclick="completeTruthOrDareTurn()" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-extrabold py-2.5 rounded-2xl active:scale-95 transition">
+          ✔️ Valider le défi & Passer au tour suivant (+20 🪙)
         </button>
       </div>
 
-      <!-- QUIZ 100 QUESTIONS AVEC GESTION STRICTE DES RÔLES TOUR PAR TOUR -->
+      <!-- QUIZ 100 QUESTIONS AVEC VÉRIFICATION DES RÔLES -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <span class="bg-purple-100 text-purple-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">
             🎯 QUIZ 100 QUESTIONS (<span id="quizNumberBadge">1/100</span>)
           </span>
-          <button onclick="nextQuizQuestion()" class="text-xs font-bold text-pink-600">🔀 Passer / Suivante</button>
+          <button id="btnNextQuiz" onclick="nextQuizQuestion()" class="text-xs font-bold text-pink-600">🔀 Passer / Suivante</button>
         </div>
 
         <div class="flex items-center justify-between bg-slate-50 border border-slate-200/80 rounded-2xl px-3 py-2 text-[11px] font-extrabold">
@@ -840,7 +845,7 @@
       </div>
     </section>
 
-    <!-- ==================== ONGLET 5 : SOUVENIRS & CAPSULE TEMPORELLE ==================== -->
+    <!-- ==================== ONGLET 5 : SOUVENIRS ==================== -->
     <section id="tab-souvenirs" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
@@ -976,7 +981,7 @@
       }
     }
 
-    // ==================== MODALE STATUTS DES SERVICES & SYNCHRO MANUELLE ====================
+    // ==================== MODALE STATUTS & QUOTAS ====================
     function openServiceStatusModal() {
       document.getElementById('serviceStatusModal').classList.remove('hidden');
       refreshServicesDiagnostics();
@@ -986,20 +991,20 @@
       document.getElementById('serviceStatusModal').classList.add('hidden');
     }
 
-    function setBadgeState(badgeId, descId, isOk, badgeText, descText) {
+    function setBadgeState(badgeId, textId, isOk, badgeText, valText) {
       const b = document.getElementById(badgeId);
-      const d = document.getElementById(descId);
+      const t = document.getElementById(textId);
       if (b) {
         b.innerText = badgeText;
         b.className = isOk
           ? 'px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300'
           : 'px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300';
       }
-      if (d && descText) d.innerText = descText;
+      if (t && valText) t.innerText = valText;
     }
 
     async function refreshServicesDiagnostics() {
-      ['Cloudflare', 'Kv', 'Fcm', 'Tokens', 'Github'].forEach(k => {
+      ['Requests', 'KvReads', 'KvWrites', 'Fcm', 'Github'].forEach(k => {
         const b = document.getElementById('statusBadge' + k);
         if (b) {
           b.innerText = '⏳ Test...';
@@ -1010,36 +1015,19 @@
       await registerFcmTokenToCloud();
 
       try {
-        const t0 = Date.now();
         const res = await fetch(API_ENDPOINT + '?action=status&t=' + Date.now(), { cache: 'no-store' });
-        const pingMs = Date.now() - t0;
         if (res.ok) {
           const info = await res.json();
-          setBadgeState('statusBadgeCloudflare', 'statusDescCloudflare', true, `🟢 En ligne (${pingMs}ms)`, 'Workers & Pages opérationnels');
-          setBadgeState('statusBadgeKv', 'statusDescKv', Boolean(info.kvBound), info.kvBound ? '🟢 Connectée' : '🔴 Non liée', 'Stockage LOVE8_COUPLE_KV');
-          setBadgeState('statusBadgeFcm', 'statusDescFcm', Boolean(info.fcmAuthOk), info.fcmAuthOk ? '🟢 Valide (OAuth2)' : '🔴 Erreur Clé', 'API Firebase HTTP v1');
+          const q = info.quotas || { requests: 0, kvReads: 0, kvWrites: 0, fcmPushes: 0 };
 
-          const bothTokens = info.tokenJordan && info.tokenLydie;
-          const tokDesc = `Jordan: ${info.tokenJordan ? '✔️' : '❌'} • Lydie: ${info.tokenLydie ? '✔️' : '❌'}`;
-          setBadgeState('statusBadgeTokens', 'statusDescTokens', bothTokens, bothTokens ? '🟢 2/2 Actifs' : '🟠 Partiel', tokDesc);
-        } else {
-          setBadgeState('statusBadgeCloudflare', 'statusDescCloudflare', false, '🔴 Erreur HTTP', 'Statut ' + res.status);
+          setBadgeState('statusBadgeCloudflare', 'quotaTextRequests', q.requests <= 100000, `${q.requests <= 100000 ? '🟢' : '🔴'} ${q.requests} req`, `${q.requests} / 100 000 requêtes aujourd'hui`);
+          setBadgeState('statusBadgeKvReads', 'quotaTextKvReads', q.kvReads <= 100000, `${q.kvReads <= 100000 ? '🟢' : '🔴'} ${q.kvReads} lect`, `${q.kvReads} / 100 000 lectures aujourd'hui`);
+          setBadgeState('statusBadgeKvWrites', 'quotaTextKvWrites', q.kvWrites <= 1000, `${q.kvWrites <= 1000 ? '🟢' : '🔴'} ${q.kvWrites} écr`, `${q.kvWrites} / 1 000 écritures aujourd'hui`);
+          setBadgeState('statusBadgeFcm', 'quotaTextFcm', info.fcmAuthOk, info.fcmAuthOk ? '🟢 OAuth2 Actif' : '🔴 Erreur Auth', `${q.fcmPushes} push(es) envoyés aujourd'hui (Illimité)`);
+          setBadgeState('statusBadgeGithub', 'statusDescGithub', true, '🟢 Appareils OK', `Jordan: ${info.tokenJordan ? '✔️' : '❌'} • Lydie: ${info.tokenLydie ? '✔️' : '❌'}`);
         }
       } catch (e) {
-        setBadgeState('statusBadgeCloudflare', 'statusDescCloudflare', false, '🔴 Hors-ligne', 'Impossible de joindre le serveur');
-      }
-
-      try {
-        const ghRes = await fetch('https://api.github.com/repos/LeeLooVF/Love8-apps/releases/tags/latest', { cache: 'no-store' });
-        if (ghRes.ok) {
-          const ghData = await ghRes.json();
-          const pubDate = ghData.published_at ? new Date(ghData.published_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'OK';
-          setBadgeState('statusBadgeGithub', 'statusDescGithub', true, '🟢 Disponible', `Dernier APK publié à ${pubDate}`);
-        } else {
-          setBadgeState('statusBadgeGithub', 'statusDescGithub', false, '🟠 Indisponible', 'Release latest non trouvée');
-        }
-      } catch (e) {
-        setBadgeState('statusBadgeGithub', 'statusDescGithub', false, '🔴 Erreur Réseau', 'GitHub API inaccessible');
+        setBadgeState('statusBadgeCloudflare', 'quotaTextRequests', false, '🔴 Erreur', 'Serveur injoignable');
       }
     }
 
@@ -1048,7 +1036,7 @@
       await registerFcmTokenToCloud();
       await pollCloudState(true);
       await refreshServicesDiagnostics();
-      triggerBanner('🔄 SYNCHRONISATION TERMINÉE', 'Les données et jetons FCM sont 100% à jour !', '📡');
+      triggerBanner('🔄 SYNCHRONISATION TERMINÉE', 'Les données et quotas sont 100% à jour !', '📡');
     }
 
     const moodPresets = [
@@ -1094,6 +1082,7 @@
       { id: 'king_aura',  name: 'Aura Légendaire', emoji: '🔥', slot: 'aura', price: 5000 }
     ];
 
+    // ==================== 60 CARTES ACTION OU VÉRITÉ (3 NIVEAUX) ====================
     const truthOrDareDeck = {
       doux: {
         Vérité: [
@@ -1102,7 +1091,11 @@
           "Quelle est la chose que je fais au quotidien et que tu adores en secret ?",
           "Si on pouvait revivre une seule journée de notre histoire, laquelle choisirais-tu ?",
           "Quelle chanson te fait immédiatement penser à nous deux ?",
-          "Quel est ton rêve le plus cher pour notre couple dans les 5 prochaines années ?"
+          "Quel est ton rêve le plus cher pour notre couple dans les 5 prochaines années ?",
+          "Quel est le plus beau compliment que l'on m'ait fait selon toi ?",
+          "Quel est ton plat préféré que je te cuisine avec amour ?",
+          "Quel petit nom doux tu préfères me donner en secret ?",
+          "Quel est le moment où tu t'es senti(e) le plus proche de moi ?"
         ],
         Action: [
           "Fais-moi un câlin en me serrant fort pendant 30 secondes sans parler 🤗",
@@ -1110,17 +1103,25 @@
           "Fais-moi un massage des épaules ou de la nuque pendant 2 minutes 💆‍♂️",
           "Embrasse-moi tendrement sur le front, les deux joues et les lèvres 😘",
           "Envoie-moi un dessin surprise en moins de 30 secondes sur l'onglet Dessin 🎨",
-          "Danse un slow avec moi tout de suite, même sans musique 💃🕺"
+          "Danse un slow avec moi tout de suite, même sans musique 💃🕺",
+          "Mets ta tête sur mon cœur et écoute-le battre pendant 1 minute 💓",
+          "Dis-moi une phrase ultra romantique avec ta voix la plus douce",
+          "Fais-moi un compliment sincère sur une partie de mon corps",
+          "Prends mes mains et remercie-moi pour tout ce qu'on partage"
         ]
       },
       fun: {
         Vérité: [
-          "Quelle est la petite habitude la plus bizarre ou drôle que tu as remarquée chez moi ?",
+          "Quelle est la petite habitude la plus bizarre ou drôle que tu aies remarquée chez moi ?",
           "Quel est le pire cadeau ou la pire surprise qu'on ait vécu ensemble ?",
           "Si on échangeait nos corps pendant 24h, quelle est la première chose que tu ferais ?",
           "Quelle est la chose la plus embarrassante que tu aies faite au début de notre relation ?",
           "Si Douglasse pouvait parler, que raconterait-il sur nous deux ? 🐱",
-          "Quel plat que je cuisine (ou commande) te fait le moins rêver en vrai ?"
+          "Quel plat que je cuisine (ou commande) te fait le moins rêver en vrai ?",
+          "Si on devait participer à une émission de télé-réalité, laquelle ce serait ?",
+          "Quel est mon plus gros tic ou manie qui te fait rire (ou râler) ?",
+          "Quel personnage de film ou de série je te rappelle le plus ?",
+          "Si tu devais me relooker entièrement pour une soirée, comment m'habillerais-tu ?"
         ],
         Action: [
           "Imite ma façon de parler ou ma tête quand je me réveille le matin 😂",
@@ -1128,7 +1129,11 @@
           "Chante le refrain d'une chanson d'amour en me regardant très sérieusement 🎤",
           "Prends un selfie grimace de nous deux tout de suite 🤳",
           "Parle avec un accent (italien, anglais ou ch'ti) jusqu'à ton prochain tour !",
-          "Laisse-moi te coiffer ou choisir ta pose pour une photo souvenir 🤪"
+          "Laisse-moi te coiffer ou choisir ta pose pour une photo souvenir 🤪",
+          "Fais un défilé de mode ridicule dans la pièce pendant 30 secondes",
+          "Imite le miaulement de Douglasse en essayant de te faire adopter",
+          "Fais 5 pompes ou squats en déclarant ton amour à haute voix",
+          "Invente une petite chanson improvisée sur moi et chante-la"
         ]
       },
       caliente: {
@@ -1138,7 +1143,11 @@
           "Quel est notre moment le plus torride dont tu te souviens encore parfaitement ? 😈",
           "Quelle tenue (ou absence de tenue) te fait perdre tous tes moyens quand je la porte ?",
           "Si tu avais carte blanche sur moi pendant 15 minutes ce soir, que ferais-tu en premier ?",
-          "Quel endroit insolite de la maison te tente le plus pour un moment rien qu'à deux ? 🌶️"
+          "Quel endroit insolite de la maison te tente le plus pour un moment rien qu'à deux ? 🌶️",
+          "Quelle est la pensée la plus coquine que tu aies eue de moi aujourd'hui ?",
+          "Qu'est-ce que je fais dans l'intimité qui te fait instantanément fondre ?",
+          "Si on devait s'offrir un jeu érotique ce soir, lequel ce serait ?",
+          "Quel mot doux ou phrase coquine tu adores que je te dise ?"
         ],
         Action: [
           "Embrasse-moi lentement dans le cou pendant 20 secondes les yeux fermés 💋",
@@ -1146,11 +1155,16 @@
           "Retire un vêtement de ton choix (ou laisse-moi choisir lequel) 😈",
           "Fais-moi un baiser passionné de cinéma d'au moins 15 secondes sans t'arrêter ❤️‍🔥",
           "Passe un glaçon (ou le bout de tes doigts) doucement le long de mon dos ou de mon ventre 🍓",
-          "Assieds-toi sur mes genoux pour les 2 prochains tours du jeu 🍑"
+          "Assieds-toi sur mes genoux pour les 2 prochains tours du jeu 🍑",
+          "Fais-moi un massage sensuel des mains ou des bras pendant 1 minute",
+          "Mords doucement la lèvre de ton partenaire en le regardant intensément",
+          "Passe tes mains sous mes vêtements et fais-moi frissonner",
+          "Embrasse mon poignet et remonte lentement le long de mon bras"
         ]
       }
     };
 
+    // ==================== 100 QUESTIONS DU QUIZ ====================
     const coupleQuizPool = [
       { q: "Quel est mon plat réconfort préféré ?", options: ["🍣 Japonais / Sushi", "🍕 Pizza & Burger", "🧀 Raclette / Fondue", "🍝 Pâtes maison"] },
       { q: "Qu'est-ce qui me fait fondre immédiatement chez toi ?", options: ["👀 Ton regard", "😂 Nos fous rires", "🤗 Tes câlins", "💋 Tes bisous dans le cou"] },
@@ -1598,9 +1612,6 @@
       return explicitEmoji || '❤️';
     }
 
-    // Pluie sur fond noir pur :
-    // - Si shouldCloseAppAfter = true (l'application était fermée ou écran en veille), ferme totalement l'application à la fin de la pluie !
-    // - Si shouldCloseAppAfter = false (on était déjà dans l'application), masque simplement le rideau noir et laisse l'application ouverte !
     function triggerBlackScreenRain(emoji, labelText, soundType = 'love', pattern = [200, 80, 300], shouldCloseAppAfter = false) {
       if (sleep15sTimer) clearTimeout(sleep15sTimer);
       if (sleepCountdownInterval) clearInterval(sleepCountdownInterval);
@@ -1676,7 +1687,6 @@
       }
     }
 
-    // 1. Appelé en direct par Love8FirebaseMessagingService quand tu es DÉJÀ dans l'application (ne ferme jamais l'app)
     window.onInAppFcmPush = async function(eventId, emoji, title, message, evType, soundType) {
       const numId = Number(eventId || 0);
       if (numId > 0 && numId <= lastEventId) return;
@@ -1701,7 +1711,6 @@
       }
     };
 
-    // 2. Appelé par MainActivity quand l'application était FERMÉE ou en veille -> Ferme l'application immédiatement après la pluie !
     window.onNativeWakeAlert = async function(emoji, title, message, evType, soundType, shouldCloseAfter = true, eventId = '0') {
       document.documentElement.classList.add('wake-blackout');
 
@@ -1810,10 +1819,8 @@
       } catch (e) {}
     }
 
-    // Polling ultra-fiable indépendant du décalage d'horloge entre les deux téléphones
     async function pollCloudState(forceSync = false) {
       if (document.hidden && !forceSync) return;
-      // Évite d'écraser une modification locale effectuée il y a moins de 1,2 seconde
       if (!forceSync && (Date.now() - lastLocalWriteTime < 1200)) return;
 
       try {
@@ -1855,7 +1862,6 @@
             renderAll();
           }
 
-          // Déclenche la vibration ou le dessin si un nouvel événement du partenaire est détecté pendant que l'application est ouverte
           if (remote.lastEvent && Number(remote.lastEvent.id) > lastEventId && remote.lastEvent.sender !== currentUser) {
             lastEventId = Number(remote.lastEvent.id);
             localStorage.setItem('love8_last_event', String(lastEventId));
@@ -2344,6 +2350,13 @@
     }
 
     function drawTruthOrDare(choiceType) {
+      const currentTurn = state.truthOrDare.turn || 'Jordan';
+      if (currentUser !== currentTurn) {
+        triggerBanner('⏳ ATTENDS TON TOUR', `C'est au tour de ${currentTurn} de tirer une carte !`, '🔒');
+        triggerDeviceVibration([80, 50, 80]);
+        return;
+      }
+
       const lvl = state.truthOrDare.level || 'doux';
       const pool = truthOrDareDeck[lvl][choiceType] || truthOrDareDeck.doux.Vérité;
       const randomCard = pool[Math.floor(Math.random() * pool.length)];
@@ -2358,10 +2371,12 @@
     }
 
     function completeTruthOrDareTurn() {
-      const prevTurn = state.truthOrDare.turn || 'Jordan';
-      const nextTurn = prevTurn === 'Jordan' ? 'Lydie' : 'Jordan';
+      const currentTurn = state.truthOrDare.turn || 'Jordan';
+      // Le joueur qui valide doit être le partenaire (ou celui qui a fini son défi)
+      const nextTurn = currentTurn === 'Jordan' ? 'Lydie' : 'Jordan';
+      
       state.truthOrDare.turn = nextTurn;
-      state.truthOrDare.cardText = `Bravo ${prevTurn} ! C'est maintenant au tour de ${nextTurn} de tirer une carte Action ou Vérité !`;
+      state.truthOrDare.cardText = `Bravo ! Défi validé par ${currentUser} ! C'est maintenant au tour de ${nextTurn} de tirer une carte Action ou Vérité !`;
       state.coins = (state.coins || 0) + 20;
       state.cat.xp = (state.cat.xp || 0) + 20;
       if (state.cat.xp >= 100) {
@@ -2433,14 +2448,21 @@
       saveState();
     }
 
-    // ==================== GESTION DU QUIZ 100 QUESTIONS SYNCHRONISÉE EN TEMPS RÉEL ====================
+    // ==================== GESTION DU QUIZ 100 QUESTIONS SYNCHRONISÉ ====================
     function nextQuizQuestion() {
+      const target = state.quiz.targetUser || 'Jordan';
+      const guesser = target === 'Jordan' ? 'Lydie' : 'Jordan';
+
+      if (currentUser !== target && currentUser !== guesser) {
+        triggerBanner('🔒 ACTION BLOQUÉE', 'Ce n\'est pas ton tour de changer de question.', '⚠️');
+        return;
+      }
+
       state.quiz.qIndex = ((state.quiz.qIndex || 0) + 1) % coupleQuizPool.length;
-      state.quiz.targetUser = state.quiz.targetUser === 'Jordan' ? 'Lydie' : 'Jordan';
-      const guesser = state.quiz.targetUser === 'Jordan' ? 'Lydie' : 'Jordan';
+      state.quiz.targetUser = guesser;
       state.quiz.secretChoice = null;
       state.quiz.updatedAt = Date.now();
-      state.quiz.statusText = `Étape 1 : ${state.quiz.targetUser} doit choisir sa réponse secrète (pour que ${guesser} devine ensuite) !`;
+      state.quiz.statusText = `Étape 1 : ${state.quiz.targetUser} doit choisir sa réponse secrète (pour que ${target} devine ensuite) !`;
       saveState();
     }
 
@@ -2450,7 +2472,6 @@
       const target = state.quiz.targetUser || 'Jordan';
       const guesser = target === 'Jordan' ? 'Lydie' : 'Jordan';
 
-      // ÉTAPE 1 : La personne sur qui porte la question verrouille son choix secret
       if (state.quiz.secretChoice === null || typeof state.quiz.secretChoice !== 'number') {
         if (currentUser !== target) {
           triggerBanner('⏳ ATTENDS TON TOUR', `C'est d'abord à ${target} de choisir sa réponse secrète !`, '🔒');
@@ -2466,7 +2487,6 @@
         return;
       }
 
-      // ÉTAPE 2 : Le partenaire devine
       if (currentUser !== guesser) {
         triggerBanner('🤫 CHUT !', `Tu as déjà verrouillé ta réponse, laisse ${guesser} deviner !`, '👀');
         triggerDeviceVibration([80, 50, 80]);
@@ -2933,6 +2953,14 @@
       document.getElementById('todCardHeader').innerText = `${tod.lastType || 'DÉFI'} (${tod.level.toUpperCase()}) • POUR ${tod.turn.toUpperCase()}`;
       document.getElementById('todCardText').innerText = tod.cardText || 'Tire une carte Action ou Vérité !';
 
+      // Blocage des boutons Action ou Vérité selon le tour du joueur
+      const isMyTodTurn = (currentUser === (tod.turn || 'Jordan'));
+      document.getElementById('btnDrawTruth').disabled = !isMyTodTurn;
+      document.getElementById('btnDrawDare').disabled = !isMyTodTurn;
+      document.getElementById('btnCompleteTod').disabled = !isMyTodTurn;
+      document.getElementById('btnDrawTruth').className = isMyTodTurn ? 'bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 py-3 rounded-2xl active:scale-95 transition' : 'bg-slate-100 text-slate-400 border border-slate-200 py-3 rounded-2xl opacity-60 cursor-not-allowed';
+      document.getElementById('btnDrawDare').className = isMyTodTurn ? 'bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 py-3 rounded-2xl active:scale-95 transition' : 'bg-slate-100 text-slate-400 border border-slate-200 py-3 rounded-2xl opacity-60 cursor-not-allowed';
+
       const lvlStyles = {
         doux:     { id: 'btnTodDoux',     active: 'bg-pink-500 text-white border-pink-600 shadow',   idle: 'bg-pink-50 text-pink-700 border-pink-200' },
         fun:      { id: 'btnTodFun',      active: 'bg-amber-500 text-white border-amber-600 shadow', idle: 'bg-amber-50 text-amber-800 border-amber-200' },
@@ -2968,6 +2996,8 @@
       }
 
       const canClickQuiz = (!isSecretLocked && currentUser === targetUser) || (isSecretLocked && currentUser === guesserUser);
+      document.getElementById('btnNextQuiz').disabled = !canClickQuiz;
+
       document.getElementById('quizOptionsGrid').innerHTML = qObj.options.map((opt, idx) => {
         const isMySecret = isSecretLocked && currentUser === targetUser && Number(state.quiz.secretChoice) === idx;
         return `
