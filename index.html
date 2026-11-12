@@ -115,6 +115,30 @@
   <input id="fileInputAvatar" type="file" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)" />
   <input id="fileInputCapsule" type="file" accept="image/*" class="hidden" onchange="handleCapsulePhotoUpload(event)" />
 
+  <!-- ==================== MODALE DE SÉLECTION INITIALE (PREMIER DÉMARRAGE) ==================== -->
+  <div id="userSelectionModal" class="fixed inset-0 z-[99999] hidden bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-6 text-center space-y-6 shadow-2xl border border-pink-100">
+      <div class="w-16 h-16 rounded-full gradient-card mx-auto flex items-center justify-center text-white text-3xl shadow-lg pulse-ring">
+        🤍
+      </div>
+      <div>
+        <h2 class="text-xl font-extrabold text-purple-950">Bienvenue sur Love8</h2>
+        <p class="text-xs text-slate-500 mt-1">Qui utilise cet appareil ? Ce choix sera mémorisé pour les prochaines ouvertures.</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 pt-2">
+        <button onclick="selectUserAndLock('Jordan')" class="py-4 px-3 rounded-2xl border-2 border-purple-200 bg-purple-50/50 hover:bg-purple-100/70 text-purple-950 flex flex-col items-center gap-2 active:scale-95 transition shadow-sm">
+          <span class="text-4xl">👦🏻</span>
+          <span class="font-extrabold text-sm">Jordan</span>
+        </button>
+        <button onclick="selectUserAndLock('Lydie')" class="py-4 px-3 rounded-2xl border-2 border-pink-200 bg-pink-50/50 hover:bg-pink-100/70 text-pink-950 flex flex-col items-center gap-2 active:scale-95 transition shadow-sm">
+          <span class="text-4xl">👩🏻</span>
+          <span class="font-extrabold text-sm">Lydie</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== MODALE DE SÉLECTION : HUMEUR UNIQUEMENT ==================== -->
   <div id="moodLocModal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-3xl p-5 space-y-4 shadow-2xl border border-pink-100 max-h-[85vh] overflow-y-auto">
@@ -687,7 +711,7 @@
 
   <script>
     const API_ENDPOINT = '/state';
-    let currentUser = localStorage.getItem('love8_user') || 'Jordan';
+    let currentUser = localStorage.getItem('love8_user') || '';
     let lastEventId = Number(localStorage.getItem('love8_last_event') || 0);
     let avatarUploadTarget = 'jordan';
     let activeTab = 'nous';
@@ -704,11 +728,35 @@
       lydieAvatarUrl: localStorage.getItem('love8_cached_lav_url') || ''
     };
 
+    // Gestion du premier lancement et du choix de l'utilisateur
+    function checkUserFirstLaunch() {
+      if (!currentUser) {
+        document.getElementById('userSelectionModal').classList.remove('hidden');
+      } else {
+        if (window.AndroidNative && window.AndroidNative.setUser) {
+          window.AndroidNative.setUser(currentUser);
+        }
+        renderAll();
+      }
+    }
+
+    function selectUserAndLock(user) {
+      currentUser = user;
+      localStorage.setItem('love8_user', user);
+      if (window.AndroidNative && window.AndroidNative.setUser) {
+        window.AndroidNative.setUser(user);
+      }
+      document.getElementById('userSelectionModal').classList.add('hidden');
+      registerFcmTokenToCloud();
+      renderAll();
+      triggerBanner('BIENVENUE ❤️', `Connecté en tant que ${user}`, user === 'Jordan' ? '👦🏻' : '👩🏻');
+    }
+
     // Fonction d'enregistrement du token FCM auprès de Cloudflare
     async function registerFcmTokenToCloud() {
       if (window.AndroidNative && window.AndroidNative.getFcmToken) {
         const token = window.AndroidNative.getFcmToken();
-        if (token && typeof currentUser !== 'undefined') {
+        if (token && typeof currentUser !== 'undefined' && currentUser) {
           try {
             await fetch(API_ENDPOINT + '?action=register_fcm', {
               method: 'POST',
@@ -794,7 +842,7 @@
       },
       caliente: {
         Vérité: [
-          "Quel est ton endroit préféré sur moim corps où tu adores que je t'embrasse ? 🔥",
+          "Quel est ton endroit préféré sur mon corps où tu adores que je t'embrasse ? 🔥",
           "Quel est le fantasme ou l'envie coquine que tu n'as encore jamais osé m'avouer ?",
           "Quel est notre moment le plus torride dont tu te souviens encore parfaitement ? 😈",
           "Quelle tenue (ou absence de tenue) te fait perdre tous tes moyens quand je la porte ?",
@@ -1216,10 +1264,6 @@
         toggleLockscreen(true, true);
       }
     };
-
-    if (window.AndroidNative && window.AndroidNative.setUser) {
-      window.AndroidNative.setUser(currentUser);
-    }
 
     async function saveState() {
       state.updatedAt = Date.now();
@@ -2196,6 +2240,7 @@
 
     checkCatDecay();
     updateCoupleTimer();
+    checkUserFirstLaunch();
     renderAll();
     pollCloudState();
     setInterval(pollCloudState, 2500);
