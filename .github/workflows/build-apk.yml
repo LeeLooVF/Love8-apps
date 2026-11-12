@@ -27,26 +27,37 @@ jobs:
         with:
           node-version: '22'
 
-      - name: 📦 Préparation du dossier Web & Capacitor 6
+      - name: 🎨 Compilation locale de Tailwind CSS & Préparation Capacitor 6 (Mode Hors-Ligne Instantané)
         run: |
           rm -rf android www package.json package-lock.json capacitor.config.json
           mkdir -p www
           cp index.html www/index.html
+          if [ -f "Snapchat-1098749864.jpg" ]; then cp Snapchat-1098749864.jpg www/; fi
+          if [ -f "icone.png" ]; then cp icone.png www/; fi
 
           sed -i "s|const API_ENDPOINT = '/state';|const API_ENDPOINT = 'https://love8-apps.pages.dev/state';|g" www/index.html
 
           npm init -y
-          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 tailwindcss@3
 
+          cat << 'EOF' > tailwind.config.js
+          module.exports = {
+            content: ["./www/index.html"],
+            theme: { extend: {} },
+            plugins: []
+          }
+          EOF
+
+          echo "@tailwind base; @tailwind components; @tailwind utilities;" > input.css
+          npx tailwindcss -i input.css -o www/tw.css --minify
+          sed -i 's|<script src="https://cdn.tailwindcss.com"></script>|<link rel="stylesheet" href="tw.css" />|g' www/index.html
+
+          # Mode 100% local (sans server.url distant) pour un démarrage en 0.1s sans écran blanc
           cat << 'EOF' > capacitor.config.json
           {
             "appId": "com.love8.app",
             "appName": "Love8",
-            "webDir": "www",
-            "server": {
-              "url": "https://love8-apps.pages.dev",
-              "cleartext": true
-            }
+            "webDir": "www"
           }
           EOF
 
@@ -62,45 +73,60 @@ jobs:
             done
           fi
 
-      - name: 🔒 Écriture du AndroidManifest.xml et des classes Java (Flash LED SOS + Veille 1s/15s)
+      - name: 🔑 Restauration ou Création de la clé de signature fixe (Fin du conflit de package)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          mkdir -p ~/.android
+          gh release download latest -p "debug.keystore" -D ~/.android || true
+          if [ ! -f ~/.android/debug.keystore ]; then
+            keytool -genkeypair -v -keystore ~/.android/debug.keystore \
+              -storepass android -alias androiddebugkey -keypass android \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+      - name: 🔒 Écriture du AndroidManifest.xml, des règles R8 et des classes Java optimisées Batterie
+        run: |
+          cat << 'EOF' >> android/app/proguard-rules.pro
+          -keep class com.love8.app.** { *; }
+          -keep class com.getcapacitor.** { *; }
+          -keepclassmembers class * {
+              @android.webkit.JavascriptInterface <methods>;
+          }
+          -dontwarn **
+          EOF
+
+          cat << 'EOF' >> android/app/build.gradle
+          android {
+              buildTypes {
+                  debug {
+                      minifyEnabled true
+                      shrinkResources true
+                      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+                  }
+              }
+          }
+          EOF
+
           cat << 'EOF' > android/app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-              <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-              <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-              <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
               <uses-permission android:name="android.permission.VIBRATE" />
               <uses-permission android:name="android.permission.FLASHLIGHT" />
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
               <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
               <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-              <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
               <uses-permission android:name="android.permission.CAMERA" />
-              <uses-permission android:name="android.permission.RECORD_AUDIO" />
-              <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-              <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-              <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-              <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-              <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
-              <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-              <uses-permission android:name="android.permission.BLUETOOTH" />
-              <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-              <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-              <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
               <uses-permission android:name="android.permission.WAKE_LOCK" />
               <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
               <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
               <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-              <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-              <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-              <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
-              <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
               <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
               <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
               <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
@@ -112,7 +138,6 @@ jobs:
                   android:roundIcon="@mipmap/ic_launcher_round"
                   android:supportsRtl="true"
                   android:usesCleartextTraffic="true"
-                  android:requestLegacyExternalStorage="true"
                   android:theme="@style/AppTheme">
 
                   <activity
@@ -200,7 +225,6 @@ jobs:
           import android.media.AudioAttributes;
           import android.media.RingtoneManager;
           import android.net.Uri;
-          import android.net.wifi.WifiManager;
           import android.os.Build;
           import android.os.Handler;
           import android.os.IBinder;
@@ -211,16 +235,19 @@ jobs:
           import org.json.JSONObject;
           import java.io.BufferedReader;
           import java.io.InputStreamReader;
+          import java.io.OutputStream;
           import java.net.HttpURLConnection;
           import java.net.URL;
+          import java.text.SimpleDateFormat;
+          import java.util.Date;
+          import java.util.Locale;
 
           public class Love8Service extends Service {
-              private static final String CHANNEL_BG = "love8_bg_service_v8";
-              private static final String CHANNEL_ALERTS = "love8_alerts_v8";
+              private static final String CHANNEL_BG = "love8_bg_service_v9";
+              private static final String CHANNEL_ALERTS = "love8_alerts_v9";
               private Handler handler = new Handler(Looper.getMainLooper());
               private Runnable poller;
               private PowerManager.WakeLock cpuWakeLock;
-              private WifiManager.WifiLock wifiLock;
 
               @Override
               public void onCreate() {
@@ -234,23 +261,13 @@ jobs:
                       cpuWakeLock.acquire();
                   }
 
-                  WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                  if (wm != null) {
-                      int lockType = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-                          ? WifiManager.WIFI_MODE_FULL_LOW_LATENCY
-                          : WifiManager.WIFI_MODE_FULL_HIGH_PERF;
-                      wifiLock = wm.createWifiLock(lockType, "love8:wifiKeepAlive");
-                      wifiLock.setReferenceCounted(false);
-                      wifiLock.acquire();
-                  }
-
                   Notification.Builder builder = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                       ? new Notification.Builder(this, CHANNEL_BG)
                       : new Notification.Builder(this);
 
                   Notification bgNotif = builder
-                      .setContentTitle("Love8 Temps Réel Actif ⚡")
-                      .setContentText("Veille & Connexion maintenues (Jordan & Lydie)")
+                      .setContentTitle("Love8 Éco-Veille Actif ⚡")
+                      .setContentText("Connecté en mode basse consommation")
                       .setSmallIcon(android.R.drawable.ic_dialog_info)
                       .setOngoing(true)
                       .build();
@@ -266,7 +283,7 @@ jobs:
               private void createChannels() {
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                       NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                      NotificationChannel bg = new NotificationChannel(CHANNEL_BG, "Veille Permanente Love8", NotificationManager.IMPORTANCE_LOW);
+                      NotificationChannel bg = new NotificationChannel(CHANNEL_BG, "Veille Éco Love8", NotificationManager.IMPORTANCE_LOW);
                       nm.createNotificationChannel(bg);
 
                       Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
@@ -284,7 +301,6 @@ jobs:
                   }
               }
 
-              // Stroboscope Flash LED Arrière en cas d'alerte S.O.S Amour
               public static void triggerSosFlashStrobe(final Context context, final int pulses) {
                   if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
                   new Thread(new Runnable() {
@@ -320,21 +336,29 @@ jobs:
                           new Thread(new Runnable() {
                               @Override
                               public void run() {
-                                  checkCloudState();
+                                  checkCloudPing();
                               }
                           }).start();
-                          handler.postDelayed(this, 2000);
+
+                          PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                          boolean isScreenOn = pm != null && pm.isInteractive();
+                          // Polling adaptatif : 2.5s écran allumé, 5s écran éteint
+                          long delayMs = isScreenOn ? 2500L : 5000L;
+                          handler.postDelayed(this, delayMs);
                       }
                   };
                   handler.post(poller);
               }
 
-              private void checkCloudState() {
+              private void checkCloudPing() {
+                  HttpURLConnection conn = null;
                   try {
-                      URL url = new URL("https://love8-apps.pages.dev/state?t=" + System.currentTimeMillis());
-                      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                      // Route ultra-légère ?action=ping (< 120 octets)
+                      URL url = new URL("https://love8-apps.pages.dev/state?action=ping&t=" + System.currentTimeMillis());
+                      conn = (HttpURLConnection) url.openConnection();
                       conn.setUseCaches(false);
-                      conn.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
+                      conn.setRequestProperty("Cache-Control", "no-cache");
+                      conn.setRequestProperty("Connection", "keep-alive");
                       conn.setConnectTimeout(2500);
                       conn.setReadTimeout(2500);
 
@@ -344,22 +368,22 @@ jobs:
                       while ((line = reader.readLine()) != null) sb.append(line);
                       reader.close();
 
-                      JSONObject json = new JSONObject(sb.toString());
-                      if (!json.has("lastEvent")) return;
-                      JSONObject ev = json.getJSONObject("lastEvent");
+                      JSONObject ev = new JSONObject(sb.toString());
                       long evId = ev.optLong("id", 0);
-                      String sender = ev.optString("sender", "");
-                      String evType = ev.optString("type", "vibration");
-                      String title = ev.optString("title", "Love8 ❤️");
-                      String message = ev.optString("message", "Nouvelle vibration !");
-                      String emoji = ev.optString("emoji", "❤️");
-                      String sound = ev.optString("sound", "love");
+                      if (evId == 0) return;
+
+                      String sender = ev.optString("s", "");
+                      String evType = ev.optString("t", "vibration");
+                      String title = ev.optString("ti", "Love8 ❤️");
+                      String message = ev.optString("m", "Nouvelle vibration !");
+                      String emoji = ev.optString("e", "❤️");
+                      String sound = ev.optString("snd", "love");
 
                       SharedPreferences prefs = getSharedPreferences("love8_native", MODE_PRIVATE);
                       long lastSeen = prefs.getLong("last_event_id", 0);
                       String myUser = prefs.getString("current_user", "Jordan");
 
-                      if (lastSeen == 0) {
+                      if (lastSeen == 0 && (System.currentTimeMillis() - evId > 20000)) {
                           prefs.edit().putLong("last_event_id", evId).apply();
                           return;
                       }
@@ -371,11 +395,38 @@ jobs:
                               return;
                           }
 
-                          if (!sender.equalsIgnoreCase(myUser)) {
+                          if (!sender.isEmpty() && !sender.equalsIgnoreCase(myUser)) {
+                              sendAckToCloud(evId, myUser);
                               triggerWakeAndNotification(title, message, emoji, evType, sound);
                           }
                       }
-                  } catch (Exception ignored) {}
+                  } catch (Exception ignored) {
+                  } finally {
+                      if (conn != null) conn.disconnect();
+                  }
+              }
+
+              private void sendAckToCloud(final long evId, final String myUser) {
+                  new Thread(new Runnable() {
+                      @Override
+                      public void run() {
+                          try {
+                              URL url = new URL("https://love8-apps.pages.dev/state?action=ack");
+                              HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                              conn.setRequestMethod("POST");
+                              conn.setRequestProperty("Content-Type", "application/json");
+                              conn.setDoOutput(true);
+                              conn.setConnectTimeout(2500);
+                              String timeStr = new SimpleDateFormat("HH:mm", Locale.FRANCE).format(new Date());
+                              String payload = "{\"id\":" + evId + ",\"by\":\"" + myUser + "\",\"at\":\"" + timeStr + "\"}";
+                              OutputStream os = conn.getOutputStream();
+                              os.write(payload.getBytes("UTF-8"));
+                              os.close();
+                              conn.getResponseCode();
+                              conn.disconnect();
+                          } catch (Exception ignored) {}
+                      }
+                  }).start();
               }
 
               public void triggerWakeAndNotification(final String title, final String message, final String emoji, final String evType, final String sound) {
@@ -385,7 +436,6 @@ jobs:
                           try {
                               long wakeDurationMs = "vibration".equalsIgnoreCase(evType) ? 3500 : 15000;
 
-                              // Si c'est un S.O.S Amour, fait clignoter le Flash LED arrière 12 fois !
                               if ("siren".equalsIgnoreCase(sound) || title.contains("S.O.S")) {
                                   triggerSosFlashStrobe(Love8Service.this, 12);
                               }
@@ -463,7 +513,6 @@ jobs:
               @Override
               public void onDestroy() {
                   if (cpuWakeLock != null && cpuWakeLock.isHeld()) cpuWakeLock.release();
-                  if (wifiLock != null && wifiLock.isHeld()) wifiLock.release();
                   super.onDestroy();
               }
 
@@ -535,21 +584,9 @@ jobs:
                       perms.add(Manifest.permission.ACCESS_FINE_LOCATION);
                       perms.add(Manifest.permission.ACCESS_COARSE_LOCATION);
                       perms.add(Manifest.permission.CAMERA);
-                      perms.add(Manifest.permission.RECORD_AUDIO);
 
                       if (Build.VERSION.SDK_INT >= 33) {
                           perms.add(Manifest.permission.POST_NOTIFICATIONS);
-                          perms.add(Manifest.permission.READ_MEDIA_IMAGES);
-                          perms.add(Manifest.permission.READ_MEDIA_VIDEO);
-                          perms.add(Manifest.permission.READ_MEDIA_AUDIO);
-                      } else {
-                          perms.add(Manifest.permission.READ_EXTERNAL_STORAGE);
-                          perms.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-                      }
-
-                      if (Build.VERSION.SDK_INT >= 31) {
-                          perms.add(Manifest.permission.BLUETOOTH_CONNECT);
-                          perms.add(Manifest.permission.BLUETOOTH_SCAN);
                       }
 
                       List<String> toRequest = new ArrayList<>();
@@ -637,7 +674,7 @@ jobs:
                                   "if(window.onNativeWakeAlert) window.onNativeWakeAlert('" + safeEmoji + "','" + safeTitle + "','" + safeMsg + "','" + safeType + "','" + safeSound + "');", null
                               );
                           }
-                      }, 350);
+                      }, 300);
                   }
               }
 
@@ -649,6 +686,12 @@ jobs:
                   public void setUser(String user) {
                       SharedPreferences prefs = ctx.getSharedPreferences("love8_native", MODE_PRIVATE);
                       prefs.edit().putString("current_user", user).apply();
+                  }
+
+                  @JavascriptInterface
+                  public void syncLastSeenEvent(long evId) {
+                      SharedPreferences prefs = ctx.getSharedPreferences("love8_native", MODE_PRIVATE);
+                      prefs.edit().putLong("last_event_id", evId).apply();
                   }
 
                   @JavascriptInterface
@@ -746,28 +789,6 @@ jobs:
                   }
 
                   @JavascriptInterface
-                  public void showSystemNotification(String title, String message) {
-                      NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
-                      Notification.Builder b;
-                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                          NotificationChannel ch = new NotificationChannel("love8_alerts_v8", "Urgent Lockscreen Love8", NotificationManager.IMPORTANCE_HIGH);
-                          ch.enableVibration(true);
-                          nm.createNotificationChannel(ch);
-                          b = new Notification.Builder(ctx, "love8_alerts_v8");
-                      } else {
-                          b = new Notification.Builder(ctx);
-                      }
-                      b.setSmallIcon(android.R.drawable.ic_dialog_email)
-                       .setContentTitle(title)
-                       .setContentText(message)
-                       .setAutoCancel(true);
-                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                          b.setVisibility(Notification.VISIBILITY_PUBLIC);
-                      }
-                      nm.notify((int) (System.currentTimeMillis() % 10000), b.build());
-                  }
-
-                  @JavascriptInterface
                   public boolean isDeviceLocked() {
                       KeyguardManager km = (KeyguardManager) ctx.getSystemService(Context.KEYGUARD_SERVICE);
                       return km != null && km.isKeyguardLocked();
@@ -776,7 +797,7 @@ jobs:
           }
           EOF
 
-      - name: 🔨 Compilation de l'APK via Gradle
+      - name: 🔨 Compilation de l'APK allégé via Gradle
         working-directory: ./android
         run: |
           chmod +x gradlew
@@ -789,8 +810,8 @@ jobs:
           name: Love8-Jordan-Lydie-APK
           path: android/app/build/outputs/apk/debug/Love8.apk
 
-      - name: 🚀 Publication directe sur GitHub Releases (Pour le bouton MAJ de l'application)
+      - name: 🚀 Publication sur GitHub Releases (APK + Clé de signature fixe persistante)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create latest android/app/build/outputs/apk/debug/Love8.apk --title "Dernière version Love8 APK" --notes "APK généré automatiquement" || gh release upload latest android/app/build/outputs/apk/debug/Love8.apk --clobber
+          gh release create latest android/app/build/outputs/apk/debug/Love8.apk ~/.android/debug.keystore --title "Dernière version Love8 APK" --notes "APK optimisé et signé avec clé persistante" || gh release upload latest android/app/build/outputs/apk/debug/Love8.apk ~/.android/debug.keystore --clobber
