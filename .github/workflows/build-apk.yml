@@ -229,20 +229,23 @@ jobs:
                       KeyguardManager km = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
                       boolean isInteractive = pm != null && pm.isInteractive();
                       boolean isLocked = km != null && km.isKeyguardLocked();
-                      boolean wasSleeping = (!isInteractive || isLocked);
+                      boolean wasInForeground = (isInteractive && !isLocked && MainActivity.isAppInForeground && MainActivity.currentInstance != null);
 
-                      // Si le téléphone est déverrouillé ET que l'application est déjà ouverte au premier plan,
-                      // on laisse le polling Web gérer l'animation sans relancer l'Activity ni fermer l'application !
-                      if (!wasSleeping && MainActivity.isAppInForeground) {
+                      // CAS 1 : Tu es DÉJÀ dans l'application ouverte au premier plan !
+                      // On déclenche directement l'alerte dans la WebView SANS fermer l'application après (shouldCloseApp = false)
+                      if (wasInForeground) {
+                          MainActivity.currentInstance.triggerInAppAlertFromService(emoji, title, body, evType, sound);
                           return;
                       }
 
-                      if (pm != null && wasSleeping) {
+                      // CAS 2 : L'application était fermée, en arrière-plan ou écran verrouillé/éteint !
+                      // On réveille l'écran, on joue l'animation sur fond noir, puis l'application se fermera toute seule à la fin !
+                      if (pm != null) {
                           PowerManager.WakeLock screenLock = pm.newWakeLock(
                               PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
                               "love8:fcmWake"
                           );
-                          screenLock.acquire(5000);
+                          screenLock.acquire(5500);
                       }
 
                       Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -257,7 +260,7 @@ jobs:
                       Intent intent = new Intent(this, MainActivity.class);
                       intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NO_ANIMATION);
                       intent.putExtra("lock_alert", true);
-                      intent.putExtra("was_sleeping", wasSleeping);
+                      intent.putExtra("was_sleeping", true);
                       intent.putExtra("emoji", emoji);
                       intent.putExtra("title", title);
                       intent.putExtra("message", body);
@@ -324,10 +327,12 @@ jobs:
 
           public class MainActivity extends BridgeActivity {
               public static boolean isAppInForeground = false;
+              public static MainActivity currentInstance = null;
 
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
+                  currentInstance = this;
 
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                       setShowWhenLocked(true);
@@ -352,6 +357,7 @@ jobs:
               @Override
               public void onResume() {
                   super.onResume();
+                  currentInstance = this;
                   isAppInForeground = true;
               }
 
@@ -359,6 +365,34 @@ jobs:
               public void onPause() {
                   super.onPause();
                   isAppInForeground = false;
+              }
+
+              @Override
+              public void onDestroy() {
+                  super.onDestroy();
+                  if (currentInstance == this) {
+                      currentInstance = null;
+                  }
+              }
+
+              public void triggerInAppAlertFromService(String emoji, String title, String msg, String evType, String sound) {
+                  final String safeEmoji = (emoji != null ? emoji : "❤️").replace("'", "\\'");
+                  final String safeTitle = (title != null ? title : "Love8").replace("'", "\\'");
+                  final String safeMsg = (msg != null ? msg : "Vibration !").replace("'", "\\'");
+                  final String safeType = (evType != null ? evType : "vibration").replace("'", "\\'");
+                  final String safeSound = (sound != null ? sound : "love").replace("'", "\\'");
+
+                  runOnUiThread(new Runnable() {
+                      @Override
+                      public void run() {
+                          if (MainActivity.this.bridge != null && MainActivity.this.bridge.getWebView() != null) {
+                              MainActivity.this.bridge.getWebView().evaluateJavascript(
+                                  "if(window.onNativeWakeAlert) window.onNativeWakeAlert('" + safeEmoji + "','" + safeTitle + "','" + safeMsg + "','" + safeType + "','" + safeSound + "', false);",
+                                  null
+                              );
+                          }
+                      }
+                  });
               }
 
               private void registerFcmToken() {
@@ -451,7 +485,6 @@ jobs:
                       final String safeSound = sound.replace("'", "\\'");
                       final String sleepFlag = wasSleeping ? "true" : "false";
 
-                      // Masque immédiatement le contenu Web en noir avant même que la frame ne s'affiche
                       final String jsCall = "document.documentElement.classList.add('wake-blackout');" +
                           "if(window.onNativeWakeAlert){window.onNativeWakeAlert('" + safeEmoji + "','" + safeTitle + "','" + safeMsg + "','" + safeType + "','" + safeSound + "'," + sleepFlag + ");}" +
                           "else{window.__pendingWakeAlert=['" + safeEmoji + "','" + safeTitle + "','" + safeMsg + "','" + safeType + "','" + safeSound + "'," + sleepFlag + "];}";
@@ -487,6 +520,9 @@ jobs:
                           @Override
                           public void run() {
                               try {
+                                  NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+                                  if (nm != null) nm.cancel(999);
+
                                   WindowManager.LayoutParams params = getWindow().getAttributes();
                                   params.screenBrightness = 0.01f;
                                   getWindow().setAttributes(params);
@@ -502,6 +538,11 @@ jobs:
                                       setShowWhenLocked(false);
                                   }
                                   moveTaskToBack(true);
+                                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                      finishAndRemoveTask();
+                                  } else {
+                                      finish();
+                                  }
                               } catch (Exception ignored) {}
                           }
                       });
