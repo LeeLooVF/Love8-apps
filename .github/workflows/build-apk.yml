@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: '22'
 
-      - name: 🎨 Compilation locale de Tailwind CSS & Préparation Capacitor 6 (Mode Hors-Ligne Instantané)
+      - name: 🎨 Compilation locale de Tailwind CSS & Préparation Capacitor 6
         run: |
           rm -rf android www package.json package-lock.json capacitor.config.json
           mkdir -p www
@@ -52,7 +52,6 @@ jobs:
           npx tailwindcss -i input.css -o www/tw.css --minify
           sed -i 's|<script src="https://cdn.tailwindcss.com"></script>|<link rel="stylesheet" href="tw.css" />|g' www/index.html
 
-          # Mode 100% local (sans server.url distant) pour un démarrage en 0.1s sans écran blanc
           cat << 'EOF' > capacitor.config.json
           {
             "appId": "com.love8.app",
@@ -73,7 +72,7 @@ jobs:
             done
           fi
 
-      - name: 🔑 Restauration ou Création de la clé de signature fixe (Fin du conflit de package)
+      - name: 🔑 Restauration ou Création de la clé de signature fixe
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -86,7 +85,7 @@ jobs:
               -dname "CN=Android Debug,O=Android,C=US"
           fi
 
-      - name: 🔒 Écriture du AndroidManifest.xml, des règles R8 et des classes Java optimisées Batterie
+      - name: 🔒 Écriture du AndroidManifest.xml et des classes Java (Zéro GPS, Zéro Flash, Ultra-Léger)
         run: |
           cat << 'EOF' >> android/app/proguard-rules.pro
           -keep class com.love8.app.** { *; }
@@ -116,11 +115,7 @@ jobs:
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
               <uses-permission android:name="android.permission.VIBRATE" />
-              <uses-permission android:name="android.permission.FLASHLIGHT" />
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-              <uses-permission android:name="android.permission.CAMERA" />
               <uses-permission android:name="android.permission.WAKE_LOCK" />
               <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
               <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -220,8 +215,6 @@ jobs:
           import android.content.Intent;
           import android.content.SharedPreferences;
           import android.content.pm.ServiceInfo;
-          import android.hardware.camera2.CameraCharacteristics;
-          import android.hardware.camera2.CameraManager;
           import android.media.AudioAttributes;
           import android.media.RingtoneManager;
           import android.net.Uri;
@@ -243,8 +236,8 @@ jobs:
           import java.util.Locale;
 
           public class Love8Service extends Service {
-              private static final String CHANNEL_BG = "love8_bg_service_v9";
-              private static final String CHANNEL_ALERTS = "love8_alerts_v9";
+              private static final String CHANNEL_BG = "love8_bg_service_v10";
+              private static final String CHANNEL_ALERTS = "love8_alerts_v10";
               private Handler handler = new Handler(Looper.getMainLooper());
               private Runnable poller;
               private PowerManager.WakeLock cpuWakeLock;
@@ -267,7 +260,7 @@ jobs:
 
                   Notification bgNotif = builder
                       .setContentTitle("Love8 Éco-Veille Actif ⚡")
-                      .setContentText("Connecté en mode basse consommation")
+                      .setContentText("Veille ultra-légère (Jordan & Lydie)")
                       .setSmallIcon(android.R.drawable.ic_dialog_info)
                       .setOngoing(true)
                       .build();
@@ -301,34 +294,6 @@ jobs:
                   }
               }
 
-              public static void triggerSosFlashStrobe(final Context context, final int pulses) {
-                  if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
-                  new Thread(new Runnable() {
-                      @Override
-                      public void run() {
-                          try {
-                              CameraManager camManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
-                              if (camManager == null) return;
-                              String torchCamId = null;
-                              for (String id : camManager.getCameraIdList()) {
-                                  Boolean hasFlash = camManager.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
-                                  if (hasFlash != null && hasFlash) {
-                                      torchCamId = id;
-                                      break;
-                                  }
-                              }
-                              if (torchCamId == null) return;
-                              for (int i = 0; i < pulses; i++) {
-                                  camManager.setTorchMode(torchCamId, true);
-                                  Thread.sleep(120);
-                                  camManager.setTorchMode(torchCamId, false);
-                                  Thread.sleep(100);
-                              }
-                          } catch (Exception ignored) {}
-                      }
-                  }).start();
-              }
-
               private void startPolling() {
                   poller = new Runnable() {
                       @Override
@@ -342,7 +307,6 @@ jobs:
 
                           PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
                           boolean isScreenOn = pm != null && pm.isInteractive();
-                          // Polling adaptatif : 2.5s écran allumé, 5s écran éteint
                           long delayMs = isScreenOn ? 2500L : 5000L;
                           handler.postDelayed(this, delayMs);
                       }
@@ -353,7 +317,6 @@ jobs:
               private void checkCloudPing() {
                   HttpURLConnection conn = null;
                   try {
-                      // Route ultra-légère ?action=ping (< 120 octets)
                       URL url = new URL("https://love8-apps.pages.dev/state?action=ping&t=" + System.currentTimeMillis());
                       conn = (HttpURLConnection) url.openConnection();
                       conn.setUseCaches(false);
@@ -436,10 +399,6 @@ jobs:
                           try {
                               long wakeDurationMs = "vibration".equalsIgnoreCase(evType) ? 3500 : 15000;
 
-                              if ("siren".equalsIgnoreCase(sound) || title.contains("S.O.S")) {
-                                  triggerSosFlashStrobe(Love8Service.this, 12);
-                              }
-
                               PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
                               if (pm != null) {
                                   PowerManager.WakeLock screenLock = pm.newWakeLock(
@@ -451,13 +410,10 @@ jobs:
 
                               Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                               if (v != null) {
-                                  long[] vibPattern = "siren".equalsIgnoreCase(sound)
-                                      ? new long[]{0, 400, 100, 400, 100, 400, 100, 600}
-                                      : new long[]{0, 300, 100, 450};
                                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                      v.vibrate(VibrationEffect.createWaveform(vibPattern, -1));
+                                      v.vibrate(VibrationEffect.createWaveform(new long[]{0, 300, 100, 450}, -1));
                                   } else {
-                                      v.vibrate(800);
+                                      v.vibrate(600);
                                   }
                               }
 
@@ -529,8 +485,6 @@ jobs:
           import android.Manifest;
           import android.app.DownloadManager;
           import android.app.KeyguardManager;
-          import android.app.Notification;
-          import android.app.NotificationChannel;
           import android.app.NotificationManager;
           import android.content.Context;
           import android.content.Intent;
@@ -546,9 +500,6 @@ jobs:
           import android.provider.Settings;
           import android.view.WindowManager;
           import android.webkit.JavascriptInterface;
-          import android.widget.Toast;
-          import java.util.ArrayList;
-          import java.util.List;
           import com.getcapacitor.BridgeActivity;
 
           public class MainActivity extends BridgeActivity {
@@ -565,7 +516,7 @@ jobs:
                       WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
                   );
 
-                  requestAllNeededPermissions();
+                  requestEssentialPermissions();
 
                   Intent svc = new Intent(this, Love8Service.class);
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -578,27 +529,14 @@ jobs:
                   handleWakeIntent(getIntent());
               }
 
-              private void requestAllNeededPermissions() {
+              private void requestEssentialPermissions() {
+                  if (Build.VERSION.SDK_INT >= 33) {
+                      if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                          requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
+                      }
+                  }
+
                   if (Build.VERSION.SDK_INT >= 23) {
-                      List<String> perms = new ArrayList<>();
-                      perms.add(Manifest.permission.ACCESS_FINE_LOCATION);
-                      perms.add(Manifest.permission.ACCESS_COARSE_LOCATION);
-                      perms.add(Manifest.permission.CAMERA);
-
-                      if (Build.VERSION.SDK_INT >= 33) {
-                          perms.add(Manifest.permission.POST_NOTIFICATIONS);
-                      }
-
-                      List<String> toRequest = new ArrayList<>();
-                      for (String p : perms) {
-                          if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
-                              toRequest.add(p);
-                          }
-                      }
-                      if (!toRequest.isEmpty()) {
-                          requestPermissions(toRequest.toArray(new String[0]), 101);
-                      }
-
                       PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
                       if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
                           try {
@@ -695,11 +633,6 @@ jobs:
                   }
 
                   @JavascriptInterface
-                  public void flashTorchStrobe(int pulses) {
-                      Love8Service.triggerSosFlashStrobe(ctx, pulses > 0 ? pulses : 10);
-                  }
-
-                  @JavascriptInterface
                   public void turnOffScreenAndSleep() {
                       runOnUiThread(new Runnable() {
                           @Override
@@ -726,17 +659,6 @@ jobs:
                                       finish();
                                   }
                               } catch (Exception ignored) {}
-                          }
-                      });
-                  }
-
-                  @JavascriptInterface
-                  public void checkAllPermissions() {
-                      runOnUiThread(new Runnable() {
-                          @Override
-                          public void run() {
-                              requestAllNeededPermissions();
-                              Toast.makeText(ctx, "Autorisations vérifiées ✅", Toast.LENGTH_SHORT).show();
                           }
                       });
                   }
@@ -797,7 +719,7 @@ jobs:
           }
           EOF
 
-      - name: 🔨 Compilation de l'APK allégé via Gradle
+      - name: 🔨 Compilation de l'APK via Gradle
         working-directory: ./android
         run: |
           chmod +x gradlew
@@ -810,8 +732,8 @@ jobs:
           name: Love8-Jordan-Lydie-APK
           path: android/app/build/outputs/apk/debug/Love8.apk
 
-      - name: 🚀 Publication sur GitHub Releases (APK + Clé de signature fixe persistante)
+      - name: 🚀 Publication sur GitHub Releases (APK + Clé de signature persistante)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create latest android/app/build/outputs/apk/debug/Love8.apk ~/.android/debug.keystore --title "Dernière version Love8 APK" --notes "APK optimisé et signé avec clé persistante" || gh release upload latest android/app/build/outputs/apk/debug/Love8.apk ~/.android/debug.keystore --clobber
+          gh release create latest android/app/build/outputs/apk/debug/Love8.apk ~/.android/debug.keystore --title "Dernière version Love8 APK" --notes "APK ultra-léger signé avec clé persistante" || gh release upload latest android/app/build/outputs/apk/debug/Love8.apk ~/.android/debug.keystore --clobber
