@@ -2,19 +2,33 @@ let memoryState = null;
 let memoryMedia = {};
 
 async function sendFcmPush(env, recipientToken, title, body, sound) {
-  if (!env.FCM_SERVER_KEY || !recipientToken) return;
+  if (!env.FCM_ACCESS_TOKEN || !env.FCM_PROJECT_ID || !recipientToken) return;
   try {
     await fetch(`https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${env.FCM_ACCESS_TOKEN}`,
+        'Authorization': `Bearer ${env.FCM_ACCESS_TOKEN.trim()}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         message: {
           token: recipientToken,
-          data: { title, body, sound, type: 'vibration' },
-          android: { priority: 'HIGH' }
+          notification: {
+            title: title || "⚡ Vibration d'amour",
+            body: body || "Ton amour t'envoie une vibration"
+          },
+          data: {
+            sound: sound || "love",
+            type: 'vibration'
+          },
+          android: {
+            priority: 'HIGH',
+            notification: {
+              sound: 'default',
+              default_sound: true,
+              default_vibrate_timings: true
+            }
+          }
         }
       })
     });
