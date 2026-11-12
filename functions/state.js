@@ -3,79 +3,20 @@ let memoryMedia = {};
 let cachedAccessToken = null;
 let tokenExpiration = 0;
 
+// Compteurs de quotas (remis à zéro chaque jour à minuit UTC)
 let quotaTracker = {
-  dayKey: "",
-  hourKey: "",
-  kvReadsDay: 0,
-  kvReadsHour: 0,
-  kvWritesDay: 0,
-  kvWritesHour: 0,
-  workerReqDay: 0,
-  workerReqHour: 0,
-  fcmDay: 0,
-  fcmHour: 0
+  date: "",
+  requests: 0,
+  kvReads: 0,
+  kvWrites: 0,
+  fcmPushes: 0
 };
 
-function updateQuotaKeys() {
-  const now = new Date();
-  const dKey = now.toISOString().slice(0, 10);
-  const hKey = now.toISOString().slice(0, 13);
-  if (quotaTracker.dayKey !== dKey) {
-    quotaTracker.dayKey = dKey;
-    quotaTracker.kvReadsDay = 0;
-    quotaTracker.kvWritesDay = 0;
-    quotaTracker.workerReqDay = 0;
-    quotaTracker.fcmDay = 0;
+function checkAndResetQuota() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (quotaTracker.date !== today) {
+    quotaTracker = { date: today, requests: 0, kvReads: 0, kvWrites: 0, fcmPushes: 0 };
   }
-  if (quotaTracker.hourKey !== hKey) {
-    quotaTracker.hourKey = hKey;
-    quotaTracker.kvReadsHour = 0;
-    quotaTracker.kvWritesHour = 0;
-    quotaTracker.workerReqHour = 0;
-    quotaTracker.fcmHour = 0;
-  }
-}
-
-function trackRequest() {
-  updateQuotaKeys();
-  quotaTracker.workerReqDay += 1;
-  quotaTracker.workerReqHour += 1;
-}
-
-function trackKvRead(count = 1) {
-  updateQuotaKeys();
-  quotaTracker.kvReadsDay += count;
-  quotaTracker.kvReadsHour += count;
-}
-
-function trackKvWrite(count = 1) {
-  updateQuotaKeys();
-  quotaTracker.kvWritesDay += count;
-  quotaTracker.kvWritesHour += count;
-}
-
-function trackFcmSend() {
-  updateQuotaKeys();
-  quotaTracker.fcmDay += 1;
-  quotaTracker.fcmHour += 1;
-}
-
-function syncQuotasWithState(st) {
-  updateQuotaKeys();
-  if (!st) return;
-  if (st._quotas && st._quotas.dayKey === quotaTracker.dayKey) {
-    quotaTracker.kvReadsDay = Math.max(quotaTracker.kvReadsDay, st._quotas.kvReadsDay || 0);
-    quotaTracker.kvWritesDay = Math.max(quotaTracker.kvWritesDay, st._quotas.kvWritesDay || 0);
-    quotaTracker.workerReqDay = Math.max(quotaTracker.workerReqDay, st._quotas.workerReqDay || 0);
-    quotaTracker.fcmDay = Math.max(quotaTracker.fcmDay, st._quotas.fcmDay || 0);
-    if (st._quotas.hourKey === quotaTracker.hourKey) {
-      quotaTracker.kvReadsHour = Math.max(quotaTracker.kvReadsHour, st._quotas.kvReadsHour || 0);
-      quotaTracker.kvWritesHour = Math.max(quotaTracker.kvWritesHour, st._quotas.kvWritesHour || 0);
-      quotaTracker.workerReqHour = Math.max(quotaTracker.workerReqHour, st._quotas.workerReqHour || 0);
-      quotaTracker.fcmHour = Math.max(quotaTracker.fcmHour, st._quotas.fcmHour || 0);
-    }
-  }
-  st._quotas = { ...quotaTracker };
 }
 
 function pemToArrayBuffer(pem) {
@@ -205,8 +146,10 @@ async function sendFcmPush(env, recipientToken, eventObj) {
       },
       body: JSON.stringify(payload)
     });
+
     if (res.ok) {
-      trackFcmSend();
+      checkAndResetQuota();
+      quotaTracker.fcmPushes++;
     }
   } catch (e) {}
 }
@@ -215,6 +158,9 @@ export async function onRequest(context) {
   const { request, env } = context;
   const url = new URL(request.url);
   const action = url.searchParams.get("action") || "state";
+
+  checkAndResetQuota();
+  quotaTracker.requests++;
 
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -228,9 +174,8 @@ export async function onRequest(context) {
     return new Response(null, { headers: corsHeaders });
   }
 
-  trackRequest();
-
   try {
+    // Action de diagnostic des services et des quotas mis à jour en temps réel
     if (action === "status" && request.method === "GET") {
       let kvOk = false;
       let tokenJordan = false;
@@ -239,18 +184,16 @@ export async function onRequest(context) {
 
       if (env.LOVE8_COUPLE_KV) {
         kvOk = true;
-        trackKvRead(3);
+        quotaTracker.kvReads++;
         const tj = await env.LOVE8_COUPLE_KV.get("fcm_token_Jordan");
+        quotaTracker.kvReads++;
         const tl = await env.LOVE8_COUPLE_KV.get("fcm_token_Lydie");
+        quotaTracker.kvReads++;
         const rawState = await env.LOVE8_COUPLE_KV.get("state_jordan_lydie");
         tokenJordan = Boolean(tj && tj.length > 20);
         tokenLydie = Boolean(tl && tl.length > 20);
         if (rawState) {
-          try {
-            const parsed = JSON.parse(rawState);
-            stateUpdatedAt = parsed.updatedAt || 0;
-            syncQuotasWithState(parsed);
-          } catch (e) {}
+          try { stateUpdatedAt = JSON.parse(rawState).updatedAt || 0; } catch (e) {}
         }
       }
 
@@ -268,28 +211,29 @@ export async function onRequest(context) {
         tokenJordan,
         tokenLydie,
         stateUpdatedAt,
-        quotas: quotaTracker,
-        serverTime: Date.now()
+        serverTime: Date.now(),
+        quotas: {
+          requests: quotaTracker.requests,
+          kvReads: quotaTracker.kvReads,
+          kvWrites: quotaTracker.kvWrites,
+          fcmPushes: quotaTracker.fcmPushes
+        }
       }), { headers: corsHeaders });
     }
 
     if (action === "register_fcm" && request.method === "POST") {
       const data = await request.json();
       if (data.user && data.token && env.LOVE8_COUPLE_KV) {
-        trackKvRead(1);
-        const existing = await env.LOVE8_COUPLE_KV.get("fcm_token_" + data.user);
-        if (existing !== data.token) {
-          trackKvWrite(1);
-          await env.LOVE8_COUPLE_KV.put("fcm_token_" + data.user, data.token);
-        }
+        quotaTracker.kvWrites++;
+        await env.LOVE8_COUPLE_KV.put("fcm_token_" + data.user, data.token);
       }
       return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
     }
 
     if (action === "ack" && request.method === "POST") {
       const ackData = await request.json();
-      if (!memoryState && env.LOVE8_COUPLE_KV) {
-        trackKvRead(1);
+      if (env.LOVE8_COUPLE_KV) {
+        quotaTracker.kvReads++;
         const raw = await env.LOVE8_COUPLE_KV.get("state_jordan_lydie");
         if (raw) { try { memoryState = JSON.parse(raw); } catch (e) {} }
       }
@@ -298,9 +242,8 @@ export async function onRequest(context) {
         memoryState.lastEvent.ackBy = ackData.by;
         memoryState.lastEvent.ackAt = ackData.at;
         memoryState.updatedAt = Date.now();
-        trackKvWrite(1);
-        syncQuotasWithState(memoryState);
         if (env.LOVE8_COUPLE_KV) {
+          quotaTracker.kvWrites++;
           await env.LOVE8_COUPLE_KV.put("state_jordan_lydie", JSON.stringify(memoryState));
         }
       }
@@ -312,9 +255,8 @@ export async function onRequest(context) {
       if (request.method === "GET") {
         let dataUrl = memoryMedia[key];
         if (!dataUrl && env.LOVE8_COUPLE_KV) {
-          trackKvRead(1);
+          quotaTracker.kvReads++;
           dataUrl = await env.LOVE8_COUPLE_KV.get("media_" + key);
-          if (dataUrl) memoryMedia[key] = dataUrl;
         }
         return new Response(JSON.stringify({ key, dataUrl: dataUrl || "" }), { headers: corsHeaders });
       }
@@ -323,7 +265,7 @@ export async function onRequest(context) {
         if (body.key && body.dataUrl) {
           memoryMedia[body.key] = body.dataUrl;
           if (env.LOVE8_COUPLE_KV) {
-            trackKvWrite(1);
+            quotaTracker.kvWrites++;
             await env.LOVE8_COUPLE_KV.put("media_" + body.key, body.dataUrl);
           }
         }
@@ -334,7 +276,7 @@ export async function onRequest(context) {
     if (action === "archive") {
       if (request.method === "GET") {
         if (env.LOVE8_COUPLE_KV) {
-          trackKvRead(1);
+          quotaTracker.kvReads++;
           const listRaw = await env.LOVE8_COUPLE_KV.get("archive_index_list");
           return new Response(listRaw || "[]", { headers: corsHeaders });
         }
@@ -346,38 +288,32 @@ export async function onRequest(context) {
         if (env.LOVE8_COUPLE_KV) {
           if (item.dataUrl) {
             memoryMedia["latest_drawing"] = item.dataUrl;
-            trackKvWrite(1);
+            quotaTracker.kvWrites++;
             await env.LOVE8_COUPLE_KV.put("media_latest_drawing", item.dataUrl);
           }
-          trackKvRead(1);
+          quotaTracker.kvReads++;
           const listRaw = await env.LOVE8_COUPLE_KV.get("archive_index_list");
           const list = listRaw ? JSON.parse(listRaw) : [];
           list.unshift(item);
-          trackKvWrite(1);
+          quotaTracker.kvWrites++;
           await env.LOVE8_COUPLE_KV.put("archive_index_list", JSON.stringify(list.slice(0, 40)));
         }
         return new Response(JSON.stringify({ ok: true, id }), { headers: corsHeaders });
       }
     }
 
-    // Lecture ultra-rapide : utilise memoryState s'il est déjà chargé dans le Worker, sinon lit KV
     if (request.method === "GET") {
-      const forceKv = url.searchParams.get("force") === "1";
-      if ((!memoryState || forceKv) && env.LOVE8_COUPLE_KV) {
-        trackKvRead(1);
+      if (env.LOVE8_COUPLE_KV) {
+        quotaTracker.kvReads++;
         const raw = await env.LOVE8_COUPLE_KV.get("state_jordan_lydie");
         if (raw) {
           try {
             const parsed = JSON.parse(raw);
             if (parsed && parsed.jordan && parsed.lydie) {
               memoryState = parsed;
-              syncQuotasWithState(memoryState);
             }
           } catch (e) {}
         }
-      }
-      if (memoryState) {
-        syncQuotasWithState(memoryState);
       }
       return new Response(memoryState ? JSON.stringify(memoryState) : "{}", { headers: corsHeaders });
     }
@@ -389,8 +325,8 @@ export async function onRequest(context) {
         return new Response(JSON.stringify({ ok: false, ignored: true }), { headers: corsHeaders });
       }
 
-      if (!memoryState && env.LOVE8_COUPLE_KV) {
-        trackKvRead(1);
+      if (env.LOVE8_COUPLE_KV) {
+        quotaTracker.kvReads++;
         const raw = await env.LOVE8_COUPLE_KV.get("state_jordan_lydie");
         if (raw) { try { memoryState = JSON.parse(raw); } catch (e) {} }
       }
@@ -401,10 +337,15 @@ export async function onRequest(context) {
       memoryState = incoming;
       memoryState.updatedAt = Date.now();
 
+      if (env.LOVE8_COUPLE_KV) {
+        quotaTracker.kvWrites++;
+        await env.LOVE8_COUPLE_KV.put("state_jordan_lydie", JSON.stringify(memoryState));
+      }
+
       if (newEventId > prevEventId && incoming.lastEvent && incoming.lastEvent.sender && incoming.lastEvent.type !== "silent") {
         const recipient = incoming.lastEvent.sender === "Jordan" ? "Lydie" : "Jordan";
         if (env.LOVE8_COUPLE_KV) {
-          trackKvRead(1);
+          quotaTracker.kvReads++;
           const recipientToken = await env.LOVE8_COUPLE_KV.get("fcm_token_" + recipient);
           if (recipientToken) {
             await sendFcmPush(env, recipientToken, incoming.lastEvent);
@@ -412,13 +353,7 @@ export async function onRequest(context) {
         }
       }
 
-      trackKvWrite(1);
-      syncQuotasWithState(memoryState);
-      if (env.LOVE8_COUPLE_KV) {
-        await env.LOVE8_COUPLE_KV.put("state_jordan_lydie", JSON.stringify(memoryState));
-      }
-
-      return new Response(JSON.stringify({ ok: true, updatedAt: memoryState.updatedAt, quotas: quotaTracker }), { headers: corsHeaders });
+      return new Response(JSON.stringify({ ok: true, updatedAt: memoryState.updatedAt }), { headers: corsHeaders });
     }
 
     return new Response(JSON.stringify({ status: "Love8 FCM API Ready" }), { headers: corsHeaders });
