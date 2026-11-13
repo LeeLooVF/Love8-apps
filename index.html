@@ -31,6 +31,8 @@
     .orbit-item { animation: floatCat 3s ease-in-out infinite; }
     .pulse-ring { animation: pulseRing 1.8s infinite; }
     @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(236,72,153,.6); } 70% { box-shadow: 0 0 0 14px rgba(236,72,153,0); } 100% { box-shadow: 0 0 0 0 rgba(236,72,153,0); } }
+    .countdown-pulse { animation: countBump 0.45s ease-out; }
+    @keyframes countBump { 0% { transform: scale(1.22); color: #f43f5e; } 100% { transform: scale(1); } }
   </style>
 </head>
 <body class="min-h-screen pb-24 text-slate-800">
@@ -54,19 +56,22 @@
     </div>
   </div>
 
-  <!-- MODALE PLEIN ÉCRAN D'ORDRE TÉLÉCOMMANDE EN DIRECT (POPUP AUTO CHEZ LA CIBLE) -->
+  <!-- MODALE PLEIN ÉCRAN D'ORDRE TÉLÉCOMMANDE EN DIRECT (AVEC DÉCOMPTE AUDIO + VIBRATION TOUTES LES 5S) -->
   <div id="remoteIncomingModal" class="fixed inset-0 z-[99995] hidden bg-black/95 backdrop-blur-lg flex items-center justify-center p-4 text-white">
-    <div class="w-full max-w-sm rounded-3xl p-6 text-center space-y-5 border-2 border-rose-500 bg-gradient-to-b from-rose-950 via-slate-950 to-black shadow-2xl">
+    <div class="w-full max-w-sm rounded-3xl p-6 text-center space-y-4 border-2 border-rose-500 bg-gradient-to-b from-rose-950 via-slate-950 to-black shadow-2xl">
+      <div class="flex items-center justify-between">
+        <span id="remoteModalBadge" class="bg-rose-500/30 border border-rose-400/50 text-rose-200 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-widest">🚨 ORDRE IMMÉDIAT</span>
+        <button id="btnToggleVoiceModal" onclick="toggleRemoteVoiceMute()" class="bg-white/10 border border-white/20 text-amber-300 text-[10px] font-extrabold px-2.5 py-1 rounded-full active:scale-95">🔊 Voix & Vib 5s : ON</button>
+      </div>
       <div class="w-20 h-20 rounded-full neon-max-fire mx-auto flex items-center justify-center text-4xl shadow-xl pulse-ring" id="remoteModalEmoji">📳</div>
       <div class="space-y-1">
-        <span id="remoteModalBadge" class="bg-rose-500/30 border border-rose-400/50 text-rose-200 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-widest">🚨 ORDRE IMMÉDIAT REÇU</span>
-        <h2 id="remoteModalTitle" class="text-xl font-extrabold text-white pt-2"></h2>
+        <h2 id="remoteModalTitle" class="text-xl font-extrabold text-white"></h2>
         <p id="remoteModalDesc" class="text-sm text-pink-100 font-semibold leading-relaxed"></p>
       </div>
       <!-- Compte à rebours géant -->
       <div class="bg-black/60 border border-rose-500/40 rounded-2xl py-3 px-4">
-        <p class="text-[10px] uppercase font-bold text-slate-400">⏱️ Temps restant pour obéir</p>
-        <p id="remoteModalTimer" class="text-4xl font-extrabold text-amber-400 tracking-wider my-1">01:30</p>
+        <p class="text-[10px] uppercase font-bold text-slate-400">⏱️ Décompte vocal & vibration chaque 5s</p>
+        <p id="remoteModalTimer" class="text-4xl font-extrabold text-amber-400 tracking-wider my-1">60s</p>
         <div class="flex items-center justify-center gap-3 text-[11px] font-extrabold pt-1">
           <span id="remoteModalBonus" class="text-emerald-400">✅ +70 🪙</span>
           <span class="text-slate-600">•</span>
@@ -599,25 +604,30 @@
       </div>
     </section>
 
-    <!-- NOUVEL ONGLET 5 : 📳 TÉLÉCOMMANDE DE COUPLE (JUSTE À CÔTÉ DE JEUX & BONS) -->
+    <!-- ONGLET 5 : 📳 TÉLÉCOMMANDE DE COUPLE (AVEC DÉCOMPTE VOCAL & VIBRATION CHAQUE 5 SECONDES) -->
     <section id="tab-telecommande" class="hidden space-y-4">
       <div class="bg-gradient-to-br from-slate-950 via-purple-950 to-rose-950 text-white rounded-3xl p-4 shadow-xl border border-pink-500/40 space-y-3.5">
         <div class="flex items-center justify-between">
           <div>
             <span class="bg-rose-500/30 border border-rose-400/50 text-rose-200 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">📳 TÉLÉCOMMANDE D'ORDRES EN 1 CLIC</span>
-            <p class="text-[10px] text-slate-300 mt-1">L'autre téléphone vibre avec compte à rebours • Refus = <b class="text-rose-400">-150 🪙</b> (plancher à 0)</p>
+            <p class="text-[10px] text-slate-300 mt-1">Voix & vibration toutes les 5s (60s, 55s, 50s...) • Refus = <b class="text-rose-400">-150 🪙</b></p>
           </div>
-          <div class="text-right text-[10px] font-extrabold space-y-0.5">
+          <div class="text-right text-[10px] font-extrabold space-y-1">
             <div class="bg-purple-500/30 border border-purple-400/40 px-2 py-0.5 rounded-lg">👦🏻 <span id="remCoinsJordan">180</span> 🪙</div>
             <div class="bg-pink-500/30 border border-pink-400/40 px-2 py-0.5 rounded-lg">👩🏻 <span id="remCoinsLydie">180</span> 🪙</div>
           </div>
+        </div>
+
+        <div class="flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl px-3 py-2">
+          <span class="text-[11px] font-bold text-pink-200">🗣️ Annonce vocale & vibration aux 5s :</span>
+          <button id="btnToggleVoiceTab" onclick="toggleRemoteVoiceMute()" class="bg-emerald-500/25 border border-emerald-400/50 text-emerald-200 text-[10px] font-extrabold px-3 py-1 rounded-full active:scale-95">🔊 Activé (5s)</button>
         </div>
 
         <!-- Écran de contrôle d'ordre actif + Verdict Émetteur -->
         <div id="remoteActiveOrderBox" class="hidden bg-black/70 border-2 border-rose-500 rounded-2xl p-4 text-center space-y-2.5 shadow-xl">
           <div class="flex items-center justify-between text-[10px] font-extrabold">
             <span id="remActiveHeader" class="text-rose-300 uppercase tracking-wider">⚡ ORDRE EN COURS</span>
-            <span id="remActiveCountdown" class="bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full text-xs font-extrabold">01:30</span>
+            <span id="remActiveCountdown" class="bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full text-xs font-extrabold">60s</span>
           </div>
           <p id="remActiveTitle" class="text-base font-extrabold text-white"></p>
           <p id="remActiveDesc" class="text-xs text-pink-200"></p>
@@ -628,7 +638,7 @@
               <button onclick="resolveRemoteOrder(false)" class="py-2.5 rounded-xl bg-rose-700 border border-rose-400 text-white shadow active:scale-95">❌ Non accompli (-150🪙)</button>
             </div>
           </div>
-          <p id="remTargetWaitingMsg" class="hidden text-[11px] font-bold text-amber-300 animate-pulse">🔥 Exécute l'ordre avant la fin du chrono ! Ton partenaire validera ensuite.</p>
+          <p id="remTargetWaitingMsg" class="hidden text-[11px] font-bold text-amber-300 animate-pulse">🔥 Exécute l'ordre avant la fin du décompte ! Ton partenaire validera ensuite.</p>
         </div>
 
         <!-- Sélecteur des 3 onglets de la Télécommande : Tendre / Chaud / Hard -->
@@ -680,7 +690,7 @@
     </section>
   </main>
 
-  <!-- BARRE DE NAVIGATION À 6 ONGLETS (AVEC 📳 TÉLÉCOMMANDE À CÔTÉ DE JEUX & BONS) -->
+  <!-- BARRE DE NAVIGATION À 6 ONGLETS -->
   <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-pink-100 px-1.5 py-2 flex justify-around items-center text-[9px] font-bold text-slate-400">
     <button id="nav-nous" onclick="showTab('nous')" class="flex flex-col items-center gap-0.5 text-pink-600"><span class="text-base">💞</span><span>Nous</span></button>
     <button id="nav-dessin" onclick="showTab('dessin')" class="flex flex-col items-center gap-0.5"><span class="text-base">🖌️</span><span>Dessin</span></button>
@@ -698,6 +708,8 @@
     let avatarUploadTarget = 'jordan', activeTab = 'nous', pendingCapsulePhoto = '', currentSexyViewSender = '';
     let blackRainTimer = null, sleep15sTimer = null, sleepCountdownInterval = null, lastLocalWriteTime = 0;
     let currentFantasyIdx = 0, currentKinkyIdx = 0, activeRemoteCategory = 'tendre';
+    let remoteVoiceEnabled = localStorage.getItem('love8_remote_voice') !== 'off';
+    let lastAnnouncedStepKey = '';
 
     let cachedMedia = {
       latestDrawingId: localStorage.getItem('love8_cached_draw_id') || '',
@@ -1096,7 +1108,6 @@
 
     let state = JSON.parse(localStorage.getItem('love8_state')) || {};
 
-    // Connexion directe aux cagnottes Jordan (lui) et Lydie (elle) avec plancher bloqué à 0 (aucun solde négatif)
     function getUserCoins(user) {
       const k = (user || currentUser || 'Jordan').toLowerCase();
       return Math.max(0, typeof state[k]?.coins === 'number' ? state[k].coins : 180);
@@ -1141,7 +1152,6 @@
       if (!state.kinkyVotes.Jordan) state.kinkyVotes.Jordan = {};
       if (!state.kinkyVotes.Lydie) state.kinkyVotes.Lydie = {};
 
-      // État de la Télécommande (ordre actif + historique)
       if (!state.remoteOrder) state.remoteOrder = { id:0, active:false, sender:'', target:'', emoji:'📳', label:'', desc:'', expiresAt:0, bonus:60, penalty:150 };
       if (!state.remoteHistory) state.remoteHistory = [];
 
@@ -1284,8 +1294,41 @@
         else if (type === 'rose') [392,493,587,784].forEach((f,i) => tone(f, f, 0.28, 'triangle', i*0.07));
         else if (type === 'cat' || type === 'meow') tone(520, 920, 0.42, 'triangle');
         else if (type === 'purr') tone(55, 55, 0.6, 'sawtooth', 0, 0.18);
+        else if (type === 'tick5s') { tone(880, 1174, 0.14, 'triangle', 0, 0.35); tone(1174, 1318, 0.14, 'triangle', 0.15, 0.35); }
+        else if (type === 'urgent5s') { tone(987, 1318, 0.16, 'sawtooth', 0, 0.38); tone(1318, 1567, 0.2, 'sawtooth', 0.16, 0.38); }
         else { tone(115, 45, 0.18, 'sine', 0, 0.45); tone(115, 45, 0.18, 'sine', 0.22, 0.45); }
       } catch (e) {}
+    }
+
+    // Synthèse vocale Française pour annoncer "60 secondes", "55 secondes", "50 secondes"...
+    function speakFrenchCountdown(textToSpeak) {
+      if (!remoteVoiceEnabled) return;
+      try {
+        if (window.AndroidNative?.speakText) {
+          window.AndroidNative.speakText(textToSpeak);
+          return;
+        }
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(textToSpeak);
+          u.lang = 'fr-FR';
+          u.rate = 1.08;
+          u.pitch = 1.05;
+          u.volume = 1.0;
+          const voices = window.speechSynthesis.getVoices();
+          const frVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('fr'));
+          if (frVoice) u.voice = frVoice;
+          window.speechSynthesis.speak(u);
+        }
+      } catch (e) {}
+    }
+
+    function toggleRemoteVoiceMute() {
+      remoteVoiceEnabled = !remoteVoiceEnabled;
+      localStorage.setItem('love8_remote_voice', remoteVoiceEnabled ? 'on' : 'off');
+      if (!remoteVoiceEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+      else speakFrenchCountdown('Décompte vocal activé');
+      renderAll();
     }
 
     function triggerDeviceVibration(pattern = [200, 80, 300]) {
@@ -1493,7 +1536,7 @@
       } catch (e) {}
     }
 
-    // ==================== 📳 TÉLÉCOMMANDE DE COUPLE (18 BOUTONS, CHRONO & VERDICT) ====================
+    // ==================== 📳 TÉLÉCOMMANDE DE COUPLE (AVEC DÉCOMPTE VOCAL & VIBRATION TOUTES LES 5 SECONDES) ====================
     function setRemoteCategory(cat) {
       activeRemoteCategory = cat;
       playLoveSound(cat === 'hard' ? 'devil' : (cat === 'chaud' ? 'fire' : 'rose'));
@@ -1515,6 +1558,7 @@
       const orderId = Date.now();
       lastSeenRemoteOrderId = orderId;
       localStorage.setItem('love8_last_remote_order', String(orderId));
+      lastAnnouncedStepKey = '';
 
       state.remoteOrder = {
         id: orderId,
@@ -1547,7 +1591,9 @@
       };
 
       playLoveSound('devil');
-      triggerDeviceVibration([180, 60, 280]);
+      triggerDeviceVibration([220, 70, 300]);
+      speakFrenchCountdown(`${item.label}. ${item.duration} secondes !`);
+      lastAnnouncedStepKey = `${orderId}_${item.duration}`;
       openRemoteIncomingModal();
       saveState();
     }
@@ -1562,7 +1608,6 @@
       document.getElementById('remoteIncomingModal').classList.add('hidden');
     }
 
-    // Verdict de l'émetteur : ✅ Accompli (+bonus) ou ❌ Non accompli (-150 pièces, plancher bloqué à 0)
     function resolveRemoteOrder(accomplished) {
       const ord = state.remoteOrder;
       if (!ord || !ord.active) return;
@@ -1571,6 +1616,7 @@
         return;
       }
 
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       const target = ord.target;
       const nowTime = new Date().toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
       const delta = accomplished ? Number(ord.bonus || 60) : -150;
@@ -1594,6 +1640,7 @@
       lastEventId = eventId;
       localStorage.setItem('love8_last_event', String(eventId));
       if (accomplished) {
+        speakFrenchCountdown(`Ordre accompli ! Plus ${ord.bonus} pièces pour ${target} !`);
         state.lastEvent = {
           id: eventId, sender: currentUser, type: 'vibration',
           title: `✅ ORDRE ACCOMPLI (+${ord.bonus} 🪙 POUR ${target.toUpperCase()}) !`,
@@ -1602,6 +1649,7 @@
         };
         triggerBlackScreenRain('✅', state.lastEvent.message, 'rose', [150, 60, 300], false);
       } else {
+        speakFrenchCountdown(`Ordre refusé ! Moins 150 pièces pour ${target} !`);
         state.lastEvent = {
           id: eventId, sender: currentUser, type: 'vibration',
           title: `❌ ORDRE NON ACCOMPLI (-150 🪙 POUR ${target.toUpperCase()}) !`,
@@ -1613,13 +1661,7 @@
       saveState();
     }
 
-    function formatSecMMSS(sec) {
-      const s = Math.max(0, Math.floor(sec));
-      const m = String(Math.floor(s / 60)).padStart(2, '0');
-      const r = String(s % 60).padStart(2, '0');
-      return `${m}:${r}`;
-    }
-
+    // Décompte chaque seconde + Annonce vocale & Vibration toutes les 5 secondes (60s, 55s, 50s... 5s, 0s)
     function updateRemoteTimerDisplay() {
       const ord = state.remoteOrder;
       const box = document.getElementById('remoteActiveOrderBox');
@@ -1630,8 +1672,33 @@
         return;
       }
       const secLeft = Math.max(0, Math.ceil((ord.expiresAt - Date.now()) / 1000));
-      const timeStr = secLeft > 0 ? formatSecMMSS(secLeft) : '⏰ ÉCOULÉ !';
+      const timeStr = secLeft > 0 ? `${secLeft}s` : '⏰ 0s • ÉCOULÉ !';
       const isSender = currentUser === ord.sender;
+
+      // Déclenchement automatique toutes les 5 secondes (ex: 60, 55, 50, 45... 5, 0)
+      if (secLeft % 5 === 0) {
+        const stepKey = `${ord.id}_${secLeft}`;
+        if (lastAnnouncedStepKey !== stepKey) {
+          lastAnnouncedStepKey = stepKey;
+          if (secLeft > 0) {
+            const isUrgent = secLeft <= 15;
+            const vibPat = isUrgent ? [280, 60, 280, 60, 320] : [180, 60, 220];
+            if (remoteVoiceEnabled) {
+              triggerDeviceVibration(vibPat);
+              playLoveSound(isUrgent ? 'urgent5s' : 'tick5s');
+              speakFrenchCountdown(`${secLeft} secondes`);
+            }
+            const tEl = document.getElementById('remoteModalTimer');
+            if (tEl) { tEl.classList.remove('countdown-pulse'); void tEl.offsetWidth; tEl.classList.add('countdown-pulse'); }
+          } else {
+            if (remoteVoiceEnabled) {
+              triggerDeviceVibration([400, 90, 400, 90, 600]);
+              playLoveSound('devil');
+              speakFrenchCountdown(`Temps écoulé ! Verdict de ${ord.sender} !`);
+            }
+          }
+        }
+      }
 
       if (box) {
         box.classList.remove('hidden');
@@ -1646,7 +1713,7 @@
 
       if (modal && !modal.classList.contains('hidden')) {
         document.getElementById('remoteModalEmoji').innerText = ord.emoji;
-        document.getElementById('remoteModalBadge').innerText = isSender ? `👑 ORDRE ENVOYÉ À ${ord.target.toUpperCase()}` : `🚨 ORDRE DE ${ord.sender.toUpperCase()} POUR TOI !`;
+        document.getElementById('remoteModalBadge').innerText = isSender ? `👑 ORDRE ENVOYÉ À ${ord.target.toUpperCase()}` : `🚨 ORDRE DE ${ord.sender.toUpperCase()} !`;
         document.getElementById('remoteModalTitle').innerText = `${ord.emoji} ${ord.label}`;
         document.getElementById('remoteModalDesc').innerText = ord.desc;
         document.getElementById('remoteModalTimer').innerText = timeStr;
@@ -1655,9 +1722,9 @@
         document.getElementById('remoteModalTargetActions').classList.toggle('hidden', isSender);
       }
     }
-    setInterval(updateRemoteTimerDisplay, 1000);
+    setInterval(updateRemoteTimerDisplay, 250);
 
-    // ==================== 3. THERMOMÈTRE D'ENVIE (6 PALIERS + TAGS + ALERTE ROUGE >= 80%) ====================
+    // ==================== 3. THERMOMÈTRE D'ENVIE ====================
     function getLibidoTierDetails(val) {
       const v = Number(val || 0);
       if (v <= 15) return { badge:`${v}% • 😴 K.O. / Besoin de dodo`, sub:'« Ce soir je récupère dans tes bras »', cls:'bg-indigo-950 text-indigo-200 border border-indigo-700', bar:'bg-indigo-600' };
@@ -2248,6 +2315,19 @@
       document.getElementById('pillCoinsJordan').className = `px-1.5 py-0.5 rounded-md ${isJ?'bg-purple-600 text-white shadow':'bg-purple-100 text-purple-900'}`;
       document.getElementById('pillCoinsLydie').className = `px-1.5 py-0.5 rounded-md ${!isJ?'bg-pink-600 text-white shadow':'bg-pink-100 text-pink-900'}`;
 
+      // Boutons ON/OFF du décompte vocal 5s
+      const vBtnTab = document.getElementById('btnToggleVoiceTab');
+      const vBtnMod = document.getElementById('btnToggleVoiceModal');
+      if (vBtnTab) {
+        vBtnTab.className = remoteVoiceEnabled
+          ? 'bg-emerald-500/25 border border-emerald-400/50 text-emerald-200 text-[10px] font-extrabold px-3 py-1 rounded-full active:scale-95'
+          : 'bg-slate-800 border border-slate-600 text-slate-400 text-[10px] font-extrabold px-3 py-1 rounded-full active:scale-95';
+        vBtnTab.innerText = remoteVoiceEnabled ? '🔊 Activé (5s)' : '🔇 Muet';
+      }
+      if (vBtnMod) {
+        vBtnMod.innerText = remoteVoiceEnabled ? '🔊 Voix & Vib 5s : ON' : '🔇 Voix & Vib 5s : OFF';
+      }
+
       // Thermomètre d'Envie
       const myLibVal = Number(state[myKey].libido ?? 50), partLibVal = Number(state[partnerKey].libido ?? 50);
       const myLibInfo = getLibidoTierDetails(myLibVal), partLibInfo = getLibidoTierDetails(partLibVal);
@@ -2333,7 +2413,7 @@
       }).join('');
       document.getElementById('catJournalList').innerHTML = state.cat.journal.map(j => `<div class="flex justify-between bg-slate-50 px-3 py-2 rounded-xl border border-slate-100"><span>${j.text}</span><span class="text-slate-400 font-semibold">${j.time}</span></div>`).join('');
 
-      // Rendu de l'onglet 📳 Télécommande (Tendre / Chaud / Hard)
+      // Rendu de l'onglet 📳 Télécommande
       ['tendre','chaud','hard'].forEach(cat => {
         const btn = document.getElementById('btnRemTab' + cat.charAt(0).toUpperCase() + cat.slice(1));
         if (btn) {
@@ -2487,7 +2567,7 @@
       document.getElementById('btnNextQuiz').className = canActQuiz ? 'text-xs font-bold text-pink-600 active:scale-95' : 'text-xs font-bold text-slate-300 opacity-50 cursor-not-allowed';
       document.getElementById('quizOptionsGrid').innerHTML = [0,1,2,3].map(i => {
         const mySec = locked && currentUser === target && state.quiz.secretChoice === i;
-        return `<button onclick="selectQuizOption(${i})" class="p-3 rounded-2xl text-left border ${mySec?'bg-purple-100 border-purple-500 text-purple-950':(canActQuiz?'bg-slate-50 border-slate-200 active:scale-95':'bg-slate-100 text-slate-400 opacity-60 cursor-not-allowed')}">${qRow[i+1]} ${mySec?'🔒':''}</button>`;
+        return `<button onclick="selectQuizOption(${i})" class="p-3 rounded-2xl text-left border ${mySec?'bg-purple-100 border-purple-500 text-purple-900':(canActQuiz?'bg-slate-50 border-slate-200 active:scale-95':'bg-slate-100 text-slate-400 opacity-60 cursor-not-allowed')}">${qRow[i+1]} ${mySec?'🔒':''}</button>`;
       }).join('');
       document.getElementById('quizStatusBox').innerText = state.quiz.statusText || '';
 
