@@ -54,6 +54,39 @@
     </div>
   </div>
 
+  <!-- MODALE PLEIN ÉCRAN D'ORDRE TÉLÉCOMMANDE EN DIRECT (POPUP AUTO CHEZ LA CIBLE) -->
+  <div id="remoteIncomingModal" class="fixed inset-0 z-[99995] hidden bg-black/95 backdrop-blur-lg flex items-center justify-center p-4 text-white">
+    <div class="w-full max-w-sm rounded-3xl p-6 text-center space-y-5 border-2 border-rose-500 bg-gradient-to-b from-rose-950 via-slate-950 to-black shadow-2xl">
+      <div class="w-20 h-20 rounded-full neon-max-fire mx-auto flex items-center justify-center text-4xl shadow-xl pulse-ring" id="remoteModalEmoji">📳</div>
+      <div class="space-y-1">
+        <span id="remoteModalBadge" class="bg-rose-500/30 border border-rose-400/50 text-rose-200 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-widest">🚨 ORDRE IMMÉDIAT REÇU</span>
+        <h2 id="remoteModalTitle" class="text-xl font-extrabold text-white pt-2"></h2>
+        <p id="remoteModalDesc" class="text-sm text-pink-100 font-semibold leading-relaxed"></p>
+      </div>
+      <!-- Compte à rebours géant -->
+      <div class="bg-black/60 border border-rose-500/40 rounded-2xl py-3 px-4">
+        <p class="text-[10px] uppercase font-bold text-slate-400">⏱️ Temps restant pour obéir</p>
+        <p id="remoteModalTimer" class="text-4xl font-extrabold text-amber-400 tracking-wider my-1">01:30</p>
+        <div class="flex items-center justify-center gap-3 text-[11px] font-extrabold pt-1">
+          <span id="remoteModalBonus" class="text-emerald-400">✅ +70 🪙</span>
+          <span class="text-slate-600">•</span>
+          <span class="text-rose-400">❌ Refus : -150 🪙</span>
+        </div>
+      </div>
+      <!-- Boutons selon si on est l'Émetteur (Verdict) ou la Cible -->
+      <div id="remoteModalSenderActions" class="hidden space-y-2 pt-1">
+        <p class="text-[11px] font-extrabold text-amber-300 uppercase">👑 Tu as le contrôle — Rendre le verdict :</p>
+        <div class="grid grid-cols-2 gap-2.5">
+          <button onclick="resolveRemoteOrder(true)" class="py-3.5 rounded-2xl bg-emerald-600 border border-emerald-400 text-white text-xs font-extrabold shadow-lg active:scale-95">✅ Accompli (+Bonus)</button>
+          <button onclick="resolveRemoteOrder(false)" class="py-3.5 rounded-2xl bg-rose-700 border border-rose-400 text-white text-xs font-extrabold shadow-lg active:scale-95">❌ Refusé (-150 🪙)</button>
+        </div>
+      </div>
+      <div id="remoteModalTargetActions" class="space-y-2 pt-1">
+        <button onclick="closeRemoteIncomingModal()" class="w-full py-3.5 rounded-2xl gradient-card text-white text-xs font-extrabold uppercase tracking-wider shadow-lg active:scale-95">🔥 J'obéis tout de suite !</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODALE STATUTS & 5 QUOTAS -->
   <div id="serviceStatusModal" class="fixed inset-0 z-[99988] hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-3xl p-5 space-y-4 shadow-2xl border border-pink-100 max-h-[90vh] overflow-y-auto">
@@ -236,7 +269,7 @@
         </div>
       </div>
 
-      <!-- 🌡️ THERMOMÈTRE D'ENVIE (JAUGE LIBIDO / MOOD DU SOIR) -->
+      <!-- 🌡️ THERMOMÈTRE D'ENVIE -->
       <div class="bg-slate-900 text-white rounded-3xl p-4 shadow-lg border border-pink-500/30 space-y-3">
         <div class="flex items-center justify-between">
           <div>
@@ -439,7 +472,7 @@
         </div>
       </div>
 
-      <!-- 1-BIS. NOUVEAU JEU : KINKY & EXTRÊME (50 DÉFIS HARD - SCORE SUR 6) -->
+      <!-- 1-BIS. KINKY & EXTRÊME (50 DÉFIS HARD - SCORE SUR 6) -->
       <div class="bg-gradient-to-br from-black via-rose-950 to-purple-950 text-white rounded-3xl p-4 shadow-xl border border-rose-500/50 space-y-3">
         <div class="flex items-center justify-between">
           <div>
@@ -461,7 +494,6 @@
           <p id="kinkyMyVoteBadge" class="text-[10px] font-bold text-amber-300"></p>
         </div>
 
-        <!-- 4 boutons de vote : 3 = J'adore, 2 = À tester, 1 = Pour te faire plaisir, 0 = Limite / Non -->
         <div class="grid grid-cols-2 gap-2 text-xs font-extrabold">
           <button onclick="voteKinkyCard(3)" class="py-2.5 px-2 rounded-2xl neon-max-fire text-white border border-pink-300 shadow active:scale-95">🔥 J'adore (3 pts)</button>
           <button onclick="voteKinkyCard(2)" class="py-2.5 px-2 rounded-2xl bg-rose-600/80 border border-rose-400 text-white active:scale-95">👀 À tester (2 pts)</button>
@@ -567,7 +599,60 @@
       </div>
     </section>
 
-    <!-- ONGLET 5 : SOUVENIRS -->
+    <!-- NOUVEL ONGLET 5 : 📳 TÉLÉCOMMANDE DE COUPLE (JUSTE À CÔTÉ DE JEUX & BONS) -->
+    <section id="tab-telecommande" class="hidden space-y-4">
+      <div class="bg-gradient-to-br from-slate-950 via-purple-950 to-rose-950 text-white rounded-3xl p-4 shadow-xl border border-pink-500/40 space-y-3.5">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="bg-rose-500/30 border border-rose-400/50 text-rose-200 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">📳 TÉLÉCOMMANDE D'ORDRES EN 1 CLIC</span>
+            <p class="text-[10px] text-slate-300 mt-1">L'autre téléphone vibre avec compte à rebours • Refus = <b class="text-rose-400">-150 🪙</b> (plancher à 0)</p>
+          </div>
+          <div class="text-right text-[10px] font-extrabold space-y-0.5">
+            <div class="bg-purple-500/30 border border-purple-400/40 px-2 py-0.5 rounded-lg">👦🏻 <span id="remCoinsJordan">180</span> 🪙</div>
+            <div class="bg-pink-500/30 border border-pink-400/40 px-2 py-0.5 rounded-lg">👩🏻 <span id="remCoinsLydie">180</span> 🪙</div>
+          </div>
+        </div>
+
+        <!-- Écran de contrôle d'ordre actif + Verdict Émetteur -->
+        <div id="remoteActiveOrderBox" class="hidden bg-black/70 border-2 border-rose-500 rounded-2xl p-4 text-center space-y-2.5 shadow-xl">
+          <div class="flex items-center justify-between text-[10px] font-extrabold">
+            <span id="remActiveHeader" class="text-rose-300 uppercase tracking-wider">⚡ ORDRE EN COURS</span>
+            <span id="remActiveCountdown" class="bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full text-xs font-extrabold">01:30</span>
+          </div>
+          <p id="remActiveTitle" class="text-base font-extrabold text-white"></p>
+          <p id="remActiveDesc" class="text-xs text-pink-200"></p>
+          <div id="remSenderVerdictBtns" class="hidden pt-2 border-t border-white/10 space-y-1.5">
+            <p class="text-[10px] uppercase font-extrabold text-amber-300">👑 Verdict de l'émetteur :</p>
+            <div class="grid grid-cols-2 gap-2 text-xs font-extrabold">
+              <button onclick="resolveRemoteOrder(true)" class="py-2.5 rounded-xl bg-emerald-600 border border-emerald-400 text-white shadow active:scale-95">✅ Accompli (<span id="remActiveBonusLbl">+60</span>🪙)</button>
+              <button onclick="resolveRemoteOrder(false)" class="py-2.5 rounded-xl bg-rose-700 border border-rose-400 text-white shadow active:scale-95">❌ Non accompli (-150🪙)</button>
+            </div>
+          </div>
+          <p id="remTargetWaitingMsg" class="hidden text-[11px] font-bold text-amber-300 animate-pulse">🔥 Exécute l'ordre avant la fin du chrono ! Ton partenaire validera ensuite.</p>
+        </div>
+
+        <!-- Sélecteur des 3 onglets de la Télécommande : Tendre / Chaud / Hard -->
+        <div class="grid grid-cols-3 gap-2 text-xs font-extrabold pt-1">
+          <button id="btnRemTabTendre" onclick="setRemoteCategory('tendre')" class="py-2.5 rounded-2xl border transition">💕 Tendre</button>
+          <button id="btnRemTabChaud" onclick="setRemoteCategory('chaud')" class="py-2.5 rounded-2xl border transition">🔥 Chaud</button>
+          <button id="btnRemTabHard" onclick="setRemoteCategory('hard')" class="py-2.5 rounded-2xl border transition">⛓️ Hard</button>
+        </div>
+
+        <!-- Grille des 6 boutons de la Télécommande -->
+        <div id="remoteButtonsGrid" class="grid grid-cols-2 gap-2.5 pt-1"></div>
+      </div>
+
+      <!-- Historique des Ordres & Verdicts -->
+      <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-extrabold uppercase text-purple-950">📜 Historique des Ordres & Verdicts</h3>
+          <span class="text-[10px] font-bold text-rose-600">Pénalité refus : -150 🪙</span>
+        </div>
+        <div id="remoteHistoryList" class="space-y-2 text-xs"></div>
+      </div>
+    </section>
+
+    <!-- ONGLET 6 : SOUVENIRS -->
     <section id="tab-souvenirs" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between"><h2 class="font-extrabold text-base">⏳ Notre Histoire</h2><span class="text-xs font-bold text-purple-600">Depuis le 12 déc. 2019</span></div>
@@ -595,21 +680,24 @@
     </section>
   </main>
 
-  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-pink-100 px-3 py-2 flex justify-around items-center text-[10px] font-bold text-slate-400">
-    <button id="nav-nous" onclick="showTab('nous')" class="flex flex-col items-center gap-0.5 text-pink-600"><span class="text-lg">💞</span><span>Nous</span></button>
-    <button id="nav-dessin" onclick="showTab('dessin')" class="flex flex-col items-center gap-0.5"><span class="text-lg">🖌️</span><span>Dessin</span></button>
-    <button id="nav-douglasse" onclick="showTab('douglasse')" class="flex flex-col items-center gap-0.5"><span class="text-lg">🐱</span><span>Douglasse</span></button>
-    <button id="nav-jeux" onclick="showTab('jeux')" class="flex flex-col items-center gap-0.5"><span class="text-lg">🎲</span><span>Jeux & Bons</span></button>
-    <button id="nav-souvenirs" onclick="showTab('souvenirs')" class="flex flex-col items-center gap-0.5"><span class="text-lg">🔐</span><span>Souvenirs</span></button>
+  <!-- BARRE DE NAVIGATION À 6 ONGLETS (AVEC 📳 TÉLÉCOMMANDE À CÔTÉ DE JEUX & BONS) -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-pink-100 px-1.5 py-2 flex justify-around items-center text-[9px] font-bold text-slate-400">
+    <button id="nav-nous" onclick="showTab('nous')" class="flex flex-col items-center gap-0.5 text-pink-600"><span class="text-base">💞</span><span>Nous</span></button>
+    <button id="nav-dessin" onclick="showTab('dessin')" class="flex flex-col items-center gap-0.5"><span class="text-base">🖌️</span><span>Dessin</span></button>
+    <button id="nav-douglasse" onclick="showTab('douglasse')" class="flex flex-col items-center gap-0.5"><span class="text-base">🐱</span><span>Douglasse</span></button>
+    <button id="nav-jeux" onclick="showTab('jeux')" class="flex flex-col items-center gap-0.5"><span class="text-base">🎲</span><span>Jeux & Bons</span></button>
+    <button id="nav-telecommande" onclick="showTab('telecommande')" class="flex flex-col items-center gap-0.5"><span class="text-base">📳</span><span>Télécomm.</span></button>
+    <button id="nav-souvenirs" onclick="showTab('souvenirs')" class="flex flex-col items-center gap-0.5"><span class="text-base">🔐</span><span>Souvenirs</span></button>
   </nav>
 
   <script>
     const API_ENDPOINT = '/state';
     let currentUser = localStorage.getItem('love8_user') || '';
     let lastEventId = Number(localStorage.getItem('love8_last_event') || 0);
+    let lastSeenRemoteOrderId = Number(localStorage.getItem('love8_last_remote_order') || 0);
     let avatarUploadTarget = 'jordan', activeTab = 'nous', pendingCapsulePhoto = '', currentSexyViewSender = '';
     let blackRainTimer = null, sleep15sTimer = null, sleepCountdownInterval = null, lastLocalWriteTime = 0;
-    let currentFantasyIdx = 0, currentKinkyIdx = 0;
+    let currentFantasyIdx = 0, currentKinkyIdx = 0, activeRemoteCategory = 'tendre';
 
     let cachedMedia = {
       latestDrawingId: localStorage.getItem('love8_cached_draw_id') || '',
@@ -643,6 +731,34 @@
     const locationPresets = ['🏠 À la maison','💼 Au travail','🏋️‍♂️ Au sport','🚗 En voiture / Route','🛒 En courses','💍 Chez Maison Bella','🍻 En sortie / Amis','🛏️ Au lit sous la couette'];
 
     const libidoTagsCatalog = ['🚿 Sous la douche','🕯️ Lent & Sensuel','⚡ Quickie sauvage','👑 Prends le contrôle','⛓️ Soumis(e) ce soir','👄 Plaisir oral','💆‍♂️ Commencer par un massage','🍑 Sex anal','✋ Fais-moi MAL'];
+
+    // CATALOGUE DE LA TÉLÉCOMMANDE (6 BOUTONS PAR ONGLET : TENDRE, CHAUD, HARD — PÉNALITÉ FIXE 150 🪙)
+    const remoteControlCatalog = {
+      tendre: [
+        { id:'rt1', emoji:'💋', label:'Viens m\'embrasser', desc:'Lâche tout et viens me faire un baiser amoureux d\'au moins 15 secondes.', duration:60, bonus:50, penalty:150 },
+        { id:'rt2', emoji:'🤗', label:'Câlin serré immédiat', desc:'Viens te blottir dans mes bras pendant 60 secondes sans parler.', duration:90, bonus:50, penalty:150 },
+        { id:'rt3', emoji:'💆‍♂️', label:'Massage express 3 min', desc:'Masse-moi la nuque, les épaules ou les pieds pendant 3 minutes.', duration:180, bonus:60, penalty:150 },
+        { id:'rt4', emoji:'🥤', label:'Service Royal canapé', desc:'Apporte-moi à boire ou une petite gourmandise avec un bisou.', duration:120, bonus:55, penalty:150 },
+        { id:'rt5', emoji:'🥰', label:'3 Compliments dans les yeux', desc:'Viens me regarder droit dans les yeux et dis-moi 3 choses qui te font craquer chez moi.', duration:90, bonus:50, penalty:150 },
+        { id:'rt6', emoji:'💃', label:'Slow amoureux', desc:'Prends-moi dans tes bras pour danser un slow collés-serrés tout de suite.', duration:120, bonus:60, penalty:150 }
+      ],
+      chaud: [
+        { id:'rc1', emoji:'👙', label:'Enlève un vêtement', desc:'Retire immédiatement le vêtement de mon choix devant moi.', duration:60, bonus:70, penalty:150 },
+        { id:'rc2', emoji:'🍑', label:'Montre-moi tes fesses', desc:'Viens te pencher ou baisser ton bas pour que j\'admire et caresse tes fesses.', duration:60, bonus:75, penalty:150 },
+        { id:'rc3', emoji:'🔥', label:'Baiser dans le cou & caresses', desc:'Embrasse-moi sensuellement dans le cou en passant tes mains sous mes vêtements.', duration:90, bonus:70, penalty:150 },
+        { id:'rc4', emoji:'👙', label:'Défilé en sous-vêtements', desc:'Mets-toi uniquement en sous-vêtements (ou nu(e)) pour les 15 prochaines minutes.', duration:120, bonus:80, penalty:150 },
+        { id:'rc5', emoji:'👅', label:'Chauffe-moi à l\'oreille', desc:'Viens me murmurer à l\'oreille en détail ce que tu veux me faire ce soir.', duration:60, bonus:70, penalty:150 },
+        { id:'rc6', emoji:'🪑', label:'À cheval sur mes genoux', desc:'Viens t\'asseoir à califourchon sur moi et embrasse-moi passionnément.', duration:90, bonus:80, penalty:150 }
+      ],
+      hard: [
+        { id:'rh1', emoji:'🧎', label:'À genoux devant moi', desc:'Mets-toi immédiatement à genoux devant moi, mains dans le dos, et attends mes ordres.', duration:60, bonus:90, penalty:150 },
+        { id:'rh2', emoji:'👄', label:'Plaisir oral immédiat', desc:'Prends le contrôle avec ta bouche et ta langue tout de suite.', duration:120, bonus:100, penalty:150 },
+        { id:'rh3', emoji:'🙈', label:'Yeux bandés & Soumis(e)', desc:'Allonge-toi sur le lit, ferme les yeux (ou bande-les) et laisse-moi faire ce que je veux.', duration:120, bonus:95, penalty:150 },
+        { id:'rh4', emoji:'✋', label:'Position Fessée', desc:'Penche-toi en avant sur le lit ou mes genoux pour recevoir ta fessée coquine.', duration:60, bonus:90, penalty:150 },
+        { id:'rh5', emoji:'👀', label:'Caresse-toi devant moi', desc:'Déshabille-toi et commence à te caresser devant mes yeux sans que je te touche.', duration:120, bonus:100, penalty:150 },
+        { id:'rh6', emoji:'⚡', label:'Quickie Sauvage Maintenant', desc:'Code Rouge : on lâche tout immédiatement et on passe à l\'acte là où on est !', duration:180, bonus:100, penalty:150 }
+      ]
+    };
 
     // 1. CATALOGUE TINDER FANTASMES (28 CARTES DÉTAILLÉES)
     const fantasyDeck = [
@@ -730,7 +846,6 @@
       { id: 50, categorie: "Extrême & BDSM", intensite: 3, cible: "Lui", texte: "Edging extrême : attaché pendant 1 heure, amené 10 fois au bord de l'éjaculation sans avoir le droit de jouir." }
     ];
 
-    // Valeurs des votes Kinky : 3 = "J'adore", 2 = "À tester", 1 = "Pour te faire plaisir", 0 = "Limite / Non"
     function calculerMatchs(votesLui, votesElle, questions) {
       return questions.filter(q => {
         const vLui = votesLui?.[q.id];
@@ -742,7 +857,7 @@
       })).sort((a, b) => b.scoreCouple - a.scoreCouple);
     }
 
-    // 2. LA BOUTIQUE SECRÈTE EN PIÈCES (11 RÉCOMPENSES OFFICIELLES)
+    // 2. LA BOUTIQUE SECRÈTE EN PIÈCES
     const secretShopCatalog = [
       { id:'s1', emoji:'💌', title:'Déclaration sur mesure', price:400, desc:'L\'autre doit t\'écrire un vrai message d\'amour de 10 lignes minimum ou une lettre manuscrite.' },
       { id:'s2', emoji:'🛑', title:'Carte « Fin du débat »', price:400, desc:'Tu gagnes immédiatement un petit désaccord du quotidien + un câlin obligatoire de 30 secondes.' },
@@ -981,15 +1096,17 @@
 
     let state = JSON.parse(localStorage.getItem('love8_state')) || {};
 
+    // Connexion directe aux cagnottes Jordan (lui) et Lydie (elle) avec plancher bloqué à 0 (aucun solde négatif)
     function getUserCoins(user) {
       const k = (user || currentUser || 'Jordan').toLowerCase();
-      return typeof state[k]?.coins === 'number' ? state[k].coins : 180;
+      return Math.max(0, typeof state[k]?.coins === 'number' ? state[k].coins : 180);
     }
     function addCoinsToUser(user, amount) {
       const k = (user || currentUser || 'Jordan').toLowerCase();
       if (!state[k]) state[k] = {};
-      state[k].coins = Math.max(0, (typeof state[k].coins === 'number' ? state[k].coins : 180) + Number(amount));
-      state.coins = state.jordan?.coins || 180;
+      const current = typeof state[k].coins === 'number' ? state[k].coins : 180;
+      state[k].coins = Math.max(0, current + Number(amount));
+      state.coins = state.jordan?.coins || 0;
     }
 
     function sanitizeStateStructure() {
@@ -999,8 +1116,8 @@
       if (!state.lastEvent) state.lastEvent = { id:0, sender:'Jordan', type:'vibration', title:'', message:'', emoji:'❤️', sound:'love', pattern:[150,80,250] };
       if (!state.jordan) state.jordan = { mood:'😍', text:'Pense à toi ❤️', location:'🏠 À la maison', avatarId:0, coins:baseCoins, libido:50, libidoTag:'', libidoDate:getTodayDateStr() };
       if (!state.lydie) state.lydie = { mood:'😍', text:'Hâte de te voir 💕', location:'🏠 À la maison', avatarId:0, coins:baseCoins, libido:50, libidoTag:'', libidoDate:getTodayDateStr() };
-      if (typeof state.jordan.coins !== 'number') state.jordan.coins = baseCoins;
-      if (typeof state.lydie.coins !== 'number') state.lydie.coins = baseCoins;
+      state.jordan.coins = Math.max(0, typeof state.jordan.coins === 'number' ? state.jordan.coins : baseCoins);
+      state.lydie.coins = Math.max(0, typeof state.lydie.coins === 'number' ? state.lydie.coins : baseCoins);
       if (!state.jordan.location) state.jordan.location = '🏠 À la maison';
       if (!state.lydie.location) state.lydie.location = '🏠 À la maison';
 
@@ -1020,10 +1137,13 @@
       if (!state.fantasyVotes.Jordan) state.fantasyVotes.Jordan = {};
       if (!state.fantasyVotes.Lydie) state.fantasyVotes.Lydie = {};
 
-      // Initialisation des votes pour le nouveau jeu Kinky & Extrême (50 questions)
       if (!state.kinkyVotes) state.kinkyVotes = { Jordan:{}, Lydie:{} };
       if (!state.kinkyVotes.Jordan) state.kinkyVotes.Jordan = {};
       if (!state.kinkyVotes.Lydie) state.kinkyVotes.Lydie = {};
+
+      // État de la Télécommande (ordre actif + historique)
+      if (!state.remoteOrder) state.remoteOrder = { id:0, active:false, sender:'', target:'', emoji:'📳', label:'', desc:'', expiresAt:0, bonus:60, penalty:150 };
+      if (!state.remoteHistory) state.remoteHistory = [];
 
       if (!state.purchasedRewards) state.purchasedRewards = [];
       if (!state.whoOfUs) state.whoOfUs = { qIndex:0, votes:{ Jordan:'', Lydie:'' }, rewardedIdx:-1, statusText:'Votez chacun de votre côté pour découvrir si vous êtes d\'accord !' };
@@ -1188,7 +1308,7 @@
     function resolveEventEmoji(explicitEmoji, msg, soundType) {
       if (explicitEmoji && explicitEmoji !== '❤️') return explicitEmoji;
       const str = (msg || '') + ' ';
-      for (const em of ['💌','🍑','🥒','🌶️','🍓','😈','💋','🌹','🎨','📸','🎟️','🔥','👑','🛍️','⛓️','❤️']) if (str.includes(em)) return em;
+      for (const em of ['💌','🍑','🥒','🌶️','🍓','😈','💋','🌹','🎨','📸','🎟️','🔥','👑','🛍️','⛓️','📳','❤️']) if (str.includes(em)) return em;
       const map = { env:'💌', peach:'🍑', cuc:'🥒', chili:'🌶️', straw:'🍓', devil:'😈', kiss:'💋', lips:'💋', rose:'🌹' };
       return map[soundType] || explicitEmoji || '❤️';
     }
@@ -1267,8 +1387,10 @@
         playLoveSound(soundType || 'rose'); triggerDeviceVibration([200,80,250]);
         toggleLockscreen(true, true, false); renderAll();
       } else {
-        triggerBlackScreenRain(resolveEventEmoji(emoji, message, soundType), message, soundType || 'love', [250,100,350], false);
-        pollCloudState(true);
+        await pollCloudState(true);
+        if (!state.remoteOrder?.active) {
+          triggerBlackScreenRain(resolveEventEmoji(emoji, message, soundType), message, soundType || 'love', [250,100,350], false);
+        }
       }
     };
 
@@ -1336,7 +1458,7 @@
         if (!res.ok) return;
         const remote = await res.json();
         if (remote?.jordan && remote?.lydie) {
-          const changed = forceSync || remote.updatedAt !== state.updatedAt || JSON.stringify(remote.lastEvent) !== JSON.stringify(state.lastEvent);
+          const changed = forceSync || remote.updatedAt !== state.updatedAt || JSON.stringify(remote.lastEvent) !== JSON.stringify(state.lastEvent) || JSON.stringify(remote.remoteOrder) !== JSON.stringify(state.remoteOrder);
           if (changed) {
             state = remote; sanitizeStateStructure();
             localStorage.setItem('love8_state', JSON.stringify(state));
@@ -1347,12 +1469,21 @@
             const lS = state.sexyChallenge?.lydieToJordan?.photoId || 0; if (lS && lS !== cachedMedia.sexyLydieId) fetchMediaIfNeeded('sexy_Lydie', lS);
             checkCatDecay(); renderAll();
           }
+          // Détection immédiate d'un nouvel Ordre Télécommande reçu
+          if (remote.remoteOrder?.active && Number(remote.remoteOrder.id) > lastSeenRemoteOrderId) {
+            lastSeenRemoteOrderId = Number(remote.remoteOrder.id);
+            localStorage.setItem('love8_last_remote_order', String(lastSeenRemoteOrderId));
+            playLoveSound('devil');
+            triggerDeviceVibration([300,80,300,80,500]);
+            openRemoteIncomingModal();
+          }
           if (remote.lastEvent && Number(remote.lastEvent.id) > lastEventId && remote.lastEvent.sender !== currentUser) {
             lastEventId = Number(remote.lastEvent.id); localStorage.setItem('love8_last_event', String(lastEventId));
             sendWebAck(lastEventId);
             const evType = remote.lastEvent.type || 'vibration';
-            if (evType === 'vibration') triggerBlackScreenRain(resolveEventEmoji(remote.lastEvent.emoji, remote.lastEvent.message, remote.lastEvent.sound), remote.lastEvent.message || '', remote.lastEvent.sound || 'love', remote.lastEvent.pattern || [200,80,300], false);
-            else if (evType === 'drawing' || remote.lastEvent.title?.includes('dessin')) {
+            if (evType === 'vibration' && !remote.remoteOrder?.active) {
+              triggerBlackScreenRain(resolveEventEmoji(remote.lastEvent.emoji, remote.lastEvent.message, remote.lastEvent.sound), remote.lastEvent.message || '', remote.lastEvent.sound || 'love', remote.lastEvent.pattern || [200,80,300], false);
+            } else if (evType === 'drawing' || remote.lastEvent.title?.includes('dessin')) {
               await fetchMediaIfNeeded('latest_drawing', state.latestDrawing?.id || 'latest');
               playLoveSound(remote.lastEvent.sound || 'rose'); triggerDeviceVibration([200,80,250]);
               toggleLockscreen(true, true, false);
@@ -1361,6 +1492,170 @@
         }
       } catch (e) {}
     }
+
+    // ==================== 📳 TÉLÉCOMMANDE DE COUPLE (18 BOUTONS, CHRONO & VERDICT) ====================
+    function setRemoteCategory(cat) {
+      activeRemoteCategory = cat;
+      playLoveSound(cat === 'hard' ? 'devil' : (cat === 'chaud' ? 'fire' : 'rose'));
+      renderAll();
+    }
+
+    function sendRemoteOrder(cat, btnId) {
+      if (state.remoteOrder?.active) {
+        triggerBanner('⏳ ORDRE DÉJÀ EN COURS', `Tranche d'abord le verdict de l'ordre actuel (✅ ou ❌) !`, '📳');
+        openRemoteIncomingModal();
+        return;
+      }
+      const list = remoteControlCatalog[cat] || [];
+      const item = list.find(x => x.id === btnId);
+      if (!item) return;
+
+      const sender = currentUser || 'Jordan';
+      const target = sender === 'Jordan' ? 'Lydie' : 'Jordan';
+      const orderId = Date.now();
+      lastSeenRemoteOrderId = orderId;
+      localStorage.setItem('love8_last_remote_order', String(orderId));
+
+      state.remoteOrder = {
+        id: orderId,
+        active: true,
+        sender,
+        target,
+        emoji: item.emoji,
+        label: item.label,
+        desc: item.desc,
+        duration: item.duration,
+        expiresAt: orderId + (item.duration * 1000),
+        bonus: item.bonus,
+        penalty: 150
+      };
+
+      const eventId = orderId + 1;
+      lastEventId = eventId;
+      localStorage.setItem('love8_last_event', String(eventId));
+      const alarmPattern = [300, 80, 300, 80, 550];
+      state.lastEvent = {
+        id: eventId,
+        sender,
+        type: 'vibration',
+        title: `📳 ${item.emoji} ORDRE DE ${sender.toUpperCase()} (${item.duration}s) !`,
+        message: `${item.label} : ${item.desc} (✅ +${item.bonus} 🪙 / ❌ Refus -150 🪙)`,
+        emoji: item.emoji,
+        sound: 'devil',
+        pattern: alarmPattern,
+        ack: 0
+      };
+
+      playLoveSound('devil');
+      triggerDeviceVibration([180, 60, 280]);
+      openRemoteIncomingModal();
+      saveState();
+    }
+
+    function openRemoteIncomingModal() {
+      if (!state.remoteOrder?.active) return;
+      document.getElementById('remoteIncomingModal').classList.remove('hidden');
+      updateRemoteTimerDisplay();
+    }
+
+    function closeRemoteIncomingModal() {
+      document.getElementById('remoteIncomingModal').classList.add('hidden');
+    }
+
+    // Verdict de l'émetteur : ✅ Accompli (+bonus) ou ❌ Non accompli (-150 pièces, plancher bloqué à 0)
+    function resolveRemoteOrder(accomplished) {
+      const ord = state.remoteOrder;
+      if (!ord || !ord.active) return;
+      if (currentUser !== ord.sender) {
+        triggerBanner('🔒 VERDICT RÉSERVÉ À ' + ord.sender.toUpperCase(), `Seul(e) ${ord.sender} peut valider ou refuser cet ordre !`, '👑');
+        return;
+      }
+
+      const target = ord.target;
+      const nowTime = new Date().toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+      const delta = accomplished ? Number(ord.bonus || 60) : -150;
+      addCoinsToUser(target, delta);
+
+      state.remoteHistory.unshift({
+        id: ord.id,
+        sender: ord.sender,
+        target: ord.target,
+        emoji: ord.emoji,
+        label: ord.label,
+        accomplished,
+        delta,
+        time: nowTime
+      });
+      state.remoteHistory = state.remoteHistory.slice(0, 15);
+      state.remoteOrder.active = false;
+      closeRemoteIncomingModal();
+
+      const eventId = Date.now();
+      lastEventId = eventId;
+      localStorage.setItem('love8_last_event', String(eventId));
+      if (accomplished) {
+        state.lastEvent = {
+          id: eventId, sender: currentUser, type: 'vibration',
+          title: `✅ ORDRE ACCOMPLI (+${ord.bonus} 🪙 POUR ${target.toUpperCase()}) !`,
+          message: `${ord.sender} a validé l'ordre « ${ord.label} » : +${ord.bonus} 🪙 ajoutés à la cagnotte de ${target} !`,
+          emoji: '✅', sound: 'rose', pattern: [150, 60, 300], ack: 0
+        };
+        triggerBlackScreenRain('✅', state.lastEvent.message, 'rose', [150, 60, 300], false);
+      } else {
+        state.lastEvent = {
+          id: eventId, sender: currentUser, type: 'vibration',
+          title: `❌ ORDRE NON ACCOMPLI (-150 🪙 POUR ${target.toUpperCase()}) !`,
+          message: `${target} n'a pas obéi à « ${ord.label} » : -150 🪙 retirés de sa cagnotte (solde : ${getUserCoins(target)} 🪙) !`,
+          emoji: '❌', sound: 'devil', pattern: [350, 90, 350], ack: 0
+        };
+        triggerBlackScreenRain('❌', state.lastEvent.message, 'devil', [350, 90, 350], false);
+      }
+      saveState();
+    }
+
+    function formatSecMMSS(sec) {
+      const s = Math.max(0, Math.floor(sec));
+      const m = String(Math.floor(s / 60)).padStart(2, '0');
+      const r = String(s % 60).padStart(2, '0');
+      return `${m}:${r}`;
+    }
+
+    function updateRemoteTimerDisplay() {
+      const ord = state.remoteOrder;
+      const box = document.getElementById('remoteActiveOrderBox');
+      const modal = document.getElementById('remoteIncomingModal');
+      if (!ord || !ord.active) {
+        if (box) box.classList.add('hidden');
+        if (modal) modal.classList.add('hidden');
+        return;
+      }
+      const secLeft = Math.max(0, Math.ceil((ord.expiresAt - Date.now()) / 1000));
+      const timeStr = secLeft > 0 ? formatSecMMSS(secLeft) : '⏰ ÉCOULÉ !';
+      const isSender = currentUser === ord.sender;
+
+      if (box) {
+        box.classList.remove('hidden');
+        document.getElementById('remActiveHeader').innerText = `⚡ ${ord.sender.toUpperCase()} ➔ ${ord.target.toUpperCase()}`;
+        document.getElementById('remActiveCountdown').innerText = timeStr;
+        document.getElementById('remActiveTitle').innerText = `${ord.emoji} ${ord.label}`;
+        document.getElementById('remActiveDesc').innerText = ord.desc;
+        document.getElementById('remActiveBonusLbl').innerText = `+${ord.bonus}`;
+        document.getElementById('remSenderVerdictBtns').classList.toggle('hidden', !isSender);
+        document.getElementById('remTargetWaitingMsg').classList.toggle('hidden', isSender);
+      }
+
+      if (modal && !modal.classList.contains('hidden')) {
+        document.getElementById('remoteModalEmoji').innerText = ord.emoji;
+        document.getElementById('remoteModalBadge').innerText = isSender ? `👑 ORDRE ENVOYÉ À ${ord.target.toUpperCase()}` : `🚨 ORDRE DE ${ord.sender.toUpperCase()} POUR TOI !`;
+        document.getElementById('remoteModalTitle').innerText = `${ord.emoji} ${ord.label}`;
+        document.getElementById('remoteModalDesc').innerText = ord.desc;
+        document.getElementById('remoteModalTimer').innerText = timeStr;
+        document.getElementById('remoteModalBonus').innerText = `✅ Obéir : +${ord.bonus} 🪙`;
+        document.getElementById('remoteModalSenderActions').classList.toggle('hidden', !isSender);
+        document.getElementById('remoteModalTargetActions').classList.toggle('hidden', isSender);
+      }
+    }
+    setInterval(updateRemoteTimerDisplay, 1000);
 
     // ==================== 3. THERMOMÈTRE D'ENVIE (6 PALIERS + TAGS + ALERTE ROUGE >= 80%) ====================
     function getLibidoTierDetails(val) {
@@ -1436,7 +1731,7 @@
       }
     }
 
-    // ==================== 1. TINDER FANTASMES (VOTE SECRET & MATCH) ====================
+    // ==================== 1. TINDER FANTASMES ====================
     function isFantasyMatched(cardId) {
       const vJ = state.fantasyVotes?.Jordan?.[cardId];
       const vL = state.fantasyVotes?.Lydie?.[cardId];
@@ -1476,7 +1771,7 @@
     function prevFantasyCard() { currentFantasyIdx = (currentFantasyIdx - 1 + fantasyDeck.length) % fantasyDeck.length; renderAll(); }
     function nextFantasyCard() { currentFantasyIdx = (currentFantasyIdx + 1) % fantasyDeck.length; renderAll(); }
 
-    // ==================== 1-BIS. KINKY & EXTRÊME (50 QUESTIONS - VOTE 0 À 3 & SCORE /6) ====================
+    // ==================== 1-BIS. KINKY & EXTRÊME ====================
     function isKinkyQuestionMatched(qId) {
       const vJ = state.kinkyVotes?.Jordan?.[qId];
       const vL = state.kinkyVotes?.Lydie?.[qId];
@@ -1555,7 +1850,7 @@
       saveState();
     }
 
-    // ==================== 4. JEU « QUI DE NOUS DEUX ? » (50 QUESTIONS) ====================
+    // ==================== 4. JEU « QUI DE NOUS DEUX ? » ====================
     function voteWhoOfUs(chosenPerson) {
       const u = currentUser || 'Jordan';
       const qIdx = (state.whoOfUs.qIndex || 0) % whoOfUsQuestions.length;
@@ -1701,12 +1996,12 @@
     function switchUser(u) { currentUser = u; localStorage.setItem('love8_user', u); if (window.AndroidNative?.setUser) window.AndroidNative.setUser(u); registerFcmTokenToCloud(); renderAll(); }
     function showTab(tab) {
       activeTab = tab;
-      ['nous','dessin','douglasse','jeux','souvenirs'].forEach(t => {
+      ['nous','dessin','douglasse','jeux','telecommande','souvenirs'].forEach(t => {
         document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
         document.getElementById('nav-' + t).classList.toggle('text-pink-600', t === tab);
       });
       if (tab === 'dessin') loadCloudArchives();
-      if (tab === 'jeux') pollCloudState(true);
+      if (tab === 'jeux' || tab === 'telecommande') pollCloudState(true);
     }
 
     function spawnParticles(emoji, pattern = [150,70,250], maxDurationMs = 2600) {
@@ -1940,12 +2235,14 @@
       document.getElementById('btnLydie').className = !isJ ? 'px-2 py-1 rounded-full gradient-card text-white shadow' : 'px-2 py-1 rounded-full text-slate-600';
       document.getElementById('pingCounter').innerText = state.pingsToday;
 
-      // Cagnottes séparées
+      // Cagnottes séparées (plancher bloqué à 0)
       const jCoins = getUserCoins('Jordan'), lCoins = getUserCoins('Lydie'), myCoins = getUserCoins(myName);
       document.getElementById('headerCoinsJordan').innerText = jCoins;
       document.getElementById('headerCoinsLydie').innerText = lCoins;
       document.getElementById('cardCoinsJordan').innerText = jCoins;
       document.getElementById('cardCoinsLydie').innerText = lCoins;
+      document.getElementById('remCoinsJordan').innerText = jCoins;
+      document.getElementById('remCoinsLydie').innerText = lCoins;
       document.getElementById('catCoinsLabel').innerText = myCoins;
       document.getElementById('shopMyCoinsBadge').innerText = myCoins;
       document.getElementById('pillCoinsJordan').className = `px-1.5 py-0.5 rounded-md ${isJ?'bg-purple-600 text-white shadow':'bg-purple-100 text-purple-900'}`;
@@ -2036,6 +2333,54 @@
       }).join('');
       document.getElementById('catJournalList').innerHTML = state.cat.journal.map(j => `<div class="flex justify-between bg-slate-50 px-3 py-2 rounded-xl border border-slate-100"><span>${j.text}</span><span class="text-slate-400 font-semibold">${j.time}</span></div>`).join('');
 
+      // Rendu de l'onglet 📳 Télécommande (Tendre / Chaud / Hard)
+      ['tendre','chaud','hard'].forEach(cat => {
+        const btn = document.getElementById('btnRemTab' + cat.charAt(0).toUpperCase() + cat.slice(1));
+        if (btn) {
+          const active = activeRemoteCategory === cat;
+          const activeStyle = cat === 'hard' ? 'neon-max-fire text-white border-pink-400 shadow-lg' : (cat === 'chaud' ? 'bg-rose-600 text-white border-rose-400 shadow' : 'gradient-card text-white border-pink-400 shadow');
+          btn.className = `py-2.5 rounded-2xl border transition ${active ? activeStyle : 'bg-white/5 text-slate-300 border-white/15'}`;
+        }
+      });
+
+      const remItems = remoteControlCatalog[activeRemoteCategory] || [];
+      const cardStyle = activeRemoteCategory === 'hard' ? 'from-rose-950/90 to-black border-rose-500/50' : (activeRemoteCategory === 'chaud' ? 'from-purple-900/80 to-rose-900/80 border-pink-400/40' : 'from-indigo-900/70 to-purple-900/70 border-purple-400/40');
+      document.getElementById('remoteButtonsGrid').innerHTML = remItems.map(it => `
+        <button onclick="sendRemoteOrder('${activeRemoteCategory}','${it.id}')" class="bg-gradient-to-br ${cardStyle} border rounded-2xl p-3 text-left flex flex-col justify-between gap-2 active:scale-95 transition shadow-md">
+          <div class="flex items-center justify-between w-full">
+            <span class="text-3xl">${it.emoji}</span>
+            <span class="bg-black/40 text-amber-300 text-[10px] font-extrabold px-2 py-0.5 rounded-full">⏱️ ${it.duration}s</span>
+          </div>
+          <div>
+            <p class="text-xs font-extrabold text-white leading-tight">${it.label}</p>
+            <p class="text-[10px] text-slate-300 mt-1 line-clamp-2 leading-snug">${it.desc}</p>
+          </div>
+          <div class="flex items-center justify-between w-full pt-1 border-t border-white/10 text-[9px] font-extrabold">
+            <span class="text-emerald-300">✅ +${it.bonus} 🪙</span>
+            <span class="text-rose-300">❌ -150 🪙</span>
+          </div>
+        </button>
+      `).join('');
+
+      updateRemoteTimerDisplay();
+
+      document.getElementById('remoteHistoryList').innerHTML = (state.remoteHistory || []).length === 0
+        ? `<p class="text-[11px] text-slate-400 italic text-center py-2">Aucun ordre envoyé pour l'instant. Appuie sur un bouton de la télécommande !</p>`
+        : state.remoteHistory.map(h => `
+          <div class="flex items-center justify-between p-2.5 rounded-2xl border ${h.accomplished ? 'bg-emerald-50/60 border-emerald-200' : 'bg-rose-50/70 border-rose-200'}">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">${h.emoji}</span>
+              <div>
+                <p class="text-xs font-extrabold text-slate-800">${h.label}</p>
+                <p class="text-[10px] text-slate-500">${h.sender} ➔ ${h.target} • ${h.time}</p>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold ${h.accomplished ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}">
+              ${h.accomplished ? `✅ +${h.delta} 🪙` : `❌ ${h.delta} 🪙`}
+            </span>
+          </div>
+        `).join('');
+
       // 1. Rendu Tinder Fantasmes
       const fCard = fantasyDeck[currentFantasyIdx] || fantasyDeck[0];
       const myFVote = state.fantasyVotes?.[myName]?.[fCard.id] || '';
@@ -2050,7 +2395,7 @@
         ? `<p class="text-[11px] text-slate-400 italic text-center py-2">Votez chacun en secret pour révéler vos envies communes !</p>`
         : matchedList.map(m => `<div class="bg-white/10 border border-pink-400/40 rounded-xl p-2.5"><p class="font-extrabold text-pink-200">${m.title}</p><p class="text-[10px] text-slate-300 mt-0.5">${m.desc}</p></div>`).join('');
 
-      // 1-BIS. Rendu Kinky & Extrême (50 questions + calculerMatchs)
+      // 1-BIS. Rendu Kinky & Extrême
       const kCard = kinkyQuestions[currentKinkyIdx] || kinkyQuestions[0];
       const myKVote = state.kinkyVotes?.[myName]?.[kCard.id];
       const kVoteLabels = { 3:'🔥 Ton vote : J\'adore (3 pts)', 2:'👀 Ton vote : À tester (2 pts)', 1:'🎁 Ton vote : Pour te faire plaisir (1 pt)', 0:'❌ Ton vote : Limite / Non (secret)' };
