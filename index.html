@@ -246,7 +246,6 @@
           <span id="libidoRedAlertBadge" class="hidden bg-rose-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full animate-pulse">🔥 ALERTE ROUGE !</span>
         </div>
 
-        <!-- Ma jauge réglable -->
         <div class="bg-white/5 border border-white/10 rounded-2xl p-3 space-y-2">
           <div class="flex items-center justify-between">
             <span id="myLibidoTitle" class="text-xs font-extrabold text-pink-200">Ma jauge</span>
@@ -257,14 +256,12 @@
             onchange="commitMyLibidoSlider(this.value)"
             class="w-full accent-pink-500 cursor-pointer h-2 rounded-lg" />
           <p id="myLibidoSubtext" class="text-[11px] text-slate-300 italic text-center"></p>
-          <!-- Tags d'envie rapides -->
           <div class="pt-1">
             <p class="text-[9px] uppercase font-bold text-slate-400 mb-1.5">🎯 Mon Tag d'envie du moment (1 tap) :</p>
             <div id="libidoTagsGrid" class="flex flex-wrap gap-1.5"></div>
           </div>
         </div>
 
-        <!-- Jauge en direct du partenaire -->
         <div class="bg-white/5 border border-white/10 rounded-2xl p-3 space-y-1.5">
           <div class="flex items-center justify-between">
             <span id="partnerLibidoTitle" class="text-xs font-extrabold text-purple-200">Son envie en direct</span>
@@ -279,7 +276,6 @@
           </div>
         </div>
 
-        <!-- Carte Défi Bonus débloqué si Alerte Rouge >= 80% -->
         <div id="libidoBonusCard" class="hidden neon-max-fire text-white rounded-2xl p-3.5 shadow-xl space-y-1 text-center">
           <p class="text-[10px] uppercase tracking-widest font-extrabold">🔥😈 ALERTE ROUGE VALIDÉE (+30 🪙 CHACUN) 🍓🔥</p>
           <p id="libidoBonusText" class="text-xs font-extrabold leading-snug"></p>
@@ -443,6 +439,48 @@
         </div>
       </div>
 
+      <!-- 1-BIS. NOUVEAU JEU : KINKY & EXTRÊME (50 DÉFIS HARD - SCORE SUR 6) -->
+      <div class="bg-gradient-to-br from-black via-rose-950 to-purple-950 text-white rounded-3xl p-4 shadow-xl border border-rose-500/50 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="bg-rose-600/30 border border-rose-400/50 text-rose-200 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">⛓️🔥 KINKY & EXTRÊME (50 DÉFIS HARD)</span>
+            <p class="text-[10px] text-slate-300 mt-1">Vote secret de 0 à 3 • Si l'un vote 0 (Limite), la carte reste secrète ! (+20 🪙/match)</p>
+          </div>
+          <span id="kinkyMatchesCountBadge" class="bg-rose-500 text-white text-xs font-extrabold px-2.5 py-1 rounded-full shadow">0 ⛓️</span>
+        </div>
+
+        <div class="bg-white/10 border border-rose-400/30 rounded-2xl p-4 text-center space-y-2 min-h-[145px] flex flex-col justify-between">
+          <div class="flex items-center justify-between text-[10px] font-extrabold">
+            <span id="kinkyCatBadge" class="bg-rose-500/30 border border-rose-400/40 text-rose-200 px-2.5 py-0.5 rounded-full uppercase"></span>
+            <div class="flex items-center gap-1.5">
+              <span id="kinkyTargetBadge" class="bg-purple-500/30 border border-purple-300/40 text-purple-200 px-2 py-0.5 rounded-full"></span>
+              <span id="kinkyIntensityBadge" class="bg-amber-500/20 border border-amber-400/40 text-amber-300 px-2 py-0.5 rounded-full"></span>
+            </div>
+          </div>
+          <p id="kinkyCardText" class="text-xs sm:text-sm font-extrabold text-white leading-relaxed my-auto py-1"></p>
+          <p id="kinkyMyVoteBadge" class="text-[10px] font-bold text-amber-300"></p>
+        </div>
+
+        <!-- 4 boutons de vote : 3 = J'adore, 2 = À tester, 1 = Pour te faire plaisir, 0 = Limite / Non -->
+        <div class="grid grid-cols-2 gap-2 text-xs font-extrabold">
+          <button onclick="voteKinkyCard(3)" class="py-2.5 px-2 rounded-2xl neon-max-fire text-white border border-pink-300 shadow active:scale-95">🔥 J'adore (3 pts)</button>
+          <button onclick="voteKinkyCard(2)" class="py-2.5 px-2 rounded-2xl bg-rose-600/80 border border-rose-400 text-white active:scale-95">👀 À tester (2 pts)</button>
+          <button onclick="voteKinkyCard(1)" class="py-2.5 px-2 rounded-2xl bg-indigo-600/80 border border-indigo-400 text-white active:scale-95">🎁 Pour ton plaisir (1 pt)</button>
+          <button onclick="voteKinkyCard(0)" class="py-2.5 px-2 rounded-2xl bg-slate-800 border border-slate-600 text-slate-300 active:scale-95">❌ Limite / Non (0)</button>
+        </div>
+
+        <div class="flex items-center justify-between text-[11px] pt-1">
+          <button onclick="prevKinkyCard()" class="text-rose-300 font-bold">‹ Défi préc.</button>
+          <span id="kinkyProgressText" class="text-slate-300 font-extrabold">1 / 50</span>
+          <button onclick="nextKinkyCard()" class="text-rose-300 font-bold">Défi suiv. ›</button>
+        </div>
+
+        <div class="pt-2 border-t border-white/10 space-y-2">
+          <p class="text-[11px] font-extrabold uppercase text-amber-300">🏆 Top Fantasmes Hard Matchés (Triés par Score /6) :</p>
+          <div id="kinkyMatchesList" class="space-y-1.5 max-h-60 overflow-y-auto pr-1 text-xs"></div>
+        </div>
+      </div>
+
       <!-- 2. JEU « QUI DE NOUS DEUX ? » (50 QUESTIONS) -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
@@ -571,7 +609,7 @@
     let lastEventId = Number(localStorage.getItem('love8_last_event') || 0);
     let avatarUploadTarget = 'jordan', activeTab = 'nous', pendingCapsulePhoto = '', currentSexyViewSender = '';
     let blackRainTimer = null, sleep15sTimer = null, sleepCountdownInterval = null, lastLocalWriteTime = 0;
-    let currentFantasyIdx = 0;
+    let currentFantasyIdx = 0, currentKinkyIdx = 0;
 
     let cachedMedia = {
       latestDrawingId: localStorage.getItem('love8_cached_draw_id') || '',
@@ -637,6 +675,72 @@
       { id:'f27', cat:'🔥 Pratiques Intenses & Marathon Sous la Couette', title:'🗣️ Dirty Talk sans filtre', desc:'Se dire absolument tout ce qu\'on a envie de se faire avec les mots les plus crus et excitants pendant l\'acte.' },
       { id:'f28', cat:'🔥 Pratiques Intenses & Marathon Sous la Couette', title:'🃏 Le Joker « Maintenant, tout de suite »', desc:'Peu importe l\'heure ou ce qu\'on est en train de faire à la maison, l\'un dit le mot-code et on lâche tout pour un quickie sauvage.' }
     ];
+
+    // 1-BIS. CATALOGUE DES 50 QUESTIONS KINKY & EXTRÊME
+    const kinkyQuestions = [
+      { id: 1, categorie: "Anal & Pegging", intensite: 1, cible: "Elle", texte: "Porter un plug anal discret sous ses vêtements pendant une sortie au restaurant ou en courses." },
+      { id: 2, categorie: "Anal & Pegging", intensite: 1, cible: "Lui", texte: "Recevoir un anulingus long et profond pendant qu'elle le masturbe lentement." },
+      { id: 3, categorie: "Anal & Pegging", intensite: 2, cible: "Lui", texte: "Porter un plug anal vibrant contrôlé à distance par madame pendant toute une soirée." },
+      { id: 4, categorie: "Anal & Pegging", intensite: 2, cible: "Lui", texte: "Se faire prendre par madame avec un gode-ceinture (pegging) à quatre pattes." },
+      { id: 5, categorie: "Anal & Pegging", intensite: 2, cible: "Elle", texte: "Utiliser un plug anal gonflable et le gonfler au maximum juste avant la pénétration vaginale." },
+      { id: 6, categorie: "Anal & Pegging", intensite: 3, cible: "Lui", texte: "Séance de pegging intense où monsieur a les poignets attachés et les yeux bandés." },
+      { id: 7, categorie: "Anal & Pegging", intensite: 3, cible: "Elle", texte: "Entraînement à la dilatation anale progressive avec des plugs XXL ou un début de fist." },
+      { id: 8, categorie: "Anal & Pegging", intensite: 2, cible: "Les deux", texte: "Porter chacun un plug anal pendant qu'on fait l'amour sauvagement." },
+      { id: 9, categorie: "Anal & Pegging", intensite: 3, cible: "Lui", texte: "Traite prostatique forcée : attaché, stimulé par un gode prostatique jusqu'à l'éjaculation sans toucher le pénis." },
+      { id: 10, categorie: "Anal & Pegging", intensite: 2, cible: "Elle", texte: "Sodomie profonde face à un grand miroir en étant maintenue par les cheveux ou la nuque." },
+      { id: 11, categorie: "Anal & Pegging", intensite: 2, cible: "Elle", texte: "Utiliser un chapelet anal (boules) et le retirer d'un coup sec pile au moment de son orgasme." },
+      { id: 12, categorie: "Anal & Pegging", intensite: 3, cible: "Elle", texte: "Maintenir l'anus ouvert avec un spéculum anal ou un tunnel plug pour y verser du lubrifiant chaud." },
+      { id: 13, categorie: "Double & Fantasmes", intensite: 1, cible: "Elle", texte: "Double pénétration avec monsieur dans le vagin et un gros gode vibrant dans l'anus." },
+      { id: 14, categorie: "Double & Fantasmes", intensite: 2, cible: "Elle", texte: "Inverser la double pénétration : monsieur dans l'anus et un gros gode dans le vagin." },
+      { id: 15, categorie: "Double & Fantasmes", intensite: 3, cible: "Elle", texte: "Double pénétration vaginale simultanée (le sexe de monsieur + un gode en même temps dans le vagin)." },
+      { id: 16, categorie: "Double & Fantasmes", intensite: 3, cible: "Elle", texte: "Vraie double pénétration avec un deuxième homme pendant que mon mari dirige la séance." },
+      { id: 17, categorie: "Double & Fantasmes", intensite: 2, cible: "Elle", texte: "Être remplie de tous les côtés (spitroast) : sodomie ou pénétration pendant qu'elle fait une gorge profonde." },
+      { id: 18, categorie: "Double & Fantasmes", intensite: 3, cible: "Les deux", texte: "Pénétration mutuelle simultanée : elle le pénètre avec un gode-ceinture pendant qu'un gros plug ou gode la pénètre." },
+      { id: 19, categorie: "Double & Fantasmes", intensite: 2, cible: "Les deux", texte: "Faire l'amour dans un lieu semi-public (voiture, forêt, balcon) avec le risque réel d'être surpris." },
+      { id: 20, categorie: "Double & Fantasmes", intensite: 3, cible: "Elle", texte: "Triple pénétration (anus + vagin + bouche) à l'aide de jouets fixés sur ventouse et de monsieur." },
+      { id: 21, categorie: "Double & Fantasmes", intensite: 2, cible: "Les deux", texte: "Se filmer en gros plan pendant une séance très hard pour la regarder ensemble au lit plus tard." },
+      { id: 22, categorie: "Double & Fantasmes", intensite: 3, cible: "Elle", texte: "Double pénétration anale (deux petits godes ou gode + doigts en même temps dans l'anus)." },
+      { id: 23, categorie: "Objets Insolites & Sondes", intensite: 3, cible: "Lui", texte: "Insérer lentement une barre à urètre (sonde métallique lubrifiée) dans le gland pendant une masturbation." },
+      { id: 24, categorie: "Objets Insolites & Sondes", intensite: 3, cible: "Lui", texte: "Combiner une barre à urètre vibrante et un plug anal pour une double stimulation interne intense." },
+      { id: 25, categorie: "Objets Insolites & Sondes", intensite: 3, cible: "Lui", texte: "Bloquer une sonde urétrale à l'intérieur pendant que madame pratique une fellation sur le pénis." },
+      { id: 26, categorie: "Objets Insolites & Sondes", intensite: 2, cible: "Elle", texte: "Utiliser un objet du quotidien (manche de brosse, bouteille lisse, concombre) pour une pénétration." },
+      { id: 27, categorie: "Objets Insolites & Sondes", intensite: 3, cible: "Elle", texte: "Placer un spéculum gynécologique métallique pour l'observer grand ouvert et la stimuler directement à l'intérieur." },
+      { id: 28, categorie: "Objets Insolites & Sondes", intensite: 2, cible: "Elle", texte: "Poser des pinces à tétons reliées par une chaîne et tirer doucement dessus pendant la levrette." },
+      { id: 29, categorie: "Objets Insolites & Sondes", intensite: 3, cible: "Les deux", texte: "Tester l'électrostimulation érotique (e-stim) sur les parties génitales ou via un plug conducteur." },
+      { id: 30, categorie: "Objets Insolites & Sondes", intensite: 2, cible: "Elle", texte: "Utiliser une pompe à clitoris (vacuum) pour le faire gonfler et le rendre ultra-sensible avant de le lécher." },
+      { id: 31, categorie: "Objets Insolites & Sondes", intensite: 3, cible: "Lui", texte: "Porter une cage de chasteté pendant 24h ou un week-end entier, dont seule madame possède la clé." },
+      { id: 32, categorie: "Objets Insolites & Sondes", intensite: 2, cible: "Elle", texte: "Insérer des glaçons dans le vagin ou l'anus juste avant que monsieur ne la pénètre." },
+      { id: 33, categorie: "Objets Insolites & Sondes", intensite: 3, cible: "Lui", texte: "Attacher un poids léger ou un parachute de testicules (ball stretcher) pendant la séance." },
+      { id: 34, categorie: "Objets Insolites & Sondes", intensite: 3, cible: "Elle", texte: "Être attachée face à une sex-machine ou un wand fixé au maximum sans pouvoir bouger les hanches." },
+      { id: 35, categorie: "Extrême & BDSM", intensite: 2, cible: "Elle", texte: "Gorge profonde forcée (facefucking) tête en bas au bord du lit jusqu'à ce qu'elle bave et pleure." },
+      { id: 36, categorie: "Extrême & BDSM", intensite: 3, cible: "Elle", texte: "Porter un bâillon-anneau (ring gag) qui garde la bouche grande ouverte pour que monsieur s'en serve à volonté." },
+      { id: 37, categorie: "Extrême & BDSM", intensite: 2, cible: "Les deux", texte: "Faire couler de la cire de bougie chaude sur le torse, les fesses, les cuisses et les seins les yeux bandés." },
+      { id: 38, categorie: "Extrême & BDSM", intensite: 3, cible: "Lui", texte: "Ruine d'orgasme : madame arrête de le toucher à la seconde exacte où il éjacule pour gâcher le plaisir." },
+      { id: 39, categorie: "Extrême & BDSM", intensite: 3, cible: "Elle", texte: "Jeu de rôle CNC (fausse agression consentie avec mot de sécurité) : prise de force à l'improviste dans la maison." },
+      { id: 40, categorie: "Extrême & BDSM", intensite: 2, cible: "Elle", texte: "Étranglement contrôlé (main serrée sur les côtés du cou) pendant une pénétration violente." },
+      { id: 41, categorie: "Extrême & BDSM", intensite: 3, cible: "Elle", texte: "Orgasmes forcés en série : attachée en étoile sur le lit, maintenue sous un vibromasseur même après avoir joui." },
+      { id: 42, categorie: "Extrême & BDSM", intensite: 2, cible: "Les deux", texte: "Séance d'impact play intense (fessées claquant fort, cravache ou martinet) jusqu'à marquer la peau en rouge." },
+      { id: 43, categorie: "Extrême & BDSM", intensite: 3, cible: "Lui", texte: "Facesitting étouffant : madame s'assoit de tout son poids sur le visage de monsieur et le force à la lécher." },
+      { id: 44, categorie: "Extrême & BDSM", intensite: 3, cible: "Les deux", texte: "Jeux d'urophilie (Golden Shower) : uriner sur le corps de l'autre sous la douche ou pendant l'acte." },
+      { id: 45, categorie: "Extrême & BDSM", intensite: 2, cible: "Elle", texte: "Bondage avec barre d'écartement (spreader bar) aux chevilles pour l'empêcher totalement de fermer les jambes." },
+      { id: 46, categorie: "Extrême & BDSM", intensite: 3, cible: "Lui", texte: "CBT léger (Cock & Ball Torture) : petites claques, griffures ou glace sur les testicules et le gland." },
+      { id: 47, categorie: "Extrême & BDSM", intensite: 2, cible: "Elle", texte: "Recevoir des claques sur le visage ou les seins et se faire cracher dans la bouche dans le feu de l'action." },
+      { id: 48, categorie: "Extrême & BDSM", intensite: 3, cible: "Les deux", texte: "Journée ou soirée Free Use : l'un des deux est disponible à tout moment, peu importe ce qu'il est en train de faire." },
+      { id: 49, categorie: "Extrême & BDSM", intensite: 3, cible: "Elle", texte: "Suspension partielle ou hogtie (poignets et chevilles reliés dans le dos) pendant une sodomie ou une fellation." },
+      { id: 50, categorie: "Extrême & BDSM", intensite: 3, cible: "Lui", texte: "Edging extrême : attaché pendant 1 heure, amené 10 fois au bord de l'éjaculation sans avoir le droit de jouir." }
+    ];
+
+    // Valeurs des votes Kinky : 3 = "J'adore", 2 = "À tester", 1 = "Pour te faire plaisir", 0 = "Limite / Non"
+    function calculerMatchs(votesLui, votesElle, questions) {
+      return questions.filter(q => {
+        const vLui = votesLui?.[q.id];
+        const vElle = votesElle?.[q.id];
+        return vLui !== undefined && vElle !== undefined && vLui > 0 && vElle > 0;
+      }).map(q => ({
+        ...q,
+        scoreCouple: Number(votesLui[q.id]) + Number(votesElle[q.id])
+      })).sort((a, b) => b.scoreCouple - a.scoreCouple);
+    }
 
     // 2. LA BOUTIQUE SECRÈTE EN PIÈCES (11 RÉCOMPENSES OFFICIELLES)
     const secretShopCatalog = [
@@ -877,7 +981,6 @@
 
     let state = JSON.parse(localStorage.getItem('love8_state')) || {};
 
-    // Helpers Cagnottes Séparées (Jordan vs Lydie)
     function getUserCoins(user) {
       const k = (user || currentUser || 'Jordan').toLowerCase();
       return typeof state[k]?.coins === 'number' ? state[k].coins : 180;
@@ -901,7 +1004,6 @@
       if (!state.jordan.location) state.jordan.location = '🏠 À la maison';
       if (!state.lydie.location) state.lydie.location = '🏠 À la maison';
 
-      // Remise à 50% chaque matin du Thermomètre d'Envie
       const today = getTodayDateStr();
       ['jordan','lydie'].forEach(k => {
         if (typeof state[k].libido !== 'number') state[k].libido = 50;
@@ -914,10 +1016,15 @@
       });
       if (!state.libidoAlert) state.libidoAlert = { lastTriggeredDate:'', bonusChallenge:'' };
 
-      // Tinder Fantasmes, Boutique Secrète & Qui de nous deux
       if (!state.fantasyVotes) state.fantasyVotes = { Jordan:{}, Lydie:{} };
       if (!state.fantasyVotes.Jordan) state.fantasyVotes.Jordan = {};
       if (!state.fantasyVotes.Lydie) state.fantasyVotes.Lydie = {};
+
+      // Initialisation des votes pour le nouveau jeu Kinky & Extrême (50 questions)
+      if (!state.kinkyVotes) state.kinkyVotes = { Jordan:{}, Lydie:{} };
+      if (!state.kinkyVotes.Jordan) state.kinkyVotes.Jordan = {};
+      if (!state.kinkyVotes.Lydie) state.kinkyVotes.Lydie = {};
+
       if (!state.purchasedRewards) state.purchasedRewards = [];
       if (!state.whoOfUs) state.whoOfUs = { qIndex:0, votes:{ Jordan:'', Lydie:'' }, rewardedIdx:-1, statusText:'Votez chacun de votre côté pour découvrir si vous êtes d\'accord !' };
       if (!state.whoOfUs.votes) state.whoOfUs.votes = { Jordan:'', Lydie:'' };
@@ -938,8 +1045,9 @@
       if (!state.capsules) state.capsules = [];
     }
     sanitizeStateStructure();
-
-function initStaticDom() {
+// === FIN DE LA PARTIE 1 — COLLE LA PARTIE 2 JUSTE EN DESSOUS ===
+// === DÉBUT DE LA PARTIE 2 ===
+    function initStaticDom() {
       document.getElementById('vibButtonsGrid').innerHTML = vibCatalog.map(([k, lbl, em, pat, snd, cls]) => `
         <button onclick='sendSpecialVibration("${k}","${lbl}","${em}",${JSON.stringify(pat)},"${snd}")' class="${cls} aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
           <span class="text-3xl">${em}</span>
@@ -1080,7 +1188,7 @@ function initStaticDom() {
     function resolveEventEmoji(explicitEmoji, msg, soundType) {
       if (explicitEmoji && explicitEmoji !== '❤️') return explicitEmoji;
       const str = (msg || '') + ' ';
-      for (const em of ['💌','🍑','🥒','🌶️','🍓','😈','💋','🌹','🎨','📸','🎟️','🔥','👑','🛍️','❤️']) if (str.includes(em)) return em;
+      for (const em of ['💌','🍑','🥒','🌶️','🍓','😈','💋','🌹','🎨','📸','🎟️','🔥','👑','🛍️','⛓️','❤️']) if (str.includes(em)) return em;
       const map = { env:'💌', peach:'🍑', cuc:'🥒', chili:'🌶️', straw:'🍓', devil:'😈', kiss:'💋', lips:'💋', rose:'🌹' };
       return map[soundType] || explicitEmoji || '❤️';
     }
@@ -1265,7 +1373,6 @@ function initStaticDom() {
       return { badge:`100% • 😈🍓 ALERTE MAXIMALE / En feu`, sub:'« Impossible d\'attendre, prépare-toi ! »', cls:'neon-max-fire text-white shadow-lg', bar:'neon-max-fire' };
     }
 
-    // Prévisualisation locale fluide sans écriture KV
     function previewMyLibidoSlider(val) {
       const info = getLibidoTierDetails(val);
       const b = document.getElementById('myLibidoBadge');
@@ -1274,7 +1381,6 @@ function initStaticDom() {
       document.getElementById('myLibidoSubtext').innerText = info.sub;
     }
 
-    // Enregistrement unique au relâchement du doigt (onchange = 1 seule écriture KV)
     function commitMyLibidoSlider(val) {
       const k = (currentUser || 'Jordan').toLowerCase();
       const numVal = Number(val);
@@ -1301,10 +1407,13 @@ function initStaticDom() {
         if (!alreadyRewardedToday) {
           addCoinsToUser('Jordan', 30);
           addCoinsToUser('Lydie', 30);
-          // Tirage d'un défi issu des Matchs Tinder Fantasmes ou d'un Gage Caliente
+          const kinkyMatches = calculerMatchs(state.kinkyVotes?.Jordan, state.kinkyVotes?.Lydie, kinkyQuestions);
           const matchedCards = fantasyDeck.filter(c => isFantasyMatched(c.id));
           let bonusText = '';
-          if (matchedCards.length > 0) {
+          if (kinkyMatches.length > 0 && Math.random() > 0.4) {
+            const pick = kinkyMatches[Math.floor(Math.random() * kinkyMatches.length)];
+            bonusText = `Défi Kinky Matché (${pick.scoreCouple}/6) : ${pick.texte}`;
+          } else if (matchedCards.length > 0) {
             const pick = matchedCards[Math.floor(Math.random() * matchedCards.length)];
             bonusText = `Gage Torride (issu de vos Matchs) : ${pick.title} — ${pick.desc}`;
           } else {
@@ -1366,6 +1475,46 @@ function initStaticDom() {
 
     function prevFantasyCard() { currentFantasyIdx = (currentFantasyIdx - 1 + fantasyDeck.length) % fantasyDeck.length; renderAll(); }
     function nextFantasyCard() { currentFantasyIdx = (currentFantasyIdx + 1) % fantasyDeck.length; renderAll(); }
+
+    // ==================== 1-BIS. KINKY & EXTRÊME (50 QUESTIONS - VOTE 0 À 3 & SCORE /6) ====================
+    function isKinkyQuestionMatched(qId) {
+      const vJ = state.kinkyVotes?.Jordan?.[qId];
+      const vL = state.kinkyVotes?.Lydie?.[qId];
+      return vJ !== undefined && vL !== undefined && Number(vJ) > 0 && Number(vL) > 0;
+    }
+
+    function voteKinkyCard(scoreVal) {
+      const u = currentUser || 'Jordan';
+      const q = kinkyQuestions[currentKinkyIdx];
+      if (!q) return;
+      const wasMatched = isKinkyQuestionMatched(q.id);
+      if (!state.kinkyVotes[u]) state.kinkyVotes[u] = {};
+      state.kinkyVotes[u][q.id] = Number(scoreVal);
+      const nowMatched = isKinkyQuestionMatched(q.id);
+
+      if (!wasMatched && nowMatched) {
+        const totalScore = Number(state.kinkyVotes.Jordan[q.id]) + Number(state.kinkyVotes.Lydie[q.id]);
+        addCoinsToUser('Jordan', 20);
+        addCoinsToUser('Lydie', 20);
+        const eventId = Date.now(); lastEventId = eventId; localStorage.setItem('love8_last_event', String(eventId));
+        state.lastEvent = {
+          id:eventId, sender:currentUser, type:'vibration',
+          title:`⛓️🔥 MATCH KINKY (${totalScore}/6) DÉBLOQUÉ !`,
+          message:`Nouveau Match Hard (${totalScore}/6 • +20 🪙 chacun) : « ${q.texte} »`,
+          emoji:'⛓️', sound:'fire', pattern:[220,70,220,70,450], ack:0
+        };
+        triggerBlackScreenRain('⛓️', `MATCH KINKY (${totalScore}/6 • +20 🪙 chacun) : ${q.texte}`, 'fire', [220,70,220,70,450], false);
+      } else {
+        playLoveSound(scoreVal >= 2 ? 'fire' : 'env');
+        triggerDeviceVibration([70]);
+      }
+
+      if (currentKinkyIdx < kinkyQuestions.length - 1) currentKinkyIdx++;
+      saveState();
+    }
+
+    function prevKinkyCard() { currentKinkyIdx = (currentKinkyIdx - 1 + kinkyQuestions.length) % kinkyQuestions.length; renderAll(); }
+    function nextKinkyCard() { currentKinkyIdx = (currentKinkyIdx + 1) % kinkyQuestions.length; renderAll(); }
 
     // ==================== 2. LA BOUTIQUE SECRÈTE EN PIÈCES ====================
     function buySecretShopReward(itemId) {
@@ -1611,7 +1760,6 @@ function initStaticDom() {
     }
     function clearAllAccessories() { state.cat.equippedSlots = { hat:'', eyes:'', neck:'', aura:'' }; saveState(); }
 
-    // Action ou Vérité
     function setTodLevel(lvl) {
       if (currentUser !== (state.truthOrDare.turn || 'Jordan')) {
         triggerBanner('🔒 TOUR VERROUILLÉ', `C'est au tour de ${state.truthOrDare.turn} !`, '⏳'); return;
@@ -1649,7 +1797,6 @@ function initStaticDom() {
       saveState();
     }
 
-    // Quiz 100 Questions
     function nextQuizQuestion() {
       const target = state.quiz.targetUser || 'Jordan', guesser = target === 'Jordan' ? 'Lydie' : 'Jordan';
       const isSecretLocked = typeof state.quiz.secretChoice === 'number';
@@ -1720,7 +1867,6 @@ function initStaticDom() {
       spawnParticles('🔐'); saveState();
     }
 
-    // Canvas Dessin
     const canvas = document.getElementById('drawCanvas'), ctx = canvas.getContext('2d');
     let drawing = false, brushColor = '#ec4899', historyStack = [], currentTextLines = 0, cloudArchivesList = [];
     function exportCanvasWebp() { const w = canvas.toDataURL('image/webp', 0.75); return w.startsWith('data:image/webp') ? w : canvas.toDataURL('image/png'); }
@@ -1794,7 +1940,7 @@ function initStaticDom() {
       document.getElementById('btnLydie').className = !isJ ? 'px-2 py-1 rounded-full gradient-card text-white shadow' : 'px-2 py-1 rounded-full text-slate-600';
       document.getElementById('pingCounter').innerText = state.pingsToday;
 
-      // Affichage des 2 Cagnottes séparées
+      // Cagnottes séparées
       const jCoins = getUserCoins('Jordan'), lCoins = getUserCoins('Lydie'), myCoins = getUserCoins(myName);
       document.getElementById('headerCoinsJordan').innerText = jCoins;
       document.getElementById('headerCoinsLydie').innerText = lCoins;
@@ -1805,7 +1951,7 @@ function initStaticDom() {
       document.getElementById('pillCoinsJordan').className = `px-1.5 py-0.5 rounded-md ${isJ?'bg-purple-600 text-white shadow':'bg-purple-100 text-purple-900'}`;
       document.getElementById('pillCoinsLydie').className = `px-1.5 py-0.5 rounded-md ${!isJ?'bg-pink-600 text-white shadow':'bg-pink-100 text-pink-900'}`;
 
-      // Thermomètre d'Envie (Libido)
+      // Thermomètre d'Envie
       const myLibVal = Number(state[myKey].libido ?? 50), partLibVal = Number(state[partnerKey].libido ?? 50);
       const myLibInfo = getLibidoTierDetails(myLibVal), partLibInfo = getLibidoTierDetails(partLibVal);
       document.getElementById('myLibidoTitle').innerText = `🌡️ Ma jauge (${myName})`;
@@ -1841,7 +1987,6 @@ function initStaticDom() {
         document.getElementById('libidoBonusText').innerText = state.libidoAlert.bonusChallenge;
       } else bonusCard.classList.add('hidden');
 
-      // Accusé de réception vibrations
       const ev = state.lastEvent || {};
       if (ev.id) {
         const em = resolveEventEmoji(ev.emoji, ev.message, ev.sound), acked = ev.ack && Number(ev.ack) === Number(ev.id);
@@ -1904,6 +2049,33 @@ function initStaticDom() {
       document.getElementById('fantasyMatchesList').innerHTML = matchedList.length === 0
         ? `<p class="text-[11px] text-slate-400 italic text-center py-2">Votez chacun en secret pour révéler vos envies communes !</p>`
         : matchedList.map(m => `<div class="bg-white/10 border border-pink-400/40 rounded-xl p-2.5"><p class="font-extrabold text-pink-200">${m.title}</p><p class="text-[10px] text-slate-300 mt-0.5">${m.desc}</p></div>`).join('');
+
+      // 1-BIS. Rendu Kinky & Extrême (50 questions + calculerMatchs)
+      const kCard = kinkyQuestions[currentKinkyIdx] || kinkyQuestions[0];
+      const myKVote = state.kinkyVotes?.[myName]?.[kCard.id];
+      const kVoteLabels = { 3:'🔥 Ton vote : J\'adore (3 pts)', 2:'👀 Ton vote : À tester (2 pts)', 1:'🎁 Ton vote : Pour te faire plaisir (1 pt)', 0:'❌ Ton vote : Limite / Non (secret)' };
+      const targetIcons = { 'Lui':'👦🏻 Cible : Lui', 'Elle':'👩🏻 Cible : Elle', 'Les deux':'👫 Cible : Les deux' };
+      document.getElementById('kinkyCatBadge').innerText = kCard.categorie;
+      document.getElementById('kinkyTargetBadge').innerText = targetIcons[kCard.cible] || kCard.cible;
+      document.getElementById('kinkyIntensityBadge').innerText = '🌶️'.repeat(kCard.intensite || 1);
+      document.getElementById('kinkyCardText').innerText = `« ${kCard.texte} »`;
+      document.getElementById('kinkyMyVoteBadge').innerText = myKVote !== undefined ? kVoteLabels[myKVote] : '🔒 Pas encore voté sur ce défi';
+      document.getElementById('kinkyProgressText').innerText = `Défi ${currentKinkyIdx + 1} / ${kinkyQuestions.length}`;
+
+      const kinkyMatches = calculerMatchs(state.kinkyVotes?.Jordan || {}, state.kinkyVotes?.Lydie || {}, kinkyQuestions);
+      document.getElementById('kinkyMatchesCountBadge').innerText = `${kinkyMatches.length} ⛓️`;
+      document.getElementById('kinkyMatchesList').innerHTML = kinkyMatches.length === 0
+        ? `<p class="text-[11px] text-slate-400 italic text-center py-2">Aucun match hard révélé pour l'instant. Votez en secret !</p>`
+        : kinkyMatches.map(km => {
+            const badgeCls = km.scoreCouple === 6 ? 'neon-max-fire text-white' : (km.scoreCouple >= 4 ? 'bg-rose-600 text-white' : 'bg-indigo-600 text-white');
+            return `<div class="bg-white/10 border border-rose-400/40 rounded-xl p-2.5 space-y-1">
+              <div class="flex items-center justify-between text-[10px] font-extrabold">
+                <span class="text-rose-200 uppercase">${km.categorie} • ${targetIcons[km.cible]||km.cible}</span>
+                <span class="px-2 py-0.5 rounded-full ${badgeCls}">Score ${km.scoreCouple}/6 🔥</span>
+              </div>
+              <p class="text-[11px] font-bold text-white leading-snug">${km.texte}</p>
+            </div>`;
+          }).join('');
 
       // 2. Rendu « Qui de nous deux ? »
       const wIdx = (state.whoOfUs.qIndex || 0) % whoOfUsQuestions.length;
