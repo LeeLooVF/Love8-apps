@@ -90,7 +90,7 @@
     </div>
   </div>
 
-  <!-- MODALE STATUTS & 5 QUOTAS -->
+  <!-- MODALE STATUTS & 5 QUOTAS (AVEC BOUTON RECHARGER L'INTERFACE & SANS BOUTON APK) -->
   <div id="serviceStatusModal" class="fixed inset-0 z-[99988] hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-3xl p-5 space-y-4 shadow-2xl border border-pink-100 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -105,7 +105,7 @@
         <button onclick="forceManualCloudSync()" class="w-full py-3 rounded-2xl gradient-card text-white text-xs font-extrabold uppercase tracking-wider shadow-md active:scale-95 transition">🔄 Synchronisation Manuelle Forcée</button>
         <div class="grid grid-cols-2 gap-2">
           <button onclick="refreshServicesDiagnostics()" class="py-2.5 rounded-xl bg-purple-50 border border-purple-200 text-purple-800 text-[11px] font-extrabold active:scale-95">📡 Actualiser quotas</button>
-          <button onclick="downloadLatestApk()" class="py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-extrabold active:scale-95">📥 MAJ APK</button>
+          <button onclick="reloadAppInterface()" class="py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-extrabold active:scale-95">🔄 Recharger l'interface</button>
         </div>
       </div>
     </div>
@@ -272,12 +272,12 @@
         </div>
       </div>
 
-      <!-- 🌡️ THERMOMÈTRE D'ENVIE (AVEC NOTIFICATION PUSH À CHAQUE CHANGEMENT) -->
+      <!-- 🌡️ THERMOMÈTRE D'ENVIE (RESET À 10% À 05H00 + TAG PERSONNALISÉ) -->
       <div class="bg-slate-900 text-white rounded-3xl p-4 shadow-lg border border-pink-500/30 space-y-3">
         <div class="flex items-center justify-between">
           <div>
             <span class="bg-pink-500/20 border border-pink-400/40 text-pink-200 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">🌡️ THERMOMÈTRE D'ENVIE DU SOIR</span>
-            <p class="text-[10px] text-slate-400 mt-0.5">Notifie ton amour à chaque réglage • Alerte Rouge dès 80 % chacun</p>
+            <p class="text-[10px] text-slate-400 mt-0.5">Remise à 10 % chaque matin à 05h00 • Notifie l'autre en direct</p>
           </div>
           <span id="libidoRedAlertBadge" class="hidden bg-rose-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full animate-pulse">🔥 ALERTE ROUGE !</span>
         </div>
@@ -285,30 +285,35 @@
         <div class="bg-white/5 border border-white/10 rounded-2xl p-3 space-y-2">
           <div class="flex items-center justify-between">
             <span id="myLibidoTitle" class="text-xs font-extrabold text-pink-200">Ma jauge</span>
-            <span id="myLibidoBadge" class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">50 %</span>
+            <span id="myLibidoBadge" class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">10 %</span>
           </div>
-          <input id="myLibidoSlider" type="range" min="0" max="100" step="5" value="50"
+          <input id="myLibidoSlider" type="range" min="0" max="100" step="5" value="10"
             oninput="previewMyLibidoSlider(this.value)"
             onchange="commitMyLibidoSlider(this.value)"
             class="w-full accent-pink-500 cursor-pointer h-2 rounded-lg" />
           <p id="myLibidoSubtext" class="text-[11px] text-slate-300 italic text-center"></p>
-          <div class="pt-1">
-            <p class="text-[9px] uppercase font-bold text-slate-400 mb-1.5">🎯 Mon Tag d'envie du moment (1 tap = notifie l'autre) :</p>
+          <div class="pt-1 space-y-2">
+            <p class="text-[9px] uppercase font-bold text-slate-400">🎯 Mon Tag d'envie du moment (1 tap = notifie l'autre) :</p>
             <div id="libidoTagsGrid" class="flex flex-wrap gap-1.5"></div>
+            <!-- Champ Tag d'envie personnalisé -->
+            <div class="flex gap-1.5 pt-1">
+              <input id="customLibidoTagInput" type="text" maxlength="38" placeholder="✨ Écrire une envie perso..." class="flex-1 text-[11px] bg-white/10 border border-white/20 rounded-xl px-2.5 py-1.5 text-white placeholder-slate-400" />
+              <button onclick="setCustomLibidoTag()" class="px-3 py-1.5 rounded-xl gradient-card text-white text-[10px] font-extrabold active:scale-95">Envoyer</button>
+            </div>
           </div>
         </div>
 
         <div class="bg-white/5 border border-white/10 rounded-2xl p-3 space-y-1.5">
           <div class="flex items-center justify-between">
             <span id="partnerLibidoTitle" class="text-xs font-extrabold text-purple-200">Son envie en direct</span>
-            <span id="partnerLibidoBadge" class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">50 %</span>
+            <span id="partnerLibidoBadge" class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">10 %</span>
           </div>
           <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
-            <div id="partnerLibidoBar" class="h-full transition-all duration-500 rounded-full" style="width:50%"></div>
+            <div id="partnerLibidoBar" class="h-full transition-all duration-500 rounded-full" style="width:10%"></div>
           </div>
-          <div class="flex items-center justify-between text-[11px] pt-0.5">
-            <span id="partnerLibidoSubtext" class="text-slate-300 italic"></span>
-            <span id="partnerLibidoTagPill" class="bg-pink-500/25 border border-pink-400/40 text-pink-200 text-[10px] font-extrabold px-2 py-0.5 rounded-full hidden"></span>
+          <div class="flex items-center justify-between text-[11px] pt-0.5 gap-2">
+            <span id="partnerLibidoSubtext" class="text-slate-300 italic truncate"></span>
+            <span id="partnerLibidoTagPill" class="bg-pink-500/25 border border-pink-400/40 text-pink-200 text-[10px] font-extrabold px-2 py-0.5 rounded-full shrink-0 hidden"></span>
           </div>
         </div>
 
@@ -318,7 +323,7 @@
         </div>
       </div>
 
-      <!-- VIBRATIONS -->
+      <!-- VIBRATIONS AVEC NOMS SOUS LES ICÔNES -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-xs font-extrabold uppercase text-slate-500">⚡ VIBRATIONS EN DIRECT (+5 🪙)</span>
@@ -331,7 +336,7 @@
         <div id="vibButtonsGrid" class="grid grid-cols-4 gap-2.5 pt-1"></div>
       </div>
 
-      <!-- 🎨 DESSIN & MOT DOUX (PLACÉ EN BAS DE L'ONGLET NOUS) -->
+      <!-- 🎨 DESSIN & MOT DOUX (EN BAS DE L'ONGLET NOUS) -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <div>
@@ -371,17 +376,24 @@
       </div>
     </section>
 
-    <!-- ONGLET 2 : DOUGLASSE -->
+    <!-- ONGLET 2 : DOUGLASSE (AVEC PLAN ANTI-SPAM, COOLDOWNS, JAUGES & GARDE PARTAGÉE) -->
     <section id="tab-douglasse" class="hidden space-y-4">
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 text-center space-y-3">
         <div class="flex items-center justify-between">
           <span class="bg-amber-100 text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full">🐾 Niv. <span id="catLevel">4</span> (<span id="catXp">40</span>/100 XP)</span>
           <span class="bg-yellow-100 text-yellow-800 text-xs font-extrabold px-3 py-1 rounded-full">Ma cagnotte : 🪙 <span id="catCoinsLabel">180</span></span>
         </div>
+
+        <!-- Badge Bonus Garde Partagée (Parents Modèles) -->
+        <div id="catSharedBonusBanner" class="bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-[11px] font-extrabold text-slate-600 flex items-center justify-between">
+          <span id="catSharedBonusText">🐾 Garde partagée : Jordan ❌ • Lydie ❌</span>
+          <span class="text-[10px] bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">+25 🪙 chacun</span>
+        </div>
+
         <div><h2 class="text-xl font-extrabold">Douglasse</h2><p id="catMoodPill" class="text-xs text-pink-600 font-bold"></p></div>
         <div id="catSpeechBubble" class="inline-block bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold px-3.5 py-1.5 rounded-full"></div>
         <div class="py-2 flex flex-col items-center justify-center">
-          <div id="catVisualContainer" onclick="interactCat('caresser')" class="relative w-52 h-52 rounded-3xl flex items-center justify-center cursor-pointer cat-bounce border-4 border-slate-200 shadow-lg bg-slate-100">
+          <div id="catVisualContainer" onclick="petCatPhoto()" class="relative w-52 h-52 rounded-3xl flex items-center justify-center cursor-pointer cat-bounce border-4 border-slate-200 shadow-lg bg-slate-100">
             <img id="mainCatPhoto" src="Snapchat-1098749864.jpg" onerror="if(this.src.indexOf('pages.dev')===-1){this.src='https://love8-apps.pages.dev/Snapchat-1098749864.jpg';}else{this.classList.add('hidden');}" onload="document.getElementById('catSvg').classList.add('hidden')" class="w-full h-full rounded-2xl object-cover" />
             <svg id="catSvg" class="w-48 h-48" viewBox="0 0 200 200">
               <ellipse cx="100" cy="182" rx="58" ry="9" fill="#e2e8f0"/><path d="M138 150 Q178 135 168 92" stroke="#475569" stroke-width="14" stroke-linecap="round" fill="none"/><ellipse cx="100" cy="142" rx="44" ry="38" fill="#475569"/><ellipse cx="100" cy="146" rx="28" ry="32" fill="#fff"/><circle cx="78" cy="172" r="11" fill="#fff"/><circle cx="122" cy="172" r="11" fill="#fff"/><circle cx="100" cy="82" r="42" fill="#475569"/><polygon points="62,58 54,18 88,44" fill="#334155"/><polygon points="66,53 60,26 84,45" fill="#fda4af"/><polygon points="138,58 146,18 112,44" fill="#334155"/><polygon points="134,53 140,26 116,45" fill="#fda4af"/><polygon points="100,56 70,106 100,122 130,106" fill="#fff"/><circle cx="82" cy="80" r="8.5" fill="#a3e635" stroke="#1e293b" stroke-width="1.5"/><ellipse cx="82" cy="80" rx="2.8" ry="5.5" fill="#0f172a"/><circle cx="118" cy="80" r="8.5" fill="#a3e635" stroke="#1e293b" stroke-width="1.5"/><ellipse cx="118" cy="80" rx="2.8" ry="5.5" fill="#0f172a"/><polygon points="95,93 105,93 100,100" fill="#fb7185"/><path d="M93 103 Q100 108 107 103" stroke="#334155" stroke-width="2.5" fill="none"/>
@@ -396,12 +408,26 @@
               <span id="auraItem4" class="orbit-item absolute bottom-2 -right-4 text-3xl">💖</span>
             </div>
           </div>
+          <p class="text-[10px] text-slate-400 mt-1.5">💡 Toucher la photo en recharge = Câlin Ronron gratuit 🐾</p>
         </div>
         <div id="catBarsBox" class="space-y-2 text-left pt-1"></div>
-        <div class="grid grid-cols-3 gap-2.5 pt-2">
-          <button onclick="interactCat('nourrir')" class="bg-amber-50 border border-amber-200 rounded-2xl py-3 flex flex-col items-center gap-1"><span class="text-2xl">🐟</span><span class="text-xs font-extrabold text-amber-900">Nourrir (+10🪙)</span></button>
-          <button onclick="interactCat('caresser')" class="bg-pink-50 border border-pink-200 rounded-2xl py-3 flex flex-col items-center gap-1"><span class="text-2xl">🤚💖</span><span class="text-xs font-extrabold text-pink-900">Câliner (+10🪙)</span></button>
-          <button onclick="interactCat('jouer')" class="bg-indigo-50 border border-indigo-200 rounded-2xl py-3 flex flex-col items-center gap-1"><span class="text-2xl">🧶</span><span class="text-xs font-extrabold text-indigo-900">Jouer (+10🪙)</span></button>
+        <!-- 3 Boutons d'actions avec Cooldowns & Quotas Journaliers -->
+        <div class="grid grid-cols-3 gap-2 pt-2">
+          <button id="btnCatNourrir" onclick="interactCat('nourrir')" class="bg-amber-50 border border-amber-200 rounded-2xl py-2.5 px-1 flex flex-col items-center gap-0.5 transition">
+            <span class="text-2xl">🐟</span>
+            <span class="text-[11px] font-extrabold text-amber-900">Nourrir (+10🪙)</span>
+            <span id="subCatNourrir" class="text-[9px] font-bold text-amber-700">4/4 dispo</span>
+          </button>
+          <button id="btnCatCaresser" onclick="interactCat('caresser')" class="bg-pink-50 border border-pink-200 rounded-2xl py-2.5 px-1 flex flex-col items-center gap-0.5 transition">
+            <span class="text-2xl">🤚💖</span>
+            <span class="text-[11px] font-extrabold text-pink-900">Câliner (+10🪙)</span>
+            <span id="subCatCaresser" class="text-[9px] font-bold text-pink-700">6/6 dispo</span>
+          </button>
+          <button id="btnCatJouer" onclick="interactCat('jouer')" class="bg-indigo-50 border border-indigo-200 rounded-2xl py-2.5 px-1 flex flex-col items-center gap-0.5 transition">
+            <span class="text-2xl">🧶</span>
+            <span class="text-[11px] font-extrabold text-indigo-900">Jouer (+10🪙)</span>
+            <span id="subCatJouer" class="text-[9px] font-bold text-indigo-700">5/5 dispo</span>
+          </button>
         </div>
       </div>
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
@@ -411,7 +437,7 @@
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-2"><h3 class="text-xs font-extrabold uppercase text-slate-400">JOURNAL DE DOUGLASSE</h3><div id="catJournalList" class="space-y-2 text-xs"></div></div>
     </section>
 
-    <!-- NOUVEL ONGLET 3 : 🔥 HOT (DÉFI PHOTO SEXY DU JOUR + TINDER FANTASMES + KINKY & EXTRÊME) -->
+    <!-- ONGLET 3 : 🔥 HOT (DÉFI PHOTO SEXY + TINDER FANTASMES + KINKY & EXTRÊME AVEC PRIORITÉ PARTENAIRE & ALÉATOIRE) -->
     <section id="tab-hot" class="hidden space-y-4">
       <!-- 1. DÉFI PHOTO SEXY DU JOUR -->
       <div class="bg-gradient-to-br from-rose-950 via-purple-950 to-slate-900 text-white rounded-3xl p-4 shadow-lg border border-pink-500/30 space-y-3">
@@ -439,17 +465,18 @@
         </div>
       </div>
 
-      <!-- 2. LE TINDER FANTASMES (MATCH SECRET) -->
+      <!-- 2. LE TINDER FANTASMES (MATCH SECRET - PRIORITÉ AUX CARTES VOTÉES PAR L'AUTRE + ALÉATOIRE) -->
       <div class="bg-gradient-to-br from-slate-900 via-purple-950 to-rose-950 text-white rounded-3xl p-4 shadow-lg border border-pink-500/40 space-y-3">
         <div class="flex items-center justify-between">
           <div>
             <span class="bg-pink-500/25 border border-pink-400/40 text-pink-200 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">🔥 TINDER FANTASMES (MATCH SECRET)</span>
-            <p class="text-[10px] text-slate-300 mt-1">Si l'un vote ❌, l'autre ne le saura jamais ! Révélé uniquement en cas de Match.</p>
+            <p class="text-[10px] text-slate-300 mt-1">Priorité aux cartes votées par l'autre puis ordre aléatoire !</p>
           </div>
           <span id="fantasyMatchesCountBadge" class="bg-amber-400 text-slate-950 text-xs font-extrabold px-2.5 py-1 rounded-full">0 ❤️‍🔥</span>
         </div>
 
-        <div id="fantasyCardContainer" class="bg-white/10 border border-white/15 rounded-2xl p-4 text-center space-y-2 min-h-[135px] flex flex-col justify-center">
+        <div id="fantasyCardContainer" class="bg-white/10 border border-white/15 rounded-2xl p-4 text-center space-y-2 min-h-[145px] flex flex-col justify-center">
+          <span id="fantasyPartnerPendingBadge" class="hidden mx-auto bg-amber-400/20 border border-amber-300/50 text-amber-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full animate-pulse">👀 Ton amour a déjà voté sur cette carte !</span>
           <p id="fantasyCategoryBadge" class="text-[10px] uppercase tracking-wider font-extrabold text-pink-300"></p>
           <p id="fantasyTitleText" class="text-sm font-extrabold text-white"></p>
           <p id="fantasyDescText" class="text-xs text-slate-200 leading-relaxed"></p>
@@ -462,9 +489,9 @@
         </div>
 
         <div class="flex items-center justify-between text-[11px] pt-1">
-          <button onclick="prevFantasyCard()" class="text-pink-300 font-bold">‹ Carte préc.</button>
+          <button onclick="prevFantasyCard()" class="text-pink-300 font-bold">‹ Préc.</button>
           <span id="fantasyProgressText" class="text-slate-300 font-extrabold">1 / 28</span>
-          <button onclick="nextFantasyCard()" class="text-pink-300 font-bold">Carte suiv. ›</button>
+          <button onclick="nextFantasyCard()" class="text-pink-300 font-bold">🔀 Aléatoire suiv. ›</button>
         </div>
 
         <div class="pt-2 border-t border-white/10 space-y-2">
@@ -473,17 +500,17 @@
         </div>
       </div>
 
-      <!-- 3. KINKY & EXTRÊME (50 DÉFIS HARD - SCORE SUR 6) -->
+      <!-- 3. KINKY & EXTRÊME (50 DÉFIS HARD - PRIORITÉ AUX CARTES VOTÉES PAR L'AUTRE + ALÉATOIRE) -->
       <div class="bg-gradient-to-br from-black via-rose-950 to-purple-950 text-white rounded-3xl p-4 shadow-xl border border-rose-500/50 space-y-3">
         <div class="flex items-center justify-between">
           <div>
             <span class="bg-rose-600/30 border border-rose-400/50 text-rose-200 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">⛓️🔥 KINKY & EXTRÊME (50 DÉFIS HARD)</span>
-            <p class="text-[10px] text-slate-300 mt-1">Vote secret de 0 à 3 • Si l'un vote 0 (Limite), la carte reste secrète ! (+20 🪙/match)</p>
+            <p class="text-[10px] text-slate-300 mt-1">Priorité aux défis votés par l'autre puis aléatoire • Si 0 = secret !</p>
           </div>
           <span id="kinkyMatchesCountBadge" class="bg-rose-500 text-white text-xs font-extrabold px-2.5 py-1 rounded-full shadow">0 ⛓️</span>
         </div>
 
-        <div class="bg-white/10 border border-rose-400/30 rounded-2xl p-4 text-center space-y-2 min-h-[145px] flex flex-col justify-between">
+        <div class="bg-white/10 border border-rose-400/30 rounded-2xl p-4 text-center space-y-2 min-h-[155px] flex flex-col justify-between">
           <div class="flex items-center justify-between text-[10px] font-extrabold">
             <span id="kinkyCatBadge" class="bg-rose-500/30 border border-rose-400/40 text-rose-200 px-2.5 py-0.5 rounded-full uppercase"></span>
             <div class="flex items-center gap-1.5">
@@ -491,6 +518,7 @@
               <span id="kinkyIntensityBadge" class="bg-amber-500/20 border border-amber-400/40 text-amber-300 px-2 py-0.5 rounded-full"></span>
             </div>
           </div>
+          <span id="kinkyPartnerPendingBadge" class="hidden mx-auto bg-amber-400/20 border border-amber-300/50 text-amber-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full animate-pulse">👀 Ton amour a déjà voté sur ce défi !</span>
           <p id="kinkyCardText" class="text-xs sm:text-sm font-extrabold text-white leading-relaxed my-auto py-1"></p>
           <p id="kinkyMyVoteBadge" class="text-[10px] font-bold text-amber-300"></p>
         </div>
@@ -503,9 +531,9 @@
         </div>
 
         <div class="flex items-center justify-between text-[11px] pt-1">
-          <button onclick="prevKinkyCard()" class="text-rose-300 font-bold">‹ Défi préc.</button>
+          <button onclick="prevKinkyCard()" class="text-rose-300 font-bold">‹ Préc.</button>
           <span id="kinkyProgressText" class="text-slate-300 font-extrabold">1 / 50</span>
-          <button onclick="nextKinkyCard()" class="text-rose-300 font-bold">Défi suiv. ›</button>
+          <button onclick="nextKinkyCard()" class="text-rose-300 font-bold">🔀 Aléatoire suiv. ›</button>
         </div>
 
         <div class="pt-2 border-t border-white/10 space-y-2">
@@ -515,16 +543,16 @@
       </div>
     </section>
 
-    <!-- ONGLET 4 : 🎲 JEUX (QUI DE NOUS DEUX + ACTION OU VÉRITÉ + QUIZ 100 Q) -->
+    <!-- ONGLET 4 : 🎲 JEUX (QUI DE NOUS DEUX + ACTION OU VÉRITÉ + QUIZ 100 Q EN ALÉATOIRE) -->
     <section id="tab-jeux" class="hidden space-y-4">
-      <!-- 1. JEU « QUI DE NOUS DEUX ? » (50 QUESTIONS) -->
+      <!-- 1. JEU « QUI DE NOUS DEUX ? » (50 QUESTIONS ALÉATOIRES) -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <div>
             <span class="bg-amber-100 text-amber-900 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">👫 QUI DE NOUS DEUX ? (<span id="whoProgressBadge">1/50</span>)</span>
             <p class="text-[10px] text-slate-400 mt-1">Votez chacun : si vous êtes d'accord = +20 🪙 chacun !</p>
           </div>
-          <button onclick="nextWhoQuestion()" class="text-xs font-bold text-pink-600">Suivante ›</button>
+          <button onclick="nextWhoQuestion()" class="text-xs font-bold text-pink-600">🔀 Question aléatoire ›</button>
         </div>
         <div class="bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 border border-pink-200 rounded-2xl p-3.5 text-center space-y-1.5">
           <p id="whoCategoryBadge" class="text-[10px] font-extrabold uppercase text-purple-700"></p>
@@ -537,7 +565,7 @@
         <div id="whoStatusBox" class="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs font-bold text-center text-slate-700"></div>
       </div>
 
-      <!-- 2. ACTION OU VÉRITÉ (60 CARTES) -->
+      <!-- 2. ACTION OU VÉRITÉ (60 CARTES ALÉATOIRES SANS DOUBLON IMMÉDIAT) -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <span class="bg-rose-100 text-rose-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">🎲 ACTION OU VÉRITÉ (60 CARTES)</span>
@@ -559,11 +587,11 @@
         <button id="btnCompleteTod" onclick="completeTruthOrDareTurn()" class="w-full text-xs font-extrabold py-2.5 rounded-2xl border transition"></button>
       </div>
 
-      <!-- 3. QUIZ 100 QUESTIONS -->
+      <!-- 3. QUIZ 100 QUESTIONS (TIRAGE ALÉATOIRE) -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <span class="bg-purple-100 text-purple-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">🎯 QUIZ 100 QUESTIONS (<span id="quizNumberBadge">1/100</span>)</span>
-          <button id="btnNextQuiz" onclick="nextQuizQuestion()" class="text-xs font-bold text-pink-600">🔀 Passer / Suivante</button>
+          <button id="btnNextQuiz" onclick="nextQuizQuestion()" class="text-xs font-bold text-pink-600">🔀 Question aléatoire</button>
         </div>
         <div class="flex items-center justify-between bg-slate-50 border border-slate-200/80 rounded-2xl px-3 py-2 text-[11px] font-extrabold">
           <span id="quizRolePill" class="text-purple-900"></span>
@@ -576,9 +604,8 @@
       </div>
     </section>
 
-    <!-- NOUVEL ONGLET 5 : 🛍️ BOUTIQUE (BOUTIQUE SECRÈTE EN PIÈCES + CARNET DE BONS D'AMOUR) -->
+    <!-- ONGLET 5 : 🛍️ BOUTIQUE (BOUTIQUE SECRÈTE EN PIÈCES + CARNET DE BONS D'AMOUR) -->
     <section id="tab-boutique" class="hidden space-y-4">
-      <!-- 1. LA BOUTIQUE SECRÈTE EN PIÈCES 🪙 -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div class="flex items-center justify-between">
           <div>
@@ -594,7 +621,6 @@
         </div>
       </div>
 
-      <!-- 2. CARNET DE « BONS D'AMOUR » -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-pink-100/80 space-y-3">
         <div>
           <h3 class="font-extrabold text-sm">🎟️ Carnet de « Bons d'Amour »</h3>
@@ -726,15 +752,16 @@
       sexyLydieUrl: localStorage.getItem('love8_cached_sxy_l_url') || ''
     };
 
+    // Catalogue des 8 Vibrations avec nom court affiché sous l'icône
     const vibCatalog = [
-      ['env', 'Tu me manques ! 💌', '💌', [140,60,280], 'env', 'vib-btn-env'],
-      ['peach', 'Envie de toi 🍑', '🍑', [200,70,220,70,320], 'peach', 'vib-btn-peach'],
-      ['cuc', 'Pensée coquine 🥒', '🥒', [260,60,260,60,400], 'cuc', 'vib-btn-cuc'],
-      ['chili', 'Caliente ! 🌶️', '🌶️', [100,40,100,40,100,40,380], 'chili', 'vib-btn-chili'],
-      ['straw', 'Gourmandise à deux 🍓', '🍓', [120,60,120,60,240], 'straw', 'vib-btn-straw'],
-      ['devil', 'Prépare-toi ce soir 😈', '😈', [300,80,150,80,450], 'devil', 'vib-btn-devil'],
-      ['lips', 'Pluie de baisers 💋', '💋', [100,50,180,50,260], 'kiss', 'vib-btn-lips'],
-      ['rose', 'Mon amour pour toujours 🌹', '🌹', [180,90,350], 'rose', 'vib-btn-rose']
+      ['env', 'Tu me manques ! 💌', '💌', [140,60,280], 'env', 'vib-btn-env', 'Manque'],
+      ['peach', 'Envie de toi 🍑', '🍑', [200,70,220,70,320], 'peach', 'vib-btn-peach', 'Envie'],
+      ['cuc', 'Pensée coquine 🥒', '🥒', [260,60,260,60,400], 'cuc', 'vib-btn-cuc', 'Coquin'],
+      ['chili', 'Caliente ! 🌶️', '🌶️', [100,40,100,40,100,40,380], 'chili', 'vib-btn-chili', 'Caliente'],
+      ['straw', 'Gourmandise à deux 🍓', '🍓', [120,60,120,60,240], 'straw', 'vib-btn-straw', 'Gourmand'],
+      ['devil', 'Prépare-toi ce soir 😈', '😈', [300,80,150,80,450], 'devil', 'vib-btn-devil', 'Ce soir'],
+      ['lips', 'Pluie de baisers 💋', '💋', [100,50,180,50,260], 'kiss', 'vib-btn-lips', 'Bisous'],
+      ['rose', 'Mon amour pour toujours 🌹', '🌹', [180,90,350], 'rose', 'vib-btn-rose', 'Je t\'aime']
     ];
 
     const moodPresets = [
@@ -745,6 +772,13 @@
     const locationPresets = ['🏠 À la maison','💼 Au travail','🏋️‍♂️ Au sport','🚗 En voiture / Route','🛒 En courses','💍 Chez Maison Bella','🍻 En sortie / Amis','🛏️ Au lit sous la couette'];
 
     const libidoTagsCatalog = ['🚿 Sous la douche','🕯️ Lent & Sensuel','⚡ Quickie sauvage','👑 Prends le contrôle','⛓️ Soumis(e) ce soir','👄 Plaisir oral','💆‍♂️ Commencer par un massage','🍑 Sex anal','✋ Fais-moi MAL'];
+
+    // Configuration Anti-Spam de Douglasse
+    const catActionConfig = {
+      nourrir:  { maxPerDay: 4, cooldownMs: 2 * 3600 * 1000, label: 'Nourrir' },
+      caresser: { maxPerDay: 6, cooldownMs: 30 * 60 * 1000,  label: 'Câliner' },
+      jouer:    { maxPerDay: 5, cooldownMs: 1 * 3600 * 1000, label: 'Jouer' }
+    };
 
     const remoteControlCatalog = {
       tendre: [
@@ -1102,6 +1136,11 @@
 
     function getTodayDateStr() { return new Date().toISOString().slice(0, 10); }
     function getYesterdayDateStr() { return new Date(Date.now() - 86400000).toISOString().slice(0, 10); }
+    // Journée logique qui bascule à 05h00 du matin (pour remettre la jauge libido à 10% à 05h00)
+    function getLibido5amDayStr() {
+      const shifted = new Date(Date.now() - 5 * 3600000);
+      return `${shifted.getFullYear()}-${String(shifted.getMonth()+1).padStart(2,'0')}-${String(shifted.getDate()).padStart(2,'0')}`;
+    }
 
     let state = JSON.parse(localStorage.getItem('love8_state')) || {};
 
@@ -1119,24 +1158,26 @@
 
     function sanitizeStateStructure() {
       const baseCoins = typeof state.coins === 'number' ? state.coins : 180;
+      const day5am = getLibido5amDayStr();
+      const today = getTodayDateStr();
       if (typeof state.pingsToday !== 'number') state.pingsToday = 41;
       if (!state.vibCounts) state.vibCounts = { env:12, peach:9, cuc:8, chili:12, straw:4, devil:6, lips:10, rose:7 };
       if (!state.lastEvent) state.lastEvent = { id:0, sender:'Jordan', type:'vibration', title:'', message:'', emoji:'❤️', sound:'love', pattern:[150,80,250] };
-      if (!state.jordan) state.jordan = { mood:'😍', text:'Pense à toi ❤️', location:'🏠 À la maison', avatarId:0, coins:baseCoins, libido:50, libidoTag:'', libidoDate:getTodayDateStr() };
-      if (!state.lydie) state.lydie = { mood:'😍', text:'Hâte de te voir 💕', location:'🏠 À la maison', avatarId:0, coins:baseCoins, libido:50, libidoTag:'', libidoDate:getTodayDateStr() };
+      if (!state.jordan) state.jordan = { mood:'😍', text:'Pense à toi ❤️', location:'🏠 À la maison', avatarId:0, coins:baseCoins, libido:10, libidoTag:'', libidoDate:day5am };
+      if (!state.lydie) state.lydie = { mood:'😍', text:'Hâte de te voir 💕', location:'🏠 À la maison', avatarId:0, coins:baseCoins, libido:10, libidoTag:'', libidoDate:day5am };
       state.jordan.coins = Math.max(0, typeof state.jordan.coins === 'number' ? state.jordan.coins : baseCoins);
       state.lydie.coins = Math.max(0, typeof state.lydie.coins === 'number' ? state.lydie.coins : baseCoins);
       if (!state.jordan.location) state.jordan.location = '🏠 À la maison';
       if (!state.lydie.location) state.lydie.location = '🏠 À la maison';
 
-      const today = getTodayDateStr();
+      // Reset automatique du Thermomètre d'Envie à 10% chaque matin à 05h00
       ['jordan','lydie'].forEach(k => {
-        if (typeof state[k].libido !== 'number') state[k].libido = 50;
+        if (typeof state[k].libido !== 'number') state[k].libido = 10;
         if (typeof state[k].libidoTag !== 'string') state[k].libidoTag = '';
-        if (state[k].libidoDate !== today) {
-          state[k].libido = 50;
+        if (state[k].libidoDate !== day5am) {
+          state[k].libido = 10;
           state[k].libidoTag = '';
-          state[k].libidoDate = today;
+          state[k].libidoDate = day5am;
         }
       });
       if (!state.libidoAlert) state.libidoAlert = { lastTriggeredDate:'', bonusChallenge:'' };
@@ -1153,17 +1194,29 @@
       if (!state.remoteHistory) state.remoteHistory = [];
 
       if (!state.purchasedRewards) state.purchasedRewards = [];
-      if (!state.whoOfUs) state.whoOfUs = { qIndex:0, votes:{ Jordan:'', Lydie:'' }, rewardedIdx:-1, statusText:'Votez chacun de votre côté pour découvrir si vous êtes d\'accord !' };
+      if (!state.whoOfUs) state.whoOfUs = { qIndex:Math.floor(Math.random()*whoOfUsQuestions.length), votes:{ Jordan:'', Lydie:'' }, rewardedIdx:-1, statusText:'Votez chacun de votre côté pour découvrir si vous êtes d\'accord !' };
       if (!state.whoOfUs.votes) state.whoOfUs.votes = { Jordan:'', Lydie:'' };
 
-      if (!state.cat) state.cat = { level:4, xp:40, hunger:100, love:100, energy:100, equippedSlots:{}, ownedAcc:[], journal:[] };
+      if (!state.cat) state.cat = { level:4, xp:40, hunger:85, love:90, energy:90, equippedSlots:{}, ownedAcc:[], journal:[] };
       if (!state.cat.ownedAcc) state.cat.ownedAcc = [];
       if (!state.cat.equippedSlots) state.cat.equippedSlots = { hat:'', eyes:'', neck:'', aura:'' };
       if (!state.cat.journal) state.cat.journal = [];
+      // Structure Anti-Spam & Cooldowns Douglasse remise à zéro chaque jour
+      if (!state.cat.limits || state.cat.limits.date !== today) {
+        state.cat.limits = {
+          date: today,
+          Jordan: { nourrirCount:0, nourrirNext:0, caresserCount:0, caresserNext:0, jouerCount:0, jouerNext:0 },
+          Lydie:  { nourrirCount:0, nourrirNext:0, caresserCount:0, caresserNext:0, jouerCount:0, jouerNext:0 },
+          sharedBonusClaimed: false
+        };
+      }
+      if (!state.cat.limits.Jordan) state.cat.limits.Jordan = { nourrirCount:0, nourrirNext:0, caresserCount:0, caresserNext:0, jouerCount:0, jouerNext:0 };
+      if (!state.cat.limits.Lydie) state.cat.limits.Lydie = { nourrirCount:0, nourrirNext:0, caresserCount:0, caresserNext:0, jouerCount:0, jouerNext:0 };
+
       if (!state.coupons) state.coupons = [];
       if (!state.truthOrDare) state.truthOrDare = { level:'doux', turn:'Jordan', cardDrawn:false, lastType:'Vérité', cardText:'Choisis un niveau et tire une carte !' };
       if (typeof state.truthOrDare.cardDrawn !== 'boolean') state.truthOrDare.cardDrawn = false;
-      if (!state.quiz) state.quiz = { qIndex:0, targetUser:'Jordan', secretChoice:null, scores:{Jordan:0,Lydie:0}, statusText:'Choisis ta réponse secrète !', updatedAt:0 };
+      if (!state.quiz) state.quiz = { qIndex:Math.floor(Math.random()*coupleQuizPool.length), targetUser:'Jordan', secretChoice:null, scores:{Jordan:0,Lydie:0}, statusText:'Choisis ta réponse secrète !', updatedAt:0 };
       if (!state.quiz.scores) state.quiz.scores = { Jordan:0, Lydie:0 };
       if (!state.sexyChallenge) state.sexyChallenge = {
         jordanToLydie: { date:'', photoId:0, time:'', rated:false, tier:0, coinsAwarded:0, streak:0, lastSentDate:'' },
@@ -1175,10 +1228,12 @@
 // === FIN DE LA PARTIE 1 — COLLE LA PARTIE 2 JUSTE EN DESSOUS ===
 // === DÉBUT DE LA PARTIE 2 ===
     function initStaticDom() {
-      document.getElementById('vibButtonsGrid').innerHTML = vibCatalog.map(([k, lbl, em, pat, snd, cls]) => `
-        <button onclick='sendSpecialVibration("${k}","${lbl}","${em}",${JSON.stringify(pat)},"${snd}")' class="${cls} aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative">
-          <span class="text-3xl">${em}</span>
-          <span id="badgeVib_${k}" class="absolute bottom-1 right-1.5 bg-black/30 text-[10px] font-extrabold px-1.5 rounded-full">0</span>
+      // Boutons de vibrations avec nom court affiché sous l'emoji
+      document.getElementById('vibButtonsGrid').innerHTML = vibCatalog.map(([k, lbl, em, pat, snd, cls, shortName]) => `
+        <button onclick='sendSpecialVibration("${k}","${lbl.replace(/'/g,"\\'")}","${em}",${JSON.stringify(pat)},"${snd}")' class="${cls} aspect-square rounded-2xl flex flex-col items-center justify-center text-white active:scale-90 transition relative p-1">
+          <span class="text-2xl leading-none">${em}</span>
+          <span class="text-[9px] font-extrabold tracking-tight mt-1 leading-none">${shortName}</span>
+          <span id="badgeVib_${k}" class="absolute top-1 right-1 bg-black/35 text-[9px] font-extrabold px-1.5 rounded-full">0</span>
         </button>`).join('');
 
       const sexyTiers = [[1,20,'Mignon 😊','bg-white/10'],[2,40,'Charmeur 😘','bg-white/10'],[3,70,'Canon & Sexy 🔥','bg-white/10'],[4,110,'Torride 🥵','bg-rose-600/40'],[5,160,'Chef-d\'œuvre 😈🍓','gradient-card']];
@@ -1207,14 +1262,20 @@
 
     function checkUserFirstLaunch() {
       if (!currentUser) document.getElementById('userSelectionModal').classList.remove('hidden');
-      else { if (window.AndroidNative?.setUser) window.AndroidNative.setUser(currentUser); renderAll(); }
+      else {
+        if (window.AndroidNative?.setUser) window.AndroidNative.setUser(currentUser);
+        pickSmartInitialCards();
+        renderAll();
+      }
     }
 
     function selectUserAndLock(user) {
       currentUser = user; localStorage.setItem('love8_user', user);
       if (window.AndroidNative?.setUser) window.AndroidNative.setUser(user);
       document.getElementById('userSelectionModal').classList.add('hidden');
-      registerFcmTokenToCloud(); renderAll();
+      registerFcmTokenToCloud();
+      pickSmartInitialCards();
+      renderAll();
       triggerBanner('BIENVENUE ❤️', `Connecté en tant que ${user}`, user === 'Jordan' ? '👦🏻' : '👩🏻');
     }
 
@@ -1225,6 +1286,7 @@
       }
     }
 
+    // ==================== STATUTS & BOUTON RECHARGER L'INTERFACE ====================
     function openServiceStatusModal() { document.getElementById('serviceStatusModal').classList.remove('hidden'); refreshServicesDiagnostics(); }
     function closeServiceStatusModal() { document.getElementById('serviceStatusModal').classList.add('hidden'); }
 
@@ -1261,11 +1323,13 @@
       triggerBanner('🔄 SYNCHRONISATION TERMINÉE', 'Quotas et données mis à jour !', '📡');
     }
 
-    function downloadLatestApk() {
-      const apkUrl = "https://github.com/LeeLooVF/Love8-apps/releases/download/latest/Love8.apk?t=" + Date.now();
-      triggerBanner("MISE À JOUR APK", "Téléchargement lancé !", "🔄");
-      if (window.AndroidNative?.downloadApkUpdate) window.AndroidNative.downloadApkUpdate(apkUrl);
-      else window.location.href = apkUrl;
+    function reloadAppInterface() {
+      triggerDeviceVibration([60, 40, 90]);
+      triggerBanner('🔄 RECHARGEMENT...', 'Mise à jour de l\'interface Love8 en cours !', '✨');
+      setTimeout(() => {
+        const baseUrl = window.location.origin + window.location.pathname;
+        window.location.replace(baseUrl + '?v=' + Date.now());
+      }, 250);
     }
 
     let audioCtx = null;
@@ -1531,7 +1595,7 @@
       } catch (e) {}
     }
 
-    // ==================== 📳 TÉLÉCOMMANDE DE COUPLE (AVEC DÉCOMPTE VOCAL & VIBRATION TOUTES LES 5 SECONDES) ====================
+    // ==================== 📳 TÉLÉCOMMANDE DE COUPLE ====================
     function setRemoteCategory(cat) {
       activeRemoteCategory = cat;
       playLoveSound(cat === 'hard' ? 'devil' : (cat === 'chaud' ? 'fire' : 'rose'));
@@ -1556,17 +1620,10 @@
       lastAnnouncedStepKey = '';
 
       state.remoteOrder = {
-        id: orderId,
-        active: true,
-        sender,
-        target,
-        emoji: item.emoji,
-        label: item.label,
-        desc: item.desc,
-        duration: item.duration,
-        expiresAt: orderId + (item.duration * 1000),
-        bonus: item.bonus,
-        penalty: 150
+        id: orderId, active: true, sender, target,
+        emoji: item.emoji, label: item.label, desc: item.desc,
+        duration: item.duration, expiresAt: orderId + (item.duration * 1000),
+        bonus: item.bonus, penalty: 150
       };
 
       const eventId = orderId + 1;
@@ -1574,15 +1631,10 @@
       localStorage.setItem('love8_last_event', String(eventId));
       const alarmPattern = [300, 80, 300, 80, 550];
       state.lastEvent = {
-        id: eventId,
-        sender,
-        type: 'vibration',
+        id: eventId, sender, type: 'vibration',
         title: `📳 ${item.emoji} ORDRE DE ${sender.toUpperCase()} (${item.duration}s) !`,
         message: `${item.label} : ${item.desc} (✅ +${item.bonus} 🪙 / ❌ Refus -150 🪙)`,
-        emoji: item.emoji,
-        sound: 'devil',
-        pattern: alarmPattern,
-        ack: 0
+        emoji: item.emoji, sound: 'devil', pattern: alarmPattern, ack: 0
       };
 
       playLoveSound('devil');
@@ -1618,14 +1670,8 @@
       addCoinsToUser(target, delta);
 
       state.remoteHistory.unshift({
-        id: ord.id,
-        sender: ord.sender,
-        target: ord.target,
-        emoji: ord.emoji,
-        label: ord.label,
-        accomplished,
-        delta,
-        time: nowTime
+        id: ord.id, sender: ord.sender, target: ord.target,
+        emoji: ord.emoji, label: ord.label, accomplished, delta, time: nowTime
       });
       state.remoteHistory = state.remoteHistory.slice(0, 15);
       state.remoteOrder.active = false;
@@ -1717,9 +1763,9 @@
     }
     setInterval(updateRemoteTimerDisplay, 250);
 
-    // ==================== 🌡️ THERMOMÈTRE D'ENVIE (AVEC NOTIFICATION PUSH À CHAQUE CHANGEMENT) ====================
+    // ==================== 🌡️ THERMOMÈTRE D'ENVIE (RESET 10% À 05H00 + TAG PERSO + NOTIF PUSH) ====================
     function getLibidoTierDetails(val) {
-      const v = Number(val || 0);
+      const v = Number(val ?? 10);
       if (v <= 15) return { emoji:'😴', badge:`${v}% • 😴 K.O. / Besoin de dodo`, sub:'« Ce soir je récupère dans tes bras »', cls:'bg-indigo-950 text-indigo-200 border border-indigo-700', bar:'bg-indigo-600' };
       if (v <= 35) return { emoji:'🤗', badge:`${v}% • 🤗 Mode Câlins & Tendresse`, sub:'« Envie de papouilles, bisous doux et film »', cls:'bg-pink-200 text-pink-950', bar:'bg-pink-400' };
       if (v <= 55) return { emoji:'😘', badge:`${v}% • 😘 Chaud(e) si tu me chauffes`, sub:'« Laisse-moi me faire désirer un peu... »', cls:'bg-purple-600 text-white', bar:'bg-purple-500' };
@@ -1736,37 +1782,45 @@
       document.getElementById('myLibidoSubtext').innerText = info.sub;
     }
 
-    // Enregistrement + Notification Push à chaque changement du curseur Thermomètre d'Envie
     function commitMyLibidoSlider(val) {
       const k = (currentUser || 'Jordan').toLowerCase();
-      const numVal = Number(val);
-      state[k].libido = numVal;
-      state[k].libidoDate = getTodayDateStr();
+      state[k].libido = Number(val);
+      state[k].libidoDate = getLibido5amDayStr();
       notifyPartnerLibidoChange(false);
       saveState();
     }
 
-    // Changement de Tag d'envie + Notification Push au partenaire
     function toggleMyLibidoTag(tagStr) {
       const k = (currentUser || 'Jordan').toLowerCase();
       state[k].libidoTag = state[k].libidoTag === tagStr ? '' : tagStr;
-      state[k].libidoDate = getTodayDateStr();
+      state[k].libidoDate = getLibido5amDayStr();
+      notifyPartnerLibidoChange(true);
+      saveState();
+    }
+
+    function setCustomLibidoTag() {
+      const inp = document.getElementById('customLibidoTagInput');
+      const txt = inp ? inp.value.trim() : '';
+      if (!txt) return;
+      const k = (currentUser || 'Jordan').toLowerCase();
+      state[k].libidoTag = `✨ ${txt}`;
+      state[k].libidoDate = getLibido5amDayStr();
+      inp.value = '';
       notifyPartnerLibidoChange(true);
       saveState();
     }
 
     function notifyPartnerLibidoChange(isTagChange = false) {
-      const today = getTodayDateStr();
-      const jLib = Number(state.jordan?.libido || 0);
-      const lLib = Number(state.lydie?.libido || 0);
+      const day5am = getLibido5amDayStr();
+      const jLib = Number(state.jordan?.libido ?? 10);
+      const lLib = Number(state.lydie?.libido ?? 10);
       const k = (currentUser || 'Jordan').toLowerCase();
-      const myVal = Number(state[k]?.libido ?? 50);
+      const myVal = Number(state[k]?.libido ?? 10);
       const myTag = state[k]?.libidoTag || '';
       const tierInfo = getLibidoTierDetails(myVal);
 
-      // Si les deux sont >= 80%, déclenche l'Alerte Rouge Torride
       if (jLib >= 80 && lLib >= 80) {
-        const alreadyRewardedToday = state.libidoAlert?.lastTriggeredDate === today;
+        const alreadyRewardedToday = state.libidoAlert?.lastTriggeredDate === day5am;
         if (!alreadyRewardedToday) {
           addCoinsToUser('Jordan', 30);
           addCoinsToUser('Lydie', 30);
@@ -1783,7 +1837,7 @@
             const calPool = truthOrDareDeck.caliente.Action;
             bonusText = `Gage Torride de la Soirée : ${calPool[Math.floor(Math.random() * calPool.length)]}`;
           }
-          state.libidoAlert = { lastTriggeredDate:today, bonusChallenge:bonusText };
+          state.libidoAlert = { lastTriggeredDate:day5am, bonusChallenge:bonusText };
         }
         const eventId = Date.now(); lastEventId = eventId; localStorage.setItem('love8_last_event', String(eventId));
         const heartBeatPattern = [180,70,180,220,220,70,220,200,300,60,450];
@@ -1797,7 +1851,6 @@
         return;
       }
 
-      // Sinon : envoie une notification Push + vibration en direct à chaque modification du Thermomètre ou Tag
       const eventId = Date.now();
       lastEventId = eventId;
       localStorage.setItem('love8_last_event', String(eventId));
@@ -1806,21 +1859,75 @@
       const pat = myVal >= 80 ? [220, 70, 320] : [140, 60, 200];
 
       state.lastEvent = {
-        id: eventId,
-        sender: currentUser,
-        type: 'vibration',
+        id: eventId, sender: currentUser, type: 'vibration',
         title: `🌡️ ${tierInfo.emoji} THERMOMÈTRE DE ${currentUser.toUpperCase()} : ${myVal}%`,
         message: isTagChange && myTag
-          ? `${currentUser} a activé le tag « ${myTag} » (Jauge à ${myVal}%) !`
+          ? `${currentUser} a affiché son envie : « ${myTag} » (Jauge à ${myVal}%) !`
           : `${currentUser} a réglé son Thermomètre d'Envie sur ${tierInfo.badge}${tagSuffix} !`,
-        emoji: tierInfo.emoji,
-        sound: snd,
-        pattern: pat,
-        ack: 0
+        emoji: tierInfo.emoji, sound: snd, pattern: pat, ack: 0
       };
       playLoveSound(snd);
       triggerDeviceVibration([100, 50, 140]);
       triggerBanner(`🌡️ THERMOMÈTRE ENVOYÉ (${myVal}%)`, `${ currentUser === 'Jordan' ? 'Lydie' : 'Jordan' } a reçu une notification !`, tierInfo.emoji);
+    }
+
+    // ==================== 🔀 TIRAGE INTELLIGENT : PRIORITÉ AUX CARTES VOTÉES PAR L'AUTRE PUIS ALÉATOIRE ====================
+    function pickNextSmartFantasyIndex(excludeIdx = -1) {
+      const me = currentUser || 'Jordan';
+      const partner = me === 'Jordan' ? 'Lydie' : 'Jordan';
+      const myVotes = state.fantasyVotes?.[me] || {};
+      const partnerVotes = state.fantasyVotes?.[partner] || {};
+
+      // Priorité 1 : Cartes où le partenaire a déjà voté mais PAS moi
+      const partnerAnsweredFirst = [];
+      // Priorité 2 : Cartes où personne n'a encore voté (pour moi)
+      const unansweredByMe = [];
+      // Priorité 3 : Toutes les autres cartes
+      const allOthers = [];
+
+      fantasyDeck.forEach((c, idx) => {
+        if (idx === excludeIdx && fantasyDeck.length > 1) return;
+        const iVoted = myVotes[c.id] !== undefined;
+        const pVoted = partnerVotes[c.id] !== undefined;
+        if (!iVoted && pVoted) partnerAnsweredFirst.push(idx);
+        else if (!iVoted) unansweredByMe.push(idx);
+        else allOthers.push(idx);
+      });
+
+      if (partnerAnsweredFirst.length > 0) return partnerAnsweredFirst[Math.floor(Math.random() * partnerAnsweredFirst.length)];
+      if (unansweredByMe.length > 0) return unansweredByMe[Math.floor(Math.random() * unansweredByMe.length)];
+      if (allOthers.length > 0) return allOthers[Math.floor(Math.random() * allOthers.length)];
+      return 0;
+    }
+
+    function pickNextSmartKinkyIndex(excludeIdx = -1) {
+      const me = currentUser || 'Jordan';
+      const partner = me === 'Jordan' ? 'Lydie' : 'Jordan';
+      const myVotes = state.kinkyVotes?.[me] || {};
+      const partnerVotes = state.kinkyVotes?.[partner] || {};
+
+      const partnerAnsweredFirst = [];
+      const unansweredByMe = [];
+      const allOthers = [];
+
+      kinkyQuestions.forEach((q, idx) => {
+        if (idx === excludeIdx && kinkyQuestions.length > 1) return;
+        const iVoted = myVotes[q.id] !== undefined;
+        const pVoted = partnerVotes[q.id] !== undefined;
+        if (!iVoted && pVoted) partnerAnsweredFirst.push(idx);
+        else if (!iVoted) unansweredByMe.push(idx);
+        else allOthers.push(idx);
+      });
+
+      if (partnerAnsweredFirst.length > 0) return partnerAnsweredFirst[Math.floor(Math.random() * partnerAnsweredFirst.length)];
+      if (unansweredByMe.length > 0) return unansweredByMe[Math.floor(Math.random() * unansweredByMe.length)];
+      if (allOthers.length > 0) return allOthers[Math.floor(Math.random() * allOthers.length)];
+      return 0;
+    }
+
+    function pickSmartInitialCards() {
+      currentFantasyIdx = pickNextSmartFantasyIndex(-1);
+      currentKinkyIdx = pickNextSmartKinkyIndex(-1);
     }
 
     // ==================== 1. TINDER FANTASMES ====================
@@ -1856,12 +1963,12 @@
         triggerDeviceVibration([60]);
       }
 
-      if (currentFantasyIdx < fantasyDeck.length - 1) currentFantasyIdx++;
+      currentFantasyIdx = pickNextSmartFantasyIndex(currentFantasyIdx);
       saveState();
     }
 
     function prevFantasyCard() { currentFantasyIdx = (currentFantasyIdx - 1 + fantasyDeck.length) % fantasyDeck.length; renderAll(); }
-    function nextFantasyCard() { currentFantasyIdx = (currentFantasyIdx + 1) % fantasyDeck.length; renderAll(); }
+    function nextFantasyCard() { currentFantasyIdx = pickNextSmartFantasyIndex(currentFantasyIdx); renderAll(); }
 
     // ==================== 1-BIS. KINKY & EXTRÊME ====================
     function isKinkyQuestionMatched(qId) {
@@ -1896,12 +2003,12 @@
         triggerDeviceVibration([70]);
       }
 
-      if (currentKinkyIdx < kinkyQuestions.length - 1) currentKinkyIdx++;
+      currentKinkyIdx = pickNextSmartKinkyIndex(currentKinkyIdx);
       saveState();
     }
 
     function prevKinkyCard() { currentKinkyIdx = (currentKinkyIdx - 1 + kinkyQuestions.length) % kinkyQuestions.length; renderAll(); }
-    function nextKinkyCard() { currentKinkyIdx = (currentKinkyIdx + 1) % kinkyQuestions.length; renderAll(); }
+    function nextKinkyCard() { currentKinkyIdx = pickNextSmartKinkyIndex(currentKinkyIdx); renderAll(); }
 
     // ==================== 2. LA BOUTIQUE SECRÈTE EN PIÈCES ====================
     function buySecretShopReward(itemId) {
@@ -1942,7 +2049,14 @@
       saveState();
     }
 
-    // ==================== 4. JEU « QUI DE NOUS DEUX ? » ====================
+    // ==================== 4. JEU « QUI DE NOUS DEUX ? » (TIRAGE ALÉATOIRE) ====================
+    function pickRandomIndex(maxLen, currentIdx) {
+      if (maxLen <= 1) return 0;
+      let next = Math.floor(Math.random() * maxLen);
+      if (next === currentIdx) next = (next + 1 + Math.floor(Math.random() * (maxLen - 1))) % maxLen;
+      return next;
+    }
+
     function voteWhoOfUs(chosenPerson) {
       const u = currentUser || 'Jordan';
       const qIdx = (state.whoOfUs.qIndex || 0) % whoOfUsQuestions.length;
@@ -1972,7 +2086,7 @@
     }
 
     function nextWhoQuestion() {
-      state.whoOfUs.qIndex = ((state.whoOfUs.qIndex || 0) + 1) % whoOfUsQuestions.length;
+      state.whoOfUs.qIndex = pickRandomIndex(whoOfUsQuestions.length, state.whoOfUs.qIndex || 0);
       state.whoOfUs.votes = { Jordan:'', Lydie:'' };
       state.whoOfUs.rewardedIdx = -1;
       state.whoOfUs.statusText = 'Votez chacun de votre côté pour découvrir si vous êtes d\'accord !';
@@ -2085,7 +2199,7 @@
       }
     }
 
-    function switchUser(u) { currentUser = u; localStorage.setItem('love8_user', u); if (window.AndroidNative?.setUser) window.AndroidNative.setUser(u); registerFcmTokenToCloud(); renderAll(); }
+    function switchUser(u) { currentUser = u; localStorage.setItem('love8_user', u); if (window.AndroidNative?.setUser) window.AndroidNative.setUser(u); registerFcmTokenToCloud(); pickSmartInitialCards(); renderAll(); }
     function showTab(tab) {
       activeTab = tab;
       ['nous','douglasse','hot','jeux','boutique','telecommande','souvenirs'].forEach(t => {
@@ -2095,7 +2209,9 @@
         if (nav) nav.classList.toggle('text-pink-600', t === tab);
       });
       if (tab === 'nous') loadCloudArchives();
+      if (tab === 'hot') pickSmartInitialCards();
       if (['hot','jeux','boutique','telecommande'].includes(tab)) pollCloudState(true);
+      renderAll();
     }
 
     function spawnParticles(emoji, pattern = [150,70,250], maxDurationMs = 2600) {
@@ -2121,19 +2237,161 @@
     }
     function hideBanner() { document.getElementById('liveBanner').classList.add('hidden'); }
 
+    // ==================== 🐱 DOUGLASSE : PLAN ANTI-SPAM, COOLDOWNS, SATIÉTÉ & GARDE PARTAGÉE ====================
+    function formatRemainingCooldown(ms) {
+      const totalSec = Math.max(0, Math.ceil(ms / 1000));
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      if (h > 0) return `${h}h${String(m).padStart(2,'0')}m`;
+      if (m > 0) return `${m}m${String(s).padStart(2,'0')}s`;
+      return `${s}s`;
+    }
+
+    // Clic sur la photo de Douglasse : tente Câliner si dispo, sinon Mode Ronron Gratuit (zéro écriture KV)
+    function petCatPhoto() {
+      const u = currentUser || 'Jordan';
+      const uLim = state.cat.limits?.[u] || { caresserCount:0, caresserNext:0 };
+      const now = Date.now();
+      if (uLim.caresserCount < catActionConfig.caresser.maxPerDay && now >= (uLim.caresserNext || 0)) {
+        interactCat('caresser');
+      } else {
+        const box = document.getElementById('catVisualContainer');
+        box.classList.add('cat-excited');
+        setTimeout(() => box.classList.remove('cat-excited'), 900);
+        playLoveSound('purr');
+        triggerDeviceVibration([60, 50, 90]);
+        document.getElementById('catSpeechBubble').innerText = '« Rrrrr... Câlin gratuit en mode Ronron 💕 (en recharge) »';
+      }
+    }
+
     function interactCat(action) {
-      const now = new Date().toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+      sanitizeStateStructure();
+      const u = currentUser || 'Jordan';
+      const cfg = catActionConfig[action];
+      if (!cfg) return;
+      const uLim = state.cat.limits[u];
+      const nowMs = Date.now();
+
+      // 1. Vérification Satiété (Faim >= 95%) et Fatigue (Énergie < 20%)
+      if (action === 'nourrir' && state.cat.hunger >= 95) {
+        document.getElementById('catSpeechBubble').innerText = '« Miaou ! J\'ai le ventre tout rond, je ne peux plus rien avaler 🤰🐾 »';
+        playLoveSound('meow');
+        triggerBanner('🤰 DOUGLASSE EST RASSASIÉ', 'Sa jauge de faim est déjà à 95%+ !', '🐟');
+        return;
+      }
+      if (action === 'jouer' && state.cat.energy < 20) {
+        document.getElementById('catSpeechBubble').innerText = '« Zzz... Je suis K.O., laisse-moi faire une sieste ou câline-moi 😴 »';
+        playLoveSound('purr');
+        triggerBanner('😴 DOUGLASSE EST FATIGUÉ', 'Son énergie est sous 20%, laisse-le récupérer !', '🧶');
+        return;
+      }
+
+      // 2. Vérification Quota Journalier & Cooldown individuel
+      const countKey = action + 'Count';
+      const nextKey = action + 'Next';
+      if ((uLim[countKey] || 0) >= cfg.maxPerDay) {
+        triggerBanner('🛑 LIMITE DU JOUR ATTEINTE', `Tu as déjà utilisé tes ${cfg.maxPerDay}/${cfg.maxPerDay} « ${cfg.label} » aujourd'hui !`, '🐾');
+        triggerDeviceVibration([80, 50, 80]);
+        return;
+      }
+      if (nowMs < (uLim[nextKey] || 0)) {
+        const waitStr = formatRemainingCooldown(uLim[nextKey] - nowMs);
+        triggerBanner('⏳ EN RECHARGE', `Action « ${cfg.label} » disponible dans ${waitStr} !`, '⏱️');
+        triggerDeviceVibration([70, 40, 70]);
+        return;
+      }
+
+      // 3. Exécution de l'action validée
+      uLim[countKey] = (uLim[countKey] || 0) + 1;
+      uLim[nextKey] = nowMs + cfg.cooldownMs;
+
+      const nowStr = new Date().toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
       const box = document.getElementById('catVisualContainer'); box.classList.add('cat-excited'); setTimeout(() => box.classList.remove('cat-excited'), 1200);
       let msg = '', em = '🐾', snd = 'meow';
-      if (action === 'nourrir') { state.cat.hunger = Math.min(100, state.cat.hunger + 30); msg = `${currentUser} a nourri Douglasse 🐟`; em = '🐟'; snd = 'crunch'; }
-      else if (action === 'caresser') { state.cat.love = Math.min(100, state.cat.love + 30); msg = `${currentUser} a câliné Douglasse 💖`; em = '💖'; snd = 'purr'; }
-      else { state.cat.love = Math.min(100, state.cat.love + 25); state.cat.energy = Math.max(10, state.cat.energy - 15); msg = `${currentUser} a joué avec Douglasse 🧶`; em = '🧶'; }
-      addCoinsToUser(currentUser, 10);
+      if (action === 'nourrir') { state.cat.hunger = Math.min(100, state.cat.hunger + 30); msg = `${u} a nourri Douglasse 🐟`; em = '🐟'; snd = 'crunch'; }
+      else if (action === 'caresser') { state.cat.love = Math.min(100, state.cat.love + 30); msg = `${u} a câliné Douglasse 💖`; em = '💖'; snd = 'purr'; }
+      else { state.cat.love = Math.min(100, state.cat.love + 25); state.cat.energy = Math.max(10, state.cat.energy - 15); msg = `${u} a joué avec Douglasse 🧶`; em = '🧶'; }
+
+      addCoinsToUser(u, 10);
       state.cat.xp += 15;
-      if (state.cat.xp >= 100) { state.cat.level += 1; state.cat.xp -= 100; }
-      state.cat.journal.unshift({ text:msg, time:now }); state.cat.journal = state.cat.journal.slice(0, 6);
+
+      // 4. Vérification du Bonus « Garde Partagée » (Jordan ET Lydie ont nourri ou câliné aujourd'hui)
+      const jLim = state.cat.limits.Jordan || {};
+      const lLim = state.cat.limits.Lydie || {};
+      const jCared = (jLim.nourrirCount || 0) + (jLim.caresserCount || 0) > 0;
+      const lCared = (lLim.nourrirCount || 0) + (lLim.caresserCount || 0) > 0;
+      if (jCared && lCared && !state.cat.limits.sharedBonusClaimed) {
+        state.cat.limits.sharedBonusClaimed = true;
+        addCoinsToUser('Jordan', 25);
+        addCoinsToUser('Lydie', 25);
+        state.cat.xp += 30;
+        state.cat.journal.unshift({ text:'🐾 Bonus Parents Modèles débloqué (+25 🪙 chacun & +30 XP) !', time:nowStr });
+        triggerBanner('🐾 PARENTS MODÈLES !', 'Jordan & Lydie ont pris soin de Douglasse aujourd\'hui : +25 🪙 chacun + 30 XP !', '👑');
+      }
+
+      while (state.cat.xp >= 100) { state.cat.level += 1; state.cat.xp -= 100; }
+      state.cat.journal.unshift({ text:msg, time:nowStr }); state.cat.journal = state.cat.journal.slice(0, 6);
       playLoveSound(snd); spawnParticles(em, [100,60,160], 2200); saveState();
     }
+
+    function updateCatButtonsCooldownUI() {
+      if (!state.cat?.limits) return;
+      const u = currentUser || 'Jordan';
+      const uLim = state.cat.limits[u] || {};
+      const nowMs = Date.now();
+
+      const defs = [
+        ['nourrir', 'btnCatNourrir', 'subCatNourrir', 'amber', state.cat.hunger >= 95, '🤰 Rassasié (95%+)'],
+        ['caresser', 'btnCatCaresser', 'subCatCaresser', 'pink', false, ''],
+        ['jouer', 'btnCatJouer', 'subCatJouer', 'indigo', state.cat.energy < 20, '😴 K.O. (<20%)']
+      ];
+
+      defs.forEach(([act, btnId, subId, col, statBlocked, statMsg]) => {
+        const cfg = catActionConfig[act];
+        const count = uLim[act + 'Count'] || 0;
+        const nextMs = uLim[act + 'Next'] || 0;
+        const remCount = Math.max(0, cfg.maxPerDay - count);
+        const btn = document.getElementById(btnId);
+        const sub = document.getElementById(subId);
+        if (!btn || !sub) return;
+
+        if (remCount === 0) {
+          btn.className = 'bg-slate-100 border border-slate-200 rounded-2xl py-2.5 px-1 flex flex-col items-center gap-0.5 opacity-60 cursor-not-allowed';
+          sub.className = 'text-[9px] font-extrabold text-rose-600';
+          sub.innerText = `0/${cfg.maxPerDay} • Demain`;
+        } else if (nowMs < nextMs) {
+          btn.className = 'bg-slate-100 border border-slate-200 rounded-2xl py-2.5 px-1 flex flex-col items-center gap-0.5 opacity-75 cursor-not-allowed';
+          sub.className = 'text-[9px] font-extrabold text-amber-700';
+          sub.innerText = `⏳ ${formatRemainingCooldown(nextMs - nowMs)} (${remCount}/${cfg.maxPerDay})`;
+        } else if (statBlocked) {
+          btn.className = 'bg-slate-100 border border-slate-200 rounded-2xl py-2.5 px-1 flex flex-col items-center gap-0.5 opacity-75 cursor-not-allowed';
+          sub.className = 'text-[9px] font-extrabold text-slate-500';
+          sub.innerText = statMsg;
+        } else {
+          btn.className = `bg-${col}-50 border border-${col}-200 rounded-2xl py-2.5 px-1 flex flex-col items-center gap-0.5 active:scale-95 transition`;
+          sub.className = `text-[9px] font-bold text-${col}-700`;
+          sub.innerText = `✔️ ${remCount}/${cfg.maxPerDay} restants`;
+        }
+      });
+
+      const jLim = state.cat.limits.Jordan || {};
+      const lLim = state.cat.limits.Lydie || {};
+      const jOk = (jLim.nourrirCount || 0) + (jLim.caresserCount || 0) > 0;
+      const lOk = (lLim.nourrirCount || 0) + (lLim.caresserCount || 0) > 0;
+      const shBanner = document.getElementById('catSharedBonusBanner');
+      const shText = document.getElementById('catSharedBonusText');
+      if (shBanner && shText) {
+        if (state.cat.limits.sharedBonusClaimed) {
+          shBanner.className = 'bg-emerald-50 border border-emerald-300 rounded-2xl px-3 py-2 text-[11px] font-extrabold text-emerald-900 flex items-center justify-between';
+          shText.innerText = '🐾 Parents Modèles validé aujourd\'hui ! ✔️';
+        } else {
+          shBanner.className = 'bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-[11px] font-extrabold text-slate-600 flex items-center justify-between';
+          shText.innerText = `🐾 Garde partagée : Jordan ${jOk?'✔️':'⏳'} • Lydie ${lOk?'✔️':'⏳'}`;
+        }
+      }
+    }
+    setInterval(updateCatButtonsCooldownUI, 1000);
 
     function buyOrEquipAccessory(accId) {
       const item = catAccessoriesCatalog.find(a => a.id === accId); if (!item) return;
@@ -2149,6 +2407,7 @@
     }
     function clearAllAccessories() { state.cat.equippedSlots = { hat:'', eyes:'', neck:'', aura:'' }; saveState(); }
 
+    // Action ou Vérité (Tirage Aléatoire sans répétition immédiate)
     function setTodLevel(lvl) {
       if (currentUser !== (state.truthOrDare.turn || 'Jordan')) {
         triggerBanner('🔒 TOUR VERROUILLÉ', `C'est au tour de ${state.truthOrDare.turn} !`, '⏳'); return;
@@ -2163,8 +2422,10 @@
       }
       const lvl = state.truthOrDare.level || 'doux';
       const pool = truthOrDareDeck[lvl][choiceType];
+      const candidates = pool.filter(c => c !== state.truthOrDare.cardText);
+      const list = candidates.length > 0 ? candidates : pool;
       state.truthOrDare.lastType = choiceType;
-      state.truthOrDare.cardText = pool[Math.floor(Math.random() * pool.length)];
+      state.truthOrDare.cardText = list[Math.floor(Math.random() * list.length)];
       state.truthOrDare.cardDrawn = true;
       playLoveSound(lvl === 'caliente' ? 'fire' : 'rose'); triggerDeviceVibration([120,60,200]); saveState();
     }
@@ -2186,15 +2447,16 @@
       saveState();
     }
 
+    // Quiz 100 Questions (Tirage Aléatoire)
     function nextQuizQuestion() {
       const target = state.quiz.targetUser || 'Jordan', guesser = target === 'Jordan' ? 'Lydie' : 'Jordan';
       const isSecretLocked = typeof state.quiz.secretChoice === 'number';
       const activePlayer = isSecretLocked ? guesser : target;
       if (currentUser !== activePlayer) {
-        triggerBanner('🔒 TOUR DE ' + activePlayer.toUpperCase(), `Seul(e) ${activePlayer} peut passer ou changer la question !`, '⏳');
+        triggerBanner('🔒 TOUR DE ' + activePlayer.toUpperCase(), `Seul(e) ${activePlayer} peut tirer une autre question !`, '⏳');
         triggerDeviceVibration([80,50,80]); return;
       }
-      state.quiz.qIndex = ((state.quiz.qIndex || 0) + 1) % coupleQuizPool.length;
+      state.quiz.qIndex = pickRandomIndex(coupleQuizPool.length, state.quiz.qIndex || 0);
       state.quiz.targetUser = guesser; state.quiz.secretChoice = null; state.quiz.updatedAt = Date.now();
       state.quiz.statusText = `Étape 1 : ${guesser} doit choisir sa réponse secrète (pour que ${target} devine) !`;
       saveState();
@@ -2213,9 +2475,9 @@
       if (Number(optIndex) === Number(state.quiz.secretChoice)) {
         addCoinsToUser(guesser, 25);
         state.quiz.scores[guesser] = (state.quiz.scores[guesser] || 0) + 1;
-        const nextIdx = (idx + 1) % coupleQuizPool.length;
+        const nextIdx = pickRandomIndex(coupleQuizPool.length, idx);
         state.quiz.qIndex = nextIdx; state.quiz.targetUser = guesser; state.quiz.secretChoice = null; state.quiz.updatedAt = Date.now();
-        state.quiz.statusText = `🎉 BRAVO ${guesser} ! C'était bien « ${qRow[optIndex+1]} » (+25 🪙 pour ${guesser}) ! À ${guesser} de choisir pour la question ${nextIdx + 1} !`;
+        state.quiz.statusText = `🎉 BRAVO ${guesser} ! C'était bien « ${qRow[optIndex+1]} » (+25 🪙 pour ${guesser}) ! Nouvelle question aléatoire pour ${guesser} !`;
         spawnParticles('🏆'); playLoveSound('rose');
       } else {
         state.quiz.updatedAt = Date.now();
@@ -2330,7 +2592,7 @@
       document.getElementById('btnLydie').className = !isJ ? 'px-2 py-1 rounded-full gradient-card text-white shadow' : 'px-2 py-1 rounded-full text-slate-600';
       document.getElementById('pingCounter').innerText = state.pingsToday;
 
-      // Cagnottes séparées (plancher bloqué à 0)
+      // Cagnottes séparées
       const jCoins = getUserCoins('Jordan'), lCoins = getUserCoins('Lydie'), myCoins = getUserCoins(myName);
       document.getElementById('headerCoinsJordan').innerText = jCoins;
       document.getElementById('headerCoinsLydie').innerText = lCoins;
@@ -2355,8 +2617,8 @@
         vBtnMod.innerText = remoteVoiceEnabled ? '🔊 Voix & Vib 5s : ON' : '🔇 Voix & Vib 5s : OFF';
       }
 
-      // Thermomètre d'Envie
-      const myLibVal = Number(state[myKey].libido ?? 50), partLibVal = Number(state[partnerKey].libido ?? 50);
+      // Thermomètre d'Envie + Tag Personnalisé
+      const myLibVal = Number(state[myKey].libido ?? 10), partLibVal = Number(state[partnerKey].libido ?? 10);
       const myLibInfo = getLibidoTierDetails(myLibVal), partLibInfo = getLibidoTierDetails(partLibVal);
       document.getElementById('myLibidoTitle').innerText = `🌡️ Ma jauge (${myName})`;
       document.getElementById('myLibidoSlider').value = myLibVal;
@@ -2366,10 +2628,15 @@
       document.getElementById('myLibidoSubtext').innerText = myLibInfo.sub;
 
       const myTag = state[myKey].libidoTag || '';
-      document.getElementById('libidoTagsGrid').innerHTML = libidoTagsCatalog.map(t => {
+      const isCustomTag = myTag && !libidoTagsCatalog.includes(myTag);
+      const tagsHtml = libidoTagsCatalog.map(t => {
         const active = myTag === t;
         return `<button onclick="toggleMyLibidoTag('${t.replace(/'/g,"\\'")}')" class="px-2 py-1 rounded-full text-[10px] font-extrabold border transition ${active?'gradient-card text-white border-pink-300 shadow':'bg-white/5 text-slate-300 border-white/15'}">${t}</button>`;
       }).join('');
+      const customPillHtml = isCustomTag
+        ? `<button onclick="toggleMyLibidoTag('${myTag.replace(/'/g,"\\'")}')" class="px-2.5 py-1 rounded-full text-[10px] font-extrabold border gradient-card text-white border-amber-300 shadow">${myTag} ✕</button>`
+        : '';
+      document.getElementById('libidoTagsGrid').innerHTML = customPillHtml + tagsHtml;
 
       document.getElementById('partnerLibidoTitle').innerText = `${isJ?'👩🏻':'👦🏻'} Jauge de ${partnerName}`;
       const pLibBadge = document.getElementById('partnerLibidoBadge');
@@ -2410,7 +2677,7 @@
       document.getElementById('lockCountEnv').innerText = vc.env||0; document.getElementById('lockCountPeach').innerText = vc.peach||0;
       document.getElementById('lockCountCuc').innerText = vc.cuc||0; document.getElementById('lockCountChili').innerText = vc.chili||0;
 
-      // Défi Photo Sexy (dans l'onglet Hot)
+      // Défi Photo Sexy
       const today = getTodayDateStr(), jS = state.sexyChallenge.jordanToLydie || {}, lS = state.sexyChallenge.lydieToJordan || {};
       document.getElementById('jordanStreakCount').innerText = jS.streak||0; document.getElementById('lydieStreakCount').innerText = lS.streak||0;
       document.getElementById('sexyStreakBadge').innerText = Math.max(jS.streak||0, lS.streak||0);
@@ -2425,15 +2692,21 @@
       if (cachedMedia.latestDrawingUrl) { document.getElementById('lockDrawingImg').src = cachedMedia.latestDrawingUrl; document.getElementById('lockDrawingImg').classList.remove('hidden'); document.getElementById('lockDrawingFallback').classList.add('hidden'); }
       if (state.latestDrawing) { document.getElementById('lockDrawingCaption').innerText = state.latestDrawing.caption||''; document.getElementById('lockDrawingMeta').innerText = `Dessiné par ${state.latestDrawing.author||'Jordan'} • ${state.latestDrawing.time||''}`; }
 
-      // Douglasse
+      // Douglasse & Cooldowns Anti-Spam
       const slots = state.cat.equippedSlots || {};
       document.getElementById('accSlotHat').innerText = slots.hat||''; document.getElementById('accSlotEyes').innerText = slots.eyes||''; document.getElementById('accSlotNeck').innerText = slots.neck||'';
       document.getElementById('accSlotAura').classList.toggle('hidden', !slots.aura);
       if (slots.aura) { document.getElementById('auraItem1').innerText = slots.aura; document.getElementById('auraItem4').innerText = slots.aura; }
-      document.getElementById('catSpeechBubble').innerText = state.cat.hunger <= 40 ? '« Miaou ! J\'ai faim 🐟 »' : '« Rrrrr... Je ronronne de bonheur 💕 »';
-      document.getElementById('catMoodPill').innerText = state.cat.hunger <= 40 ? 'J\'ai faim 🐟' : 'Ronronne 🐾';
+      if (state.cat.hunger >= 95) document.getElementById('catSpeechBubble').innerText = '« Miaou ! J\'ai le ventre tout rond, je ne peux plus rien avaler 🤰🐾 »';
+      else if (state.cat.energy < 20) document.getElementById('catSpeechBubble').innerText = '« Zzz... Je suis K.O., laisse-moi faire une sieste ou câline-moi 😴 »';
+      else if (state.cat.hunger <= 40) document.getElementById('catSpeechBubble').innerText = '« Miaou ! J\'ai faim 🐟 »';
+      else document.getElementById('catSpeechBubble').innerText = '« Rrrrr... Je ronronne de bonheur 💕 »';
+
+      document.getElementById('catMoodPill').innerText = state.cat.hunger >= 95 ? 'Ventre plein 🤰' : (state.cat.energy < 20 ? 'En sieste 😴' : (state.cat.hunger <= 40 ? 'J\'ai faim 🐟' : 'Ronronne 🐾'));
       document.getElementById('catLevel').innerText = state.cat.level; document.getElementById('catXp').innerText = state.cat.xp;
       [['Hunger',state.cat.hunger],['Love',state.cat.love],['Energy',state.cat.energy]].forEach(([k,v]) => { document.getElementById('bar'+k).style.width = v+'%'; document.getElementById('bar'+k+'Label').innerText = v+'%'; });
+      updateCatButtonsCooldownUI();
+
       document.getElementById('catShopGrid').innerHTML = catAccessoriesCatalog.map(it => {
         const own = state.cat.ownedAcc.includes(it.id), eq = slots[it.slot] === it.emoji;
         return `<button onclick="buyOrEquipAccessory('${it.id}')" class="p-2.5 rounded-2xl border ${eq?'border-pink-500 bg-pink-50':'border-slate-200 bg-slate-50'} flex flex-col items-center gap-1"><span class="text-2xl">${it.emoji}</span><span class="text-[10px] font-extrabold">${it.name}</span><span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${own?'bg-emerald-100 text-emerald-800':'bg-amber-100 text-amber-900'}">${eq?'✔️ Porté':(own?'Équiper':'🪙 '+it.price)}</span></button>`;
@@ -2488,22 +2761,32 @@
           </div>
         `).join('');
 
-      // Rendu Onglet Hot : Tinder Fantasmes & Kinky Extrême
+      // Rendu Onglet Hot : Tinder Fantasmes (avec badge si le partenaire a déjà voté)
       const fCard = fantasyDeck[currentFantasyIdx] || fantasyDeck[0];
-      const myFVote = state.fantasyVotes?.[myName]?.[fCard.id] || '';
+      const myFVote = state.fantasyVotes?.[myName]?.[fCard.id];
+      const partnerFVote = state.fantasyVotes?.[partnerName]?.[fCard.id];
+      const fPartnerWaiting = myFVote === undefined && partnerFVote !== undefined;
+      document.getElementById('fantasyPartnerPendingBadge').classList.toggle('hidden', !fPartnerWaiting);
+
       const voteLabels = { yes:'🔥 Ton vote secret : OUI', maybe:'👀 Ton vote secret : Pourquoi pas', no:'❌ Ton vote secret : Non (secret)' };
       document.getElementById('fantasyCategoryBadge').innerText = fCard.cat;
       document.getElementById('fantasyTitleText').innerText = fCard.title;
       document.getElementById('fantasyDescText').innerText = fCard.desc + (myFVote ? `\n(${voteLabels[myFVote]})` : '');
-      document.getElementById('fantasyProgressText').innerText = `Carte ${currentFantasyIdx + 1} / ${fantasyDeck.length}`;
+      const fAnsweredCount = Object.keys(state.fantasyVotes?.[myName] || {}).length;
+      document.getElementById('fantasyProgressText').innerText = `Carte #${currentFantasyIdx + 1} (${fAnsweredCount}/${fantasyDeck.length} votées)`;
       const matchedList = fantasyDeck.filter(c => isFantasyMatched(c.id));
       document.getElementById('fantasyMatchesCountBadge').innerText = `${matchedList.length} ❤️‍🔥`;
       document.getElementById('fantasyMatchesList').innerHTML = matchedList.length === 0
         ? `<p class="text-[11px] text-slate-400 italic text-center py-2">Votez chacun en secret pour révéler vos envies communes !</p>`
         : matchedList.map(m => `<div class="bg-white/10 border border-pink-400/40 rounded-xl p-2.5"><p class="font-extrabold text-pink-200">${m.title}</p><p class="text-[10px] text-slate-300 mt-0.5">${m.desc}</p></div>`).join('');
 
+      // Rendu Kinky & Extrême (avec badge si le partenaire a déjà voté)
       const kCard = kinkyQuestions[currentKinkyIdx] || kinkyQuestions[0];
       const myKVote = state.kinkyVotes?.[myName]?.[kCard.id];
+      const partnerKVote = state.kinkyVotes?.[partnerName]?.[kCard.id];
+      const kPartnerWaiting = myKVote === undefined && partnerKVote !== undefined;
+      document.getElementById('kinkyPartnerPendingBadge').classList.toggle('hidden', !kPartnerWaiting);
+
       const kVoteLabels = { 3:'🔥 Ton vote : J\'adore (3 pts)', 2:'👀 Ton vote : À tester (2 pts)', 1:'🎁 Ton vote : Pour te faire plaisir (1 pt)', 0:'❌ Ton vote : Limite / Non (secret)' };
       const targetIcons = { 'Lui':'👦🏻 Cible : Lui', 'Elle':'👩🏻 Cible : Elle', 'Les deux':'👫 Cible : Les deux' };
       document.getElementById('kinkyCatBadge').innerText = kCard.categorie;
@@ -2511,7 +2794,8 @@
       document.getElementById('kinkyIntensityBadge').innerText = '🌶️'.repeat(kCard.intensite || 1);
       document.getElementById('kinkyCardText').innerText = `« ${kCard.texte} »`;
       document.getElementById('kinkyMyVoteBadge').innerText = myKVote !== undefined ? kVoteLabels[myKVote] : '🔒 Pas encore voté sur ce défi';
-      document.getElementById('kinkyProgressText').innerText = `Défi ${currentKinkyIdx + 1} / ${kinkyQuestions.length}`;
+      const kAnsweredCount = Object.keys(state.kinkyVotes?.[myName] || {}).length;
+      document.getElementById('kinkyProgressText').innerText = `Défi #${currentKinkyIdx + 1} (${kAnsweredCount}/${kinkyQuestions.length} votés)`;
 
       const kinkyMatches = calculerMatchs(state.kinkyVotes?.Jordan || {}, state.kinkyVotes?.Lydie || {}, kinkyQuestions);
       document.getElementById('kinkyMatchesCountBadge').innerText = `${kinkyMatches.length} ⛓️`;
@@ -2528,11 +2812,11 @@
             </div>`;
           }).join('');
 
-      // Rendu Onglet Jeux : Qui de nous deux, Action ou Vérité, Quiz 100 Questions
+      // Rendu Onglet Jeux
       const wIdx = (state.whoOfUs.qIndex || 0) % whoOfUsQuestions.length;
       const wRow = whoOfUsQuestions[wIdx];
       const myWVote = state.whoOfUs.votes?.[myName] || '';
-      document.getElementById('whoProgressBadge').innerText = `${wIdx + 1}/${whoOfUsQuestions.length}`;
+      document.getElementById('whoProgressBadge').innerText = `#${wIdx + 1}/50`;
       document.getElementById('whoCategoryBadge').innerText = wRow[0];
       document.getElementById('whoQuestionText').innerText = `« ${wRow[1]} »`;
       document.getElementById('btnVoteWhoJordan').className = `py-3 rounded-2xl border-2 flex items-center justify-center gap-2 active:scale-95 ${myWVote==='Jordan'?'gradient-card text-white border-pink-500 shadow':'border-purple-200 bg-purple-50/60 text-purple-950'}`;
@@ -2556,7 +2840,7 @@
       const qIdx = (state.quiz.qIndex || 0) % coupleQuizPool.length, qRow = coupleQuizPool[qIdx];
       const target = state.quiz.targetUser || 'Jordan', guesser = target === 'Jordan' ? 'Lydie' : 'Jordan', locked = typeof state.quiz.secretChoice === 'number';
       const canActQuiz = (!locked && currentUser === target) || (locked && currentUser === guesser);
-      document.getElementById('quizNumberBadge').innerText = `${qIdx + 1}/100`;
+      document.getElementById('quizNumberBadge').innerText = `#${qIdx + 1}/100`;
       document.getElementById('quizScorePill').innerText = `👦🏻 ${state.quiz.scores.Jordan||0} • 👩🏻 ${state.quiz.scores.Lydie||0}`;
       document.getElementById('quizRolePill').innerText = !locked ? `Étape 1 : ${target} choisit 🔒` : `Étape 2 : ${guesser} devine 🤔`;
       document.getElementById('quizQuestionTitle').innerText = `Pour ${target} : « ${qRow[0]} »`;
@@ -2570,7 +2854,7 @@
       }).join('');
       document.getElementById('quizStatusBox').innerText = state.quiz.statusText || '';
 
-      // Rendu Onglet Boutique : Boutique Secrète en Pièces + Carnet de Bons d'Amour
+      // Rendu Onglet Boutique
       document.getElementById('secretShopGrid').innerHTML = secretShopCatalog.map(it => {
         const canAfford = myCoins >= it.price;
         return `<div class="flex items-center justify-between gap-2 p-2.5 rounded-2xl border ${canAfford?'border-pink-200 bg-pink-50/30':'border-slate-200 bg-slate-50 opacity-75'}">
@@ -2606,7 +2890,7 @@
       }).join('');
     }
 
-    checkCatDecay(); updateCoupleTimer(); checkUserFirstLaunch(); renderAll();
+    checkCatDecay(); updateCoupleTimer(); pickSmartInitialCards(); checkUserFirstLaunch(); renderAll();
     loadCloudArchives();
     pollCloudState(true); setInterval(() => pollCloudState(false), 2000);
     window.addEventListener('DOMContentLoaded', () => setTimeout(registerFcmTokenToCloud, 2000));
